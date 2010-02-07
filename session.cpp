@@ -48,7 +48,7 @@ const QDBusObjectPath &Session::objectPath() const
 }
 
 Session *Session::create(const QString &algorithm, const QVariant &input,
-                         QVariant &output, Service *parent)
+                         QVariant &output, const QString &peer, Service *parent)
 {
    static QRegExp rxAlgorithm("^dh-(ietf\\d)\\-(^\\-)\\-(^\\-)\\-(^\\-)$", Qt::CaseInsensitive);
    
@@ -57,7 +57,6 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
    if (algorithm == "plain") {
       session = new Session(parent);
       session->m_encrypted = false;
-      return session;
    } else if (rxAlgorithm.exactMatch(algorithm) &&
               input.type() == QVariant::ByteArray) {
       QString encalgo = rxAlgorithm.cap(1).toLower();
@@ -148,8 +147,12 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
             return session;
          }
       }
+   } else {
+      return 0;
    }
-   return 0;
+   // creating the session was successful
+   session->m_peer = peer;
+   return session;
 }
 
 Secret Session::encrypt(const QCA::SecureArray &value, bool &ok)
@@ -214,6 +217,11 @@ QCA::SecureArray Session::decrypt(const Secret &secret, bool &ok)
 void Session::close()
 {
    deleteLater();
+}
+
+const QString &Session::peer() const
+{
+   return m_peer;
 }
 
 #include "session.moc"

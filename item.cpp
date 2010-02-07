@@ -21,7 +21,9 @@
 #include "item.h"
 #include "collection.h"
 #include "dbus/itemadaptor.h"
+#include "session.h"
 #include "secret.h"
+#include "prompt.h"
 
 #include <backend/backenditem.h>
 
@@ -93,21 +95,73 @@ qulonglong Item::modified() const
 
 QDBusObjectPath Item::deleteItem()
 {
-   // TODO: implement using PendingCall
-   return QDBusObjectPath("/");
+   // bypass prompt?
+   if (m_item->isCallImmediate(AsyncCall::AsyncDeleteItem)) {
+      m_item->deleteItem();
+      return QDBusObjectPath("/");
+   } else {
+      // FIXME: needs the service as well as some QObject.
+      //        I'd say the whole constructor should be checked
+      //        and its signature changed.
+      PromptItemDelete *p = new PromptItemDelete(m_item, 0, 0);
+      return p->objectPath();
+   }
 }
 
 Secret Item::getSecret(const QDBusObjectPath &session)
 {
-   Q_UNUSED(session);
-   // TODO: implement
-   return Secret();
+   if (m_item->isLocked()) {
+      // TODO: error, requires unlocking
+      return Secret();
+   }
+   
+   QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
+   Session *sessionObj;
+   if (object && (sessionObj = qobject_cast<Session*>(object))) {
+      BackendReturn<QCA::SecureArray> br = m_item->secret();
+      if (br.isError()) {
+         // TODO: handle error
+         return Secret();
+      }
+      bool ok;
+      Secret secret = sessionObj->encrypt(br.value(), ok);
+      if (br.isError()) {
+         // TODO: error, invalid session
+         return Secret();
+      }
+      return secret;
+   } else {
+      // TODO: error, requires session
+      return Secret();
+   }
 }
 
 void Item::setSecret(const Secret &secret)
 {
-   Q_UNUSED(secret);
-   // TODO: implement
+   if (m_item->isLocked()) {
+      // TODO: error, requires unlocking
+      return;
+   }
+   
+   QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.session().path());
+   Session *sessionObj;
+   if (object && (sessionObj = qobject_cast<Session*>(object))) {
+      bool ok;
+      BackendReturn<QCA::SecureArray> br = sessionObj->decrypt(secret, ok);
+      if (!ok) {
+         // TODO: invalid session
+         return;
+      }
+      BackendReturn<void> rc = m_item->setSecret(br.value());
+      if (rc.isError()) {
+         // TODO: handle error
+         return;
+      }
+   }
+   
+   // TODO: error, invalid session
+   
+   return;
 }
 
 BackendItem *Item::backendItem() const

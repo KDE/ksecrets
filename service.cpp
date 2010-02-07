@@ -32,6 +32,7 @@
 
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMetaType>
+#include <QtDBus/QDBusMessage>
 
 Service::Service(QObject *parent)
  : QObject(parent), m_master(this), m_basePath("/org/freedesktop/secrets")
@@ -66,7 +67,11 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
                               QDBusObjectPath &result)
 {
    QVariant output;
-   Session *session = Session::create(algorithm, input, output, this);
+   QString peer;
+   if (calledFromDBus()) {
+      peer = message().service();
+   }
+   Session *session = Session::create(algorithm, input, output, peer, this);
    if (session) {
       result = session->objectPath();
    } else {
@@ -82,7 +87,8 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
                                           QDBusObjectPath &prompt)
 {
    // TODO: bypass prompt
-   // TODO: check is session exists
+   // TODO: check if session exists
+   // TODO: figure out which manager to call
    PromptBase *p = new PromptServiceCreateCollection(properties["Label"].toString(),
                                                      properties["Locked"].toBool(),
                                                      this, this);
@@ -139,7 +145,18 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
             if (!bc->isLocked()) {
                rc.append(path);
             } else {
-               unlockObjects.insert(bc, path);
+               if (bc->isCallImmediate(AsyncCall::AsyncUnlock)) {
+                  // unlock without prompt?
+                  BackendReturn<bool> br = bc->unlock();
+                  if (!br.isError() && br.value()) {
+                     rc.append(path);
+                  } else {
+                     // fallback: try async unlocking
+                     unlockObjects.insert(bc, path);
+                  }
+               } else {
+                  unlockObjects.insert(bc, path);
+               }
             }
          }
       } else if ((item = qobject_cast<Item*>(object))) {
@@ -147,7 +164,18 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
             if (!bi->isLocked()) {
                rc.append(path);
             } else {
-               unlockObjects.insert(bi, path);
+               if (bi->isCallImmediate(AsyncCall::AsyncUnlock)) {
+                  // unlock without prompt?
+                  BackendReturn<bool> br = bi->unlock();
+                  if (!br.isError() && br.value()) {
+                     rc.append(path);
+                  } else {
+                     // fallback: try async unlocking
+                     unlockObjects.insert(bi, path);
+                  }
+               } else {
+                  unlockObjects.insert(bi, path);
+               }
             }
          }
       }
@@ -190,7 +218,18 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
             if (bc->isLocked()) {
                rc.append(path);
             } else {
-               lockObjects.insert(bc, path);
+               if (bc->isCallImmediate(AsyncCall::AsyncLock)) {
+                  // lock without prompt?
+                  BackendReturn<bool> br = bc->lock();
+                  if (!br.isError() && br.value()) {
+                     rc.append(path);
+                  } else {
+                     // fallback: try async unlocking
+                     lockObjects.insert(bc, path);
+                  }
+               } else {
+                  lockObjects.insert(bc, path);
+               }
             }
          }
       } else if ((item = qobject_cast<Item*>(object))) {
@@ -198,7 +237,18 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
             if (bi->isLocked()) {
                rc.append(path);
             } else {
-               lockObjects.insert(bi, path);
+               if (bi->isCallImmediate(AsyncCall::AsyncLock)) {
+                  // unlock without prompt?
+                  BackendReturn<bool> br = bi->lock();
+                  if (!br.isError() && br.value()) {
+                     rc.append(path);
+                  } else {
+                     // fallback: try async unlocking
+                     lockObjects.insert(bi, path);
+                  }
+               } else {
+                  lockObjects.insert(bi, path);
+               }
             }
          }
       }

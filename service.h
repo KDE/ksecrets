@@ -24,6 +24,7 @@
 #include <backend/backendmaster.h>
 
 #include <QtCore/QObject>
+#include <QtCore/QMultiMap>
 #include <QtDBus/QDBusObjectPath>
 #include <QtDBus/QDBusContext>
 

@@ -22,6 +22,7 @@
 #include "dbus/collectionadaptor.h"
 #include "service.h"
 #include "item.h"
+#include "session.h"
 #include "prompt.h"
 
 #include <backend/backendcollection.h>
@@ -30,7 +31,7 @@
 #include <QtDBus/QDBusConnection>
 
 Collection::Collection(BackendCollection *collection, Service *service)
- : QObject(service), m_collection(collection)
+ : QObject(service), m_service(service), m_collection(collection)
 {
    Q_ASSERT(collection);
    m_objectPath.setPath(service->objectPath().path() + "/collection/" + collection->id());
@@ -90,8 +91,14 @@ qulonglong Collection::modified() const
 
 QDBusObjectPath Collection::deleteCollection()
 {
-   // TODO: implement using PendingCall
-   return QDBusObjectPath("/");
+   // bypass prompt?
+   if (m_collection->isCallImmediate(AsyncCall::AsyncDeleteCollection)) {
+      m_collection->deleteCollection();
+      return QDBusObjectPath("/");
+   } else {
+      PromptCollectionDelete *p = new PromptCollectionDelete(m_collection, m_service);
+      return p->objectPath();
+   }
 }
 
 QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &attributes)
@@ -99,11 +106,11 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
    QList<QDBusObjectPath> rc;
    BackendReturn<QList<BackendItem*> > br = m_collection->searchItems(attributes);
    if (br.isError()) {
-      // generate D-Bus error
+      // TODO: generate D-Bus error
    }
    else {
       Q_FOREACH(BackendItem *item, br.value()) {
-         // TODO: implement
+         rc.append(QDBusObjectPath(m_objectPath.path() + "/" + item->id()));
       }
    }
    return rc;
@@ -118,6 +125,13 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
    QMap<QString, QString> attributes;
    bool locked = false;
 
+   // get the session object
+   QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.session().path());
+   Session *session;
+   if (!(session = qobject_cast<Session*>(object))) {
+      // TODO: error, requires session
+   }
+   
    if (properties.contains("Label")) {
       label = properties["Label"].toString();
    }
@@ -134,13 +148,29 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
    }
 
    // TODO: check the parameters before creating the prompt
-   PromptBase *p = new PromptCollectionCreateItem(m_collection, label, attributes, locked,
-                                                  secret.value(), replace,
-                                                  qobject_cast<Service*>(parent()),
-                                                  this);
-                                                  
-   prompt = p->objectPath();
-   return QDBusObjectPath("/");
+   bool ok;
+   QCA::SecureArray secretValue = session->decrypt(secret, ok);
+   if (!ok) {
+      // TODO: invalid session
+   }
+   if (m_collection->isCallImmediate(AsyncCall::AsyncCreateItem)) {
+      BackendReturn<BackendItem*> rc = m_collection->createItem(label, attributes, secretValue,
+                                                                replace, locked);
+      if (rc.isError()) {
+         // TODO: error creating the item
+      }
+      
+      // the item is already created inside slotItemCreated()
+      prompt.setPath("/");
+      QDBusObjectPath itemPath(m_objectPath.path() + "/" + rc.value()->id());
+      return itemPath;
+   } else {
+      PromptBase *p = new PromptCollectionCreateItem(m_collection, label, attributes, locked,
+                                                   secret.value(), replace, m_service, this);
+                                                   
+      prompt = p->objectPath();
+      return QDBusObjectPath("/");
+   }
 }
 
 BackendCollection *Collection::backendCollection() const

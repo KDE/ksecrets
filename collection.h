@@ -56,8 +56,6 @@ public:
     */
    const QDBusObjectPath &objectPath() const;
 
-public: // called by D-Bus adaptors
-   
    /**
     * Get the items stored inside this collection.
     *
@@ -129,16 +127,12 @@ public: // called by D-Bus adaptors
     */
    QDBusObjectPath createItem(const QMap<QString, QVariant> &properties,
                               const Secret &secret, bool replace, QDBusObjectPath &prompt);
-
-public:
+                              
    /**
-    * Get the backend collection associated with this frontend collection.
-    *
-    * @return the backend collection belonging to this frontend collection
-    * @remarks called by other frontend objects
+    * Get the backend collection linked to this object.
     */
    BackendCollection *backendCollection() const;
-                              
+
 Q_SIGNALS:
    /**
     * Signals the creation of a new item.
@@ -170,6 +164,7 @@ private Q_SLOTS:
    void slotItemChanged(BackendItem *item);
    
 private:
+   Service *m_service; // parent service
    BackendCollection *m_collection;
    QDBusObjectPath m_objectPath;
    QList<QDBusObjectPath> m_items; // cache for items' object paths

@@ -24,7 +24,6 @@
 #include "secret.h"
 
 #include <QtCore/QObject>
-#include <QtDBus/QDBusContext>
 #include <QtCrypto/QtCrypto>
 
 class Service;
@@ -35,7 +34,7 @@ class Service;
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */
-class Session : public QObject, protected QDBusContext
+class Session : public QObject
 {
    Q_OBJECT
 
@@ -70,7 +69,7 @@ public:
     *         supported or an error occurred
     */
    static Session *create(const QString &algorithm, const QVariant &input,
-                          QVariant &output, Service *parent);
+                          QVariant &output, const QString &peer, Service *parent);
 
    /**
     * Encrypt a secret value using this session.
@@ -94,9 +93,15 @@ public:
     * Close this session.
     */
    void close();
+   
+   /**
+    * Get the session's D-Bus peer (the client requesting the session).
+    */
+   const QString &peer() const;
 
 private:
    QDBusObjectPath m_objectPath;
+   QString m_peer; // D-Bus address of the application that requested this session
    
    // if true, use encryption, if false, use plaintext
    bool m_encrypted;
