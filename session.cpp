@@ -42,6 +42,11 @@ Session::~Session()
    delete m_cipher;
 }
 
+const QDBusObjectPath &Session::objectPath() const
+{
+   return m_objectPath;
+}
+
 Session *Session::create(const QString &algorithm, const QVariant &input,
                          QVariant &output, Service *parent)
 {
@@ -49,7 +54,6 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
    
    Session *session = 0;
    
-   // FIXME
    if (algorithm == "plain") {
       session = new Session(parent);
       session->m_encrypted = false;

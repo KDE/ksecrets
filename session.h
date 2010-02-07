@@ -53,6 +53,11 @@ public:
    ~Session();
    
    /**
+    * Get the session's object path.
+    */
+   const QDBusObjectPath &objectPath() const;
+   
+   /**
     * Try to create a (possibly encrypted) session for the use of transferring
     * secrets.
     *

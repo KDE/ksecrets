@@ -23,6 +23,7 @@
 #include "dbus/attributemap.h"
 #include "collection.h"
 #include "prompt.h"
+#include "session.h"
 #include "secret.h"
 
 #include <backend/backendcollection.h>
@@ -63,12 +64,14 @@ const QList<QDBusObjectPath> &Service::collections() const
 QVariant Service::openSession(const QString &algorithm, const QVariant &input,
                               QDBusObjectPath &result)
 {
-   Q_UNUSED(algorithm);
-   Q_UNUSED(input);
-   Q_UNUSED(result);
-   
-   // TODO: Session management
-   return 0;
+   QVariant output;
+   Session *session = Session::create(algorithm, input, output, this);
+   if (session) {
+      result = session->objectPath();
+   } else {
+      result = QDBusObjectPath("/");
+   }
+   return output;
 }
 
 QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &properties,
