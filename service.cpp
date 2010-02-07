@@ -25,6 +25,7 @@
 #include "prompt.h"
 #include "session.h"
 #include "secret.h"
+#include "item.h"
 
 #include <backend/backendcollection.h>
 #include <backend/backenditem.h>
@@ -70,6 +71,9 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
       result = session->objectPath();
    } else {
       result = QDBusObjectPath("/");
+      if (calledFromDBus()) {
+         sendErrorReply("org.freedesktop.Secret.Error.NotSupported");
+      }
    }
    return output;
 }
@@ -78,6 +82,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
                                           QDBusObjectPath &prompt)
 {
    // TODO: bypass prompt
+   // TODO: check is session exists
    PromptBase *p = new PromptServiceCreateCollection(properties["Label"].toString(),
                                                      properties["Locked"].toBool(),
                                                      this, this);
@@ -88,6 +93,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
 QList<QDBusObjectPath> Service::searchItems(const QMap<QString, QString> &attributes,
                                             QList<QDBusObjectPath> &locked)
 {
+   // TODO: check if session exists
    // TODO: should this rather be implemented using Daemon::Collection?
    QList<QDBusObjectPath> unlocked;
    Q_FOREACH(BackendCollection* collection, m_master.collections()) {
@@ -110,34 +116,42 @@ QList<QDBusObjectPath> Service::searchItems(const QMap<QString, QString> &attrib
 QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
                                        QDBusObjectPath &prompt)
 {
+   // TODO: check is session exists
    // TODO: bypass prompt
 
    // objects already unlocked
    QList<QDBusObjectPath> rc;
    // objects to unlock
    QMap<BackendBase*, QDBusObjectPath> unlockObjects;
+   QObject *object;
+   Item *item;
+   Collection *collection;
+   BackendItem *bi;
+   BackendCollection *bc;
    
    Q_FOREACH(const QDBusObjectPath &path, objects) {
-      QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(path.path());
-      BackendItem *item = qobject_cast<BackendItem*>(object);
-      BackendCollection *collection = qobject_cast<BackendCollection*>(object);
-      if (collection) {
-         if (!collection->isLocked()) {
-            rc.append(path);
-         } else {
-            unlockObjects.insert(collection, path);
-         }
-      } else if (item) {
-         if (!item->isLocked()) {
-            rc.append(path);
-         } else {
-            unlockObjects.insert(item, path);
-         }
-      } else {
-         // TODO: error - object to unlock is neither item nor collection (maybe it doesn't
-         //       even exist).
-         return QList<QDBusObjectPath>();
+      object = QDBusConnection::sessionBus().objectRegisteredAt(path.path());
+      if (!object) {
+         continue;
       }
+      if ((collection = qobject_cast<Collection*>(object))) {
+         if ((bc = collection->backendCollection())) {
+            if (!bc->isLocked()) {
+               rc.append(path);
+            } else {
+               unlockObjects.insert(bc, path);
+            }
+         }
+      } else if ((item = qobject_cast<Item*>(object))) {
+         if ((bi = item->backendItem())) {
+            if (!bi->isLocked()) {
+               rc.append(path);
+            } else {
+               unlockObjects.insert(bi, path);
+            }
+         }
+      }
+      // NOTE: objects which either don't exist or whose type is wrong are silently ignored.
    }
 
    if (unlockObjects.size() > 0) {
@@ -153,34 +167,42 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
 QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
                                      QDBusObjectPath &prompt)
 {
+   // TODO: check is session exists
    // TODO: bypass prompt
-
+   
    // objects already locked
    QList<QDBusObjectPath> rc;
    // objects to lock
    QMap<BackendBase*, QDBusObjectPath> lockObjects;
-
+   QObject *object;
+   Item *item;
+   Collection *collection;
+   BackendItem *bi;
+   BackendCollection *bc;
+   
    Q_FOREACH(const QDBusObjectPath &path, objects) {
-      QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(path.path());
-      BackendItem *item = qobject_cast<BackendItem*>(object);
-      BackendCollection *collection = qobject_cast<BackendCollection*>(object);
-      if (collection) {
-         if (collection->isLocked()) {
-            rc.append(path);
-         } else {
-            lockObjects.insert(collection, path);
-         }
-      } else if (item) {
-         if (item->isLocked()) {
-            rc.append(path);
-         } else {
-            lockObjects.insert(item, path);
-         }
-      } else {
-         // TODO: error - object to unlock is neither item nor collection (maybe it doesn't
-         //       even exist).
-         return QList<QDBusObjectPath>();
+      object = QDBusConnection::sessionBus().objectRegisteredAt(path.path());
+      if (!object) {
+         continue;
       }
+      if ((collection = qobject_cast<Collection*>(object))) {
+         if ((bc = collection->backendCollection())) {
+            if (bc->isLocked()) {
+               rc.append(path);
+            } else {
+               lockObjects.insert(bc, path);
+            }
+         }
+      } else if ((item = qobject_cast<Item*>(object))) {
+         if ((bi = item->backendItem())) {
+            if (bi->isLocked()) {
+               rc.append(path);
+            } else {
+               lockObjects.insert(bi, path);
+            }
+         }
+      }
+      // NOTE: objects which either don't exist or whose type is wrong are silently ignored.
    }
 
    if (lockObjects.size() > 0) {
@@ -196,10 +218,40 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
 QMap<QDBusObjectPath, Secret> Service::getSecrets(const QList<QDBusObjectPath> &items,
                                                   const QDBusObjectPath &session)
 {
-   Q_UNUSED(items);
-   Q_UNUSED(session);
-   // TODO: implement
-   return QMap<QDBusObjectPath, Secret>();
+   QMap<QDBusObjectPath, Secret> rc;
+   QObject *object;
+   Session *sessionObj;
+   Item *item;
+   bool ok;
+   Secret secret;
+   
+   object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
+   if (!object || !(sessionObj = qobject_cast<Session*>(object))) {
+      if (calledFromDBus()) {
+         sendErrorReply("org.freedesktop.Secret.Error.NoSession");
+      }
+      return rc;
+   }
+   
+   Q_FOREACH(const QDBusObjectPath &path, items) {
+      object = QDBusConnection::sessionBus().objectRegisteredAt(path.path());
+      if (object && (item = qobject_cast<Item*>(object))) {
+         BackendItem *bi = item->backendItem();
+         if (bi && !bi->isLocked()) {
+            BackendReturn<QCA::SecureArray> be = bi->secret();
+            // TODO: what should this do if getting the secret failed?
+            if (!be.isError()) {
+               secret = sessionObj->encrypt(be.value(), ok);
+               // TODO: what should this do if encrypting failed?
+               if (ok) {
+                  rc.insert(path, secret);
+               }
+            }
+         }
+      }
+   }
+
+   return rc;
 }
 
 void Service::slotCollectionCreated(BackendCollection *collection)

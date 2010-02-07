@@ -25,6 +25,7 @@
 
 #include <QtCore/QObject>
 #include <QtDBus/QDBusObjectPath>
+#include <QtDBus/QDBusContext>
 
 // TODO: when doing getResult() calls, be sure to check for errors!!!
 
@@ -37,7 +38,7 @@ class Service;
  * @remarks a Prompt can contain several PendingCall objects which are all executed
  *          when prompt() is called.
  */
-class PromptBase : public QObject
+class PromptBase : public QObject, protected QDBusContext
 {
    Q_OBJECT
 

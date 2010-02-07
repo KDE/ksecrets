@@ -24,6 +24,7 @@
 #include "secret.h"
 
 #include <QtCore/QObject>
+#include <QtDBus/QDBusContext>
 #include <QtCrypto/QtCrypto>
 
 class Service;
@@ -34,7 +35,7 @@ class Service;
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */
-class Session : public QObject
+class Session : public QObject, protected QDBusContext
 {
    Q_OBJECT
 

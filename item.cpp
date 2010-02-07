@@ -110,4 +110,9 @@ void Item::setSecret(const Secret &secret)
    // TODO: implement
 }
 
+BackendItem *Item::backendItem() const
+{
+   return m_item;
+}
+
 #include "item.moc"

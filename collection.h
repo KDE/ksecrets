@@ -56,6 +56,8 @@ public:
     */
    const QDBusObjectPath &objectPath() const;
 
+public: // called by D-Bus adaptors
+   
    /**
     * Get the items stored inside this collection.
     *
@@ -128,6 +130,15 @@ public:
    QDBusObjectPath createItem(const QMap<QString, QVariant> &properties,
                               const Secret &secret, bool replace, QDBusObjectPath &prompt);
 
+public:
+   /**
+    * Get the backend collection associated with this frontend collection.
+    *
+    * @return the backend collection belonging to this frontend collection
+    * @remarks called by other frontend objects
+    */
+   BackendCollection *backendCollection() const;
+                              
 Q_SIGNALS:
    /**
     * Signals the creation of a new item.

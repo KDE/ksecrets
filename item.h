@@ -24,15 +24,17 @@
 #include "secret.h"
 
 #include <QtCore/QObject>
+#include <QtDBus/QDBusContext>
 
 class BackendItem;
 class Collection;
+class Service;
    
 /**
  * Represents an item on the D-Bus implementing the org.freedesktop.Secret.Item
  * interface.
  */
-class Item : public QObject
+class Item : public QObject, protected QDBusContext
 {
    Q_OBJECT
 
@@ -52,6 +54,8 @@ public:
     */
    const QDBusObjectPath &objectPath() const;
 
+public: // called by D-Bus adaptors
+   
    /**
     * Check whether this item is locked.
     *
@@ -123,6 +127,15 @@ public:
     * @param secret Secret to store inside the item
     */
    void setSecret(const Secret &secret);
+
+public:
+   /**
+    * Get the backend item associated with this frontend item.
+    *
+    * @return the backend item belonging to this frontend item
+    * @remarks called by other frontend objects
+    */
+   BackendItem *backendItem() const;
 
 private:
    BackendItem *m_item;

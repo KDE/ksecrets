@@ -143,6 +143,11 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
    return QDBusObjectPath("/");
 }
 
+BackendCollection *Collection::backendCollection() const
+{
+   return m_collection;
+}
+
 void Collection::slotItemCreated(BackendItem *item)
 {
    Q_ASSERT(item);

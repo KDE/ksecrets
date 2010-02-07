@@ -25,6 +25,7 @@
 
 #include <QtCore/QObject>
 #include <QtDBus/QDBusObjectPath>
+#include <QtDBus/QDBusContext>
 
 class Secret;
 class Collection;
@@ -37,7 +38,7 @@ class _TypeRegistrar;
  * 
  * @todo Implement proper session handling
  */
-class Service : public QObject
+class Service : public QObject, protected QDBusContext
 {
    Q_OBJECT
 
