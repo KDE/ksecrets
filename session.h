@@ -48,6 +48,11 @@ private:
 
 public:
    /**
+    * Destructor.
+    */
+   ~Session();
+   
+   /**
     * Try to create a (possibly encrypted) session for the use of transferring
     * secrets.
     *
@@ -59,25 +64,25 @@ public:
     *         supported or an error occurred
     */
    static Session *create(const QString &algorithm, const QVariant &input,
-                          const QVariant &output, Service *parent);
+                          QVariant &output, Service *parent);
 
    /**
     * Encrypt a secret value using this session.
     *
     * @param value value to encrypt
+    * @param ok set to true if encrypting succeeds, set to false else
     * @return the secret encrypted for transport
-    * @todo make secret secure
     */
-   Secret encrypt(const QCA::SecureArray &value);
+   Secret encrypt(const QCA::SecureArray &value, bool &ok);
 
    /**
     * Decrypt a secret value using this session.
     *
     * @param secret Secret received on the D-Bus
+    * @param ok set to true if decrypting succeeds, set to false else
     * @return the unencryped value
-    * @todo make secret secure
     */
-   QCA::SecureArray decrypt(const Secret &secret);
+   QCA::SecureArray decrypt(const Secret &secret, bool &ok);
                              
    /**
     * Close this session.
@@ -86,6 +91,13 @@ public:
 
 private:
    QDBusObjectPath m_objectPath;
+   
+   // if true, use encryption, if false, use plaintext
+   bool m_encrypted;
+   
+   // the cipher and the symmetric key used for encryption
+   QCA::Cipher *m_cipher;
+   QCA::SymmetricKey m_symmetricKey;
 };
 
 #endif
