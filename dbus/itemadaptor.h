@@ -21,8 +21,7 @@
 #ifndef ORG_FREEDESKTOP_SECRET_ITEMADAPTOR_H
 #define ORG_FREEDESKTOP_SECRET_ITEMADAPTOR_H
 
-#include "../secret.h"
-#include "attributemap.h"
+#include "dbustypes.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtCore/QString>
@@ -41,7 +40,7 @@ class ItemAdaptor : public QDBusAbstractAdaptor
    Q_OBJECT
    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Item")
    Q_PROPERTY(bool Locked READ locked)
-   Q_PROPERTY(AttributeMap Attributes READ attributes WRITE setAttributes)
+   Q_PROPERTY(StringStringMap Attributes READ attributes WRITE setAttributes)
    Q_PROPERTY(QString Label READ label WRITE setLabel)
    Q_PROPERTY(qulonglong Created READ created)
    Q_PROPERTY(qulonglong Modified READ modified)
@@ -56,9 +55,9 @@ public:
 
    bool locked() const;
 
-   void setAttributes(const AttributeMap &attributes);
+   void setAttributes(const StringStringMap &attributes);
    
-   AttributeMap attributes() const;
+   StringStringMap attributes() const;
 
    void setLabel(const QString &label);
 

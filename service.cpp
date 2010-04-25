@@ -20,7 +20,6 @@
 
 #include "service.h"
 #include "dbus/serviceadaptor.h"
-#include "dbus/attributemap.h"
 #include "collection.h"
 #include "prompt.h"
 #include "session.h"
@@ -327,16 +326,5 @@ void Service::slotCollectionChanged(BackendCollection *collection)
    QDBusObjectPath collPath(m_basePath.path() + "/collection/" + collection->id());
    emit collectionChanged(collPath);
 }
-
-class _TypeRegistrar
-{
-public:
-   _TypeRegistrar() {
-      qDBusRegisterMetaType<Secret>();
-      qDBusRegisterMetaType<orgFreedesktopSecret::AttributeMap>();
-   }
-};
-
-_TypeRegistrar Service::_reg;
 
 #include "service.moc"

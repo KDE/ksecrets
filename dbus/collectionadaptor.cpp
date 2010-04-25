@@ -72,7 +72,7 @@ QDBusObjectPath CollectionAdaptor::Delete()
    return m_collection->deleteCollection();
 }
 
-QList<QDBusObjectPath> CollectionAdaptor::SearchItems(const QMap<QString, QString> &attributes)
+QList<QDBusObjectPath> CollectionAdaptor::SearchItems(const StringStringMap &attributes)
 {
    return m_collection->searchItems(attributes);
 }

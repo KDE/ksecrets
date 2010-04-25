@@ -27,6 +27,8 @@
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QRegExp>
 
+#include <QtCore/QDebug>
+
 Session::Session(Service *parent)
  : QObject(parent),
    m_objectPath(parent->objectPath().path() + "/session/" + createId()),
@@ -50,24 +52,26 @@ const QDBusObjectPath &Session::objectPath() const
 Session *Session::create(const QString &algorithm, const QVariant &input,
                          QVariant &output, const QString &peer, Service *parent)
 {
-   static QRegExp rxAlgorithm("^dh-(ietf\\d)\\-(^\\-)\\-(^\\-)\\-(^\\-)$", Qt::CaseInsensitive);
+   static QRegExp rxAlgorithm("^dh-ietf(\\d+)-([^-]+)-([^-]+)-([^-]+)$",
+                              Qt::CaseInsensitive);
    
    Session *session = 0;
    
    if (algorithm == "plain") {
       session = new Session(parent);
       session->m_encrypted = false;
+      output.setValue(QString(""));
    } else if (rxAlgorithm.exactMatch(algorithm) &&
               input.type() == QVariant::ByteArray) {
-      QString encalgo = rxAlgorithm.cap(1).toLower();
-      QString blockmode = rxAlgorithm.cap(2).toLower();
-      QString padding = rxAlgorithm.cap(3).toLower();
+      QString encalgo = rxAlgorithm.cap(2).toLower();
+      QString blockmode = rxAlgorithm.cap(3).toLower();
+      QString padding = rxAlgorithm.cap(4).toLower();
 
       QCA::KeyGenerator keygen;
       
       // determine the discrete logarithm group to use
       QCA::DLGroupSet groupnum;
-      switch (rxAlgorithm.cap(0).toInt()) {
+      switch (rxAlgorithm.cap(1).toInt()) {
       case 768:
          groupnum = QCA::IETF_768;
          break;
@@ -110,7 +114,8 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
                            .toLatin1().constData())) {
          
          // get client's public key
-         QCA::DHPublicKey clientKey(dlgroup, QCA::BigInteger(QCA::SecureArray(input.toByteArray())));
+         QCA::DHPublicKey clientKey(dlgroup,
+                                    QCA::BigInteger(QCA::SecureArray(input.toByteArray())));
          // generate own private key
          QCA::PrivateKey privKey(keygen.createDH(dlgroup));
          // generate the shared symmetric key
@@ -135,8 +140,8 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
          QCA::Cipher *cipher = new QCA::Cipher(encalgo, cbm, cp);
          
          // check if creating the cipher worked and if our shared
-         // key has the correct length
-         if (cipher->validKeyLength(sharedKey.size())) {
+         // key is longer than the minimum length required.
+         if (sharedKey.size() >= cipher->keyLength().minimum()) {
             // generate the response to the client so it can derive
             // the key as well.
             session = new Session(parent);
@@ -144,12 +149,14 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
             session->m_cipher = cipher;
             session->m_symmetricKey = sharedKey;
             output.setValue(privKey.toPublicKey().toDH().y().toArray().toByteArray());
-            return session;
+         } else {
+            return 0;
          }
       }
    } else {
       return 0;
    }
+
    // creating the session was successful
    session->m_peer = peer;
    return session;

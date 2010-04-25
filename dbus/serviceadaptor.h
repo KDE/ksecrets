@@ -21,6 +21,7 @@
 #ifndef ORG_FREEDESKTOP_SECRET_SERVICEADAPTOR_H
 #define ORG_FREEDESKTOP_SECRET_SERVICEADAPTOR_H
 
+#include "dbustypes.h"
 #include "../secret.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
@@ -51,20 +52,21 @@ public:
    const QList<QDBusObjectPath> &collections() const;
 
 public Q_SLOTS:
-   QVariant OpenSession(const QString &algorithm, const QVariant &input, QDBusObjectPath &result);
+   QDBusVariant OpenSession(const QString &algorithm, const QDBusVariant &input,
+                            QDBusObjectPath &result);
    
    QDBusObjectPath CreateCollection(const QMap<QString, QVariant> &properties,
                                     QDBusObjectPath &prompt);
                                     
-   QList<QDBusObjectPath> SearchItems(const QMap<QString, QString> &attributes,
+   QList<QDBusObjectPath> SearchItems(const StringStringMap &attributes,
                                       QList<QDBusObjectPath> &locked);
                                       
    QList<QDBusObjectPath> Unlock(const QList<QDBusObjectPath> &objects, QDBusObjectPath &prompt);
    
    QList<QDBusObjectPath> Lock(const QList<QDBusObjectPath> &objects, QDBusObjectPath &prompt);
 
-   QMap<QDBusObjectPath, Secret> GetSecrets(const QList<QDBusObjectPath> &items,
-                                            const QDBusObjectPath &session);
+   ObjectPathSecretMap GetSecrets(const QList<QDBusObjectPath> &items,
+                                  const QDBusObjectPath &session);
 
 Q_SIGNALS:
    void CollectionCreated(const QDBusObjectPath &collection);

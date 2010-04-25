@@ -18,35 +18,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ORG_FREEDESKTOP_SECRET_ATTRIBUTEMAP_H
-#define ORG_FREEDESKTOP_SECRET_ATTRIBUTEMAP_H
+#ifndef ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
+#define ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
 
-#include <QtCore/QMetaType>
-#include <QtCore/QString>
+#include "../secret.h"
+
+#include <QtDBus/QDBusObjectPath>
 #include <QtCore/QMap>
-#include <QtDBus/QDBusArgument>
-
-namespace orgFreedesktopSecret
-{
+#include <QtCore/QString>
 
 /**
- * This class is nothing more than a QMap<QString, QString> useable as a Q_PROPERTY
- * and providing D-Bus marshalling.
+ * Register the types needed for the fd.o Secrets D-Bus interface.
  */
-class AttributeMap : public QMap<QString, QString>
-{
-public:
-   AttributeMap();
-   AttributeMap(const AttributeMap &other);
-   AttributeMap(const QMap<QString, QString> &other);
-   ~AttributeMap();
-};
+void registerDBusTypes();
 
-}
+typedef QMap<QString, QString> StringStringMap;
+typedef QMap<QDBusObjectPath, Secret> ObjectPathSecretMap;
 
-Q_DECLARE_METATYPE(orgFreedesktopSecret::AttributeMap)
-
-QDBusArgument &operator<<(QDBusArgument &argument, const QMap<QString, QString> &map);
-const QDBusArgument &operator>>(const QDBusArgument &argument, QMap<QString, QString> &map);
+Q_DECLARE_METATYPE(StringStringMap);
+Q_DECLARE_METATYPE(ObjectPathSecretMap);
 
 #endif

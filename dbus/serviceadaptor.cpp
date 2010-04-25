@@ -19,6 +19,7 @@
  */
 
 #include "serviceadaptor.h"
+#include "dbustypes.h"
 #include "../service.h"
 
 namespace orgFreedesktopSecret
@@ -28,7 +29,10 @@ ServiceAdaptor::ServiceAdaptor(Service *service)
  : QDBusAbstractAdaptor(service), m_service(service)
 {
    Q_ASSERT(service);
-   
+
+   // register all types needed for the D-Bus interface
+   registerDBusTypes();
+
    connect(service, SIGNAL(collectionCreated(const QDBusObjectPath&)),
                     SIGNAL(CollectionCreated(const QDBusObjectPath&)));
    connect(service, SIGNAL(collectionDeleted(const QDBusObjectPath&)),
@@ -42,10 +46,10 @@ const QList<QDBusObjectPath> &ServiceAdaptor::collections() const
    return m_service->collections();
 }
 
-QVariant ServiceAdaptor::OpenSession(const QString &algorithm, const QVariant &input,
-                                     QDBusObjectPath &result)
+QDBusVariant ServiceAdaptor::OpenSession(const QString &algorithm, const QDBusVariant &input,
+                                         QDBusObjectPath &result)
 {
-   return m_service->openSession(algorithm, input, result);
+   return QDBusVariant(m_service->openSession(algorithm, input.variant(), result));
 }
 
 QDBusObjectPath ServiceAdaptor::CreateCollection(const QMap<QString, QVariant> &properties,
@@ -54,7 +58,7 @@ QDBusObjectPath ServiceAdaptor::CreateCollection(const QMap<QString, QVariant> &
    return m_service->createCollection(properties, prompt);
 }
 
-QList<QDBusObjectPath> ServiceAdaptor::SearchItems(const QMap<QString, QString> &attributes,
+QList<QDBusObjectPath> ServiceAdaptor::SearchItems(const StringStringMap &attributes,
                                                    QList<QDBusObjectPath> &locked)
 {
    return m_service->searchItems(attributes, locked);
@@ -72,8 +76,8 @@ QList<QDBusObjectPath> ServiceAdaptor::Lock(const QList<QDBusObjectPath> &object
    return m_service->lock(objects, prompt);
 }
 
-QMap<QDBusObjectPath, Secret> ServiceAdaptor::GetSecrets(const QList<QDBusObjectPath> &items,
-                                                         const QDBusObjectPath &session)
+ObjectPathSecretMap ServiceAdaptor::GetSecrets(const QList<QDBusObjectPath> &items,
+                                               const QDBusObjectPath &session)
 {
    return m_service->getSecrets(items, session);
 }

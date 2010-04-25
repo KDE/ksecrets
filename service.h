@@ -158,7 +158,6 @@ private:
    BackendMaster m_master;
    QList<QDBusObjectPath> m_collections; // cache object paths of collections
    const QDBusObjectPath m_basePath;
-   static _TypeRegistrar _reg;
 };
 
 #endif

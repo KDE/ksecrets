@@ -21,7 +21,7 @@
 #ifndef ORG_FREEDESKTOP_SECRET_COLLECTIONADAPTOR_H
 #define ORG_FREEDESKTOP_SECRET_COLLECTIONADAPTOR_H
 
-#include "../secret.h"
+#include "dbustypes.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
 
@@ -66,7 +66,7 @@ public:
 public Q_SLOTS:
    QDBusObjectPath Delete();
 
-   QList<QDBusObjectPath> SearchItems(const QMap<QString, QString> &attributes);
+   QList<QDBusObjectPath> SearchItems(const StringStringMap &attributes);
 
    QDBusObjectPath CreateItem(const QMap<QString, QVariant> &properties,
                               const Secret &secret, bool replace,

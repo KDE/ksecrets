@@ -36,12 +36,12 @@ bool ItemAdaptor::locked() const
    return m_item->locked();
 }
 
-void ItemAdaptor::setAttributes(const AttributeMap &attributes)
+void ItemAdaptor::setAttributes(const StringStringMap &attributes)
 {
    m_item->setAttributes(attributes);
 }
 
-AttributeMap ItemAdaptor::attributes() const
+StringStringMap ItemAdaptor::attributes() const
 {
    return m_item->attributes();
 }
