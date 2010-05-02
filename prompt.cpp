@@ -85,7 +85,7 @@ void PromptBase::addCall(AsyncCall *call)
 
 void PromptBase::slotCompleted(AsyncCall *call, bool dismissed)
 {
-   Q_ASSERT(m_pendingCalls.contains[call]);
+   Q_ASSERT(m_pendingCalls.contains(call));
    m_pendingCalls.removeAll(call);
    if (m_pendingCalls.size() > 0) {
       return; // still waiting for more calls to complete

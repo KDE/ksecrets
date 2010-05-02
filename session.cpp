@@ -194,7 +194,7 @@ Secret Session::encrypt(const QCA::SecureArray &value, bool &ok)
 QCA::SecureArray Session::decrypt(const Secret &secret, bool &ok)
 {
    // make sure this is really meant for us
-   Q_ASSERT(secret.objectPath() == m_objectPath);
+   Q_ASSERT(secret.session() == m_objectPath);
    ok = false;
    
    QCA::SecureArray value;
