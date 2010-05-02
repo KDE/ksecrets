@@ -44,12 +44,12 @@ Service::Service(BackendMaster *master, QObject *parent)
    // TODO: make master singleton so we can get a KWallet-compatible interface
    //       on top of it as well.
 
-   connect(m_master, SIGNAL(collectionCreated(Collection*)),
-                     SLOT(slotCollectionCreated(Collection*)));
-   connect(m_master, SIGNAL(collectionDeleted(Collection*)),
-                     SLOT(slotCollectionDeleted(Collection*)));
-   connect(m_master, SIGNAL(collectionChanged(Collection*)),
-                     SLOT(slotCollectionChanged(Collection*)));
+   connect(m_master, SIGNAL(collectionCreated(BackendCollection*)),
+                     SLOT(slotCollectionCreated(BackendCollection*)));
+   connect(m_master, SIGNAL(collectionDeleted(BackendCollection*)),
+                     SLOT(slotCollectionDeleted(BackendCollection*)));
+   connect(m_master, SIGNAL(collectionChanged(BackendCollection*)),
+                     SLOT(slotCollectionChanged(BackendCollection*)));
 
    // TODO: add managers to master
 }
@@ -326,7 +326,7 @@ void Service::slotCollectionCreated(BackendCollection *collection)
    Q_ASSERT(collection);
    Collection *coll = new Collection(collection, this);
    m_collections.append(coll->objectPath());
-   emit collectionChanged(coll->objectPath());
+   emit collectionCreated(coll->objectPath());
 }
 
 void Service::slotCollectionDeleted(BackendCollection *collection)
