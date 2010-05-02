@@ -22,10 +22,13 @@
 #define SERVICETEST_H
 
 #include <QtCore/QObject>
+#include <QtCore/QList>
+#include <QtDBus/QDBusObjectPath>
 
 class BackendMaster;
 class Service;
 class QDBusInterface;
+class QDBusAbstractInterface;
 
 /**
  * Unit-test for the fd.o Secret daemon
@@ -49,10 +52,40 @@ private Q_SLOTS:
    void session();
 
    // create and remove collections
-   void collection();
+   void nonBlockingCollection();
 
    // cleanup
    void cleanupTestCase();
+};
+
+/**
+ * Listens to D-Bus signals which only have an object-path
+ * as only argument.
+ */
+class ObjectPathSignalSpy : public QObject, public QList<QDBusObjectPath>
+{
+   Q_OBJECT
+
+public:
+   // constructor. similar to QSignalSpy's constructor.
+   ObjectPathSignalSpy(QDBusAbstractInterface *iface, const char *signal);
+   
+   // return true if the connection to the signal was successful
+   bool isValid() const;
+   
+   // wait a specified number of ms for the signal to be received.
+   void waitForSignal(int time);
+
+Q_SIGNALS:
+   // stop waiting for the signal.
+   void doneWaiting();
+   
+private Q_SLOTS:
+   // Single slot which receives all of the various signals.
+   void slotReceived(const QDBusObjectPath &objectPath);
+   
+private:
+   bool m_valid;
 };
 
 #endif

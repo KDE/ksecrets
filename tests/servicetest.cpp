@@ -129,7 +129,7 @@ void ServiceTest::session()
    QCOMPARE(dhIface.call("Introspect").type(), QDBusMessage::ErrorMessage);
 }
 
-void ServiceTest::collection()
+void ServiceTest::nonBlockingCollection()
 {
    QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
    QVERIFY(ifaceService.isValid());
@@ -143,10 +143,13 @@ void ServiceTest::collection()
    sessionPath = sessionReply.arguments().at(1).value<QDBusObjectPath>();
 
    // listen to CollectionCreated/CollectionDeleted/CollectionChanged signals
-   QSignalSpy createdSpy(&ifaceService, SIGNAL(CollectionCreated(QDBusObjectPath)));
-   QSignalSpy deletedSpy(&ifaceService, SIGNAL(CollectionDeleted(QDBusObjectPath)));
-   QSignalSpy changedSpy(&ifaceService, SIGNAL(CollectionChanged(QDBusObjectPath)));
-
+   ObjectPathSignalSpy createdSpy(&ifaceService, SIGNAL(CollectionCreated(QDBusObjectPath)));
+   QVERIFY(createdSpy.isValid());
+   ObjectPathSignalSpy deletedSpy(&ifaceService, SIGNAL(CollectionDeleted(QDBusObjectPath)));
+   QVERIFY(deletedSpy.isValid());
+   ObjectPathSignalSpy changedSpy(&ifaceService, SIGNAL(CollectionChanged(QDBusObjectPath)));
+   QVERIFY(changedSpy.isValid());
+   
    // create a collection
    QDBusObjectPath collectionPath;
    QMap<QString, QVariant> createProperties;
@@ -170,12 +173,35 @@ void ServiceTest::collection()
                                   "org.freedesktop.Secret.Collection");
    QVERIFY(ifaceCollection.isValid());
 
-   // make sure the CreateCollection signal was sent
+   // make sure the CollectionCreated signal was sent
+   if (createdSpy.size() < 1) {
+      createdSpy.waitForSignal(5000);
+   }
    QCOMPARE(createdSpy.size(), 1);
-   QList<QVariant> createSpyArgs = createdSpy.takeFirst();
-   QCOMPARE(createSpyArgs.at(0).value<QDBusObjectPath>(), collectionPath);
+   QCOMPARE(createdSpy.takeFirst(), collectionPath);
 
-   // TODO: read collection properties
+   // read collection properties
+   QVariant propItems = ifaceCollection.property("Items");
+   QVERIFY(propItems.isValid());
+   QVERIFY(propItems.canConvert<QList<QDBusObjectPath> >());
+   QList<QDBusObjectPath> propItemsList = propItems.value<QList<QDBusObjectPath> >();
+   QVERIFY(propItemsList.isEmpty());
+   QVariant propLabel = ifaceCollection.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QString("test"));
+   QVariant propLocked = ifaceCollection.property("Locked");
+   QVERIFY(propLocked.isValid());
+   QCOMPARE(propLocked.value<bool>(), false);
+   QVariant propCreated = ifaceCollection.property("Created");
+   QVERIFY(propCreated.isValid());
+   QCOMPARE(propCreated.type(), QVariant::ULongLong);
+   qulonglong propCreatedUll = propCreated.value<qulonglong>();
+   QVERIFY(QDateTime::currentDateTime().toTime_t() - propCreatedUll < 60);
+   QVariant propModified = ifaceCollection.property("Modified");
+   QVERIFY(propModified.isValid());
+   QCOMPARE(propModified.type(), QVariant::ULongLong);
+   QCOMPARE(propModified.value<qulonglong>(), propCreatedUll);
 
    // delete the collection
    QDBusMessage deleteReply = ifaceCollection.call(QDBus::Block, "Delete");
@@ -184,9 +210,16 @@ void ServiceTest::collection()
    QCOMPARE(deleteArgs.size(), 1);
    QCOMPARE(deleteArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
    // TemporaryCollection is non-blocking, so the output (prompt) should be "/".
-   QCOMPARE(deleteArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   QCOMPARE(deleteArgs.at(0).value<QDBusObjectPath>().path(), QLatin1String("/"));
    // make sure the collection is gone
    QCOMPARE(ifaceCollection.call("Introspect").type(), QDBusMessage::ErrorMessage);
+   
+   // make sure the CollectionDeleted signal was sent
+   if (deletedSpy.size() < 1) {
+      deletedSpy.waitForSignal(5000);
+   }
+   QCOMPARE(deletedSpy.size(), 1);
+   QCOMPARE(deletedSpy.takeFirst(), collectionPath);
 }
 
 void ServiceTest::cleanupTestCase()
@@ -198,5 +231,30 @@ void ServiceTest::cleanupTestCase()
 }
 
 QTEST_KDEMAIN_CORE(ServiceTest)
+
+ObjectPathSignalSpy::ObjectPathSignalSpy(QDBusAbstractInterface *iface,
+                                         const char *signal)
+{
+   m_valid = connect(iface, signal, SLOT(slotReceived(QDBusObjectPath)));
+}
+
+bool ObjectPathSignalSpy::isValid() const
+{
+   return m_valid;
+}
+
+void ObjectPathSignalSpy::waitForSignal(int time)
+{
+   QEventLoop loop;
+   loop.connect(this, SIGNAL(doneWaiting()), SLOT(quit()));
+   QTimer::singleShot(time, &loop, SLOT(quit()));
+   loop.exec();
+}
+
+void ObjectPathSignalSpy::slotReceived(const QDBusObjectPath &objectPath)
+{
+   append(objectPath);
+   emit doneWaiting();
+}
 
 #include "servicetest.moc"
