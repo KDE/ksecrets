@@ -23,6 +23,7 @@
 #include "backend/backendmaster.h"
 #include "backend/temporarycollectionmanager.h"
 #include "daemon/service.h"
+#include "daemon/dbus/dbustypes.h"
 
 #include <qtest_kde.h>
 
@@ -202,6 +203,20 @@ void ServiceTest::nonBlockingCollection()
    QVERIFY(propModified.isValid());
    QCOMPARE(propModified.type(), QVariant::ULongLong);
    QCOMPARE(propModified.value<qulonglong>(), propCreatedUll);
+   
+   // set the label and re-read it.
+   ifaceCollection.setProperty("Label", QString("test2"));
+   propLabel = ifaceCollection.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QString("test2"));
+   
+   // make sure the CollectionChanged signal was sent
+   if (changedSpy.size() < 1) {
+      changedSpy.waitForSignal(1);
+   }
+   QCOMPARE(changedSpy.size(), 1);
+   QCOMPARE(changedSpy.takeFirst(), collectionPath);
 
    // delete the collection
    QDBusMessage deleteReply = ifaceCollection.call(QDBus::Block, "Delete");
@@ -220,6 +235,187 @@ void ServiceTest::nonBlockingCollection()
    }
    QCOMPARE(deletedSpy.size(), 1);
    QCOMPARE(deletedSpy.takeFirst(), collectionPath);
+   
+   // close the session
+   QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
+}
+
+void ServiceTest::nonBlockingItem()
+{
+   QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+
+   // create a session
+   QDBusObjectPath sessionPath;
+   QList<QVariant> sessionInput;
+   sessionInput << QString("plain") << QVariant::fromValue(QDBusVariant(""));
+   QDBusMessage sessionReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
+                                                                 sessionInput);
+   sessionPath = sessionReply.arguments().at(1).value<QDBusObjectPath>();
+   
+   // create a collection
+   QDBusObjectPath collectionPath;
+   QMap<QString, QVariant> collProperties;
+   QList<QVariant> collInput;
+   collProperties["Label"] = "test3";
+   collProperties["Locked"] = false;
+   collInput << QVariant::fromValue(collProperties);
+   QDBusMessage collReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
+                                                              collInput);
+   collectionPath = collReply.arguments()[0].value<QDBusObjectPath>();
+   QDBusInterface ifaceColl("org.freedesktop.Secret", collectionPath.path());
+   
+   ObjectPathSignalSpy createdSpy(&ifaceColl, SIGNAL(ItemCreated(QDBusObjectPath)));
+   QVERIFY(createdSpy.isValid());
+   ObjectPathSignalSpy deletedSpy(&ifaceColl, SIGNAL(ItemDeleted(QDBusObjectPath)));
+   QVERIFY(deletedSpy.isValid());
+   ObjectPathSignalSpy changedSpy(&ifaceColl, SIGNAL(ItemChanged(QDBusObjectPath)));
+   QVERIFY(changedSpy.isValid());
+   
+   // create an item
+   QDBusObjectPath itemPath;
+   StringStringMap itemAttributes;
+   itemAttributes["attribute1"] = "value1";
+   itemAttributes["attribute2"] = "value2";
+   QMap<QString, QVariant> itemProperties;
+   itemProperties["Attributes"] = QVariant::fromValue(itemAttributes);
+   itemProperties["Label"] = "item1";
+   itemProperties["Locked"] = false;
+   QList<QVariant> itemInput;
+   Secret secret;
+   secret.setSession(sessionPath);
+   secret.setValue(QByteArray("mysecret"));
+   itemInput << QVariant::fromValue(itemProperties);
+   itemInput << QVariant::fromValue(secret);
+   itemInput << false;
+   QDBusMessage itemReply = ifaceColl.callWithArgumentList(QDBus::Block, "CreateItem",
+                                                           itemInput);
+   QCOMPARE(itemReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> itemArgs = itemReply.arguments();
+   QCOMPARE(itemArgs.size(), 2);
+   QCOMPARE(itemArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   QCOMPARE(itemArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TemporaryItem is non-blocking, so the second output (prompt) should be "/"
+   QCOMPARE(itemArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   itemPath = itemArgs.at(0).value<QDBusObjectPath>();
+   QVERIFY(itemPath.path().startsWith(collectionPath.path() + "/"));
+   QDBusInterface ifaceItem("org.freedesktop.Secret", itemPath.path(),
+                            "org.freedesktop.Secret.Item");
+   QVERIFY(ifaceItem.isValid());
+   
+   // make sure the ItemCreated signal was sent
+   if (createdSpy.size() < 1) {
+      createdSpy.waitForSignal(5000);
+   }
+   QCOMPARE(createdSpy.size(), 1);
+   QCOMPARE(createdSpy.takeFirst(), itemPath);
+   
+   // check if the collection's Items property contains the item.
+   QVariant propItems = ifaceColl.property("Items");
+   QVERIFY(propItems.isValid());
+   QVERIFY(propItems.canConvert<QList<QDBusObjectPath> >());
+   QList<QDBusObjectPath> propItemsList = propItems.value<QList<QDBusObjectPath> >();
+   QCOMPARE(propItemsList.count(), 1);
+   QCOMPARE(propItemsList.at(0), itemPath);
+
+   // read item properties
+   QVariant propLocked = ifaceItem.property("Locked");
+   QVERIFY(propLocked.isValid());
+   QCOMPARE(propLocked.type(), QVariant::Bool);
+   QCOMPARE(propLocked.value<bool>(), false);
+   QVariant propLabel = ifaceItem.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QLatin1String("item1"));
+   QVariant propCreated = ifaceItem.property("Created");
+   QVERIFY(propCreated.isValid());
+   QCOMPARE(propCreated.type(), QVariant::ULongLong);
+   qulonglong propCreatedUll = propCreated.value<qulonglong>();
+   QVERIFY(QDateTime::currentDateTime().toTime_t() - propCreatedUll < 60);
+   QVariant propModified = ifaceItem.property("Modified");
+   QVERIFY(propModified.isValid());
+   QCOMPARE(propModified.type(), QVariant::ULongLong);
+   QCOMPARE(propModified.value<qulonglong>(), propCreatedUll);
+   QVariant propAttributes = ifaceItem.property("Attributes");
+   QVERIFY(propAttributes.isValid());
+   QCOMPARE(propAttributes.userType(), qMetaTypeId<StringStringMap>());
+   StringStringMap propAttributesMap = propAttributes.value<StringStringMap>();
+   QCOMPARE(propAttributesMap.size(), 2);
+   QCOMPARE(propAttributesMap.value("attribute1"), QLatin1String("value1"));
+   QCOMPARE(propAttributesMap.value("attribute2"), QLatin1String("value2"));
+   
+   // read the secret
+   QDBusMessage secretReply = ifaceItem.call(QDBus::Block, "GetSecret",
+                                             QVariant::fromValue<QDBusObjectPath>(sessionPath));
+   QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> secretOutput = secretReply.arguments();
+   QCOMPARE(secretOutput.count(), 1);
+   Secret outsecret = qdbus_cast<Secret>(secretOutput.at(0));
+   QCOMPARE(outsecret.session(), sessionPath);
+   QCOMPARE(outsecret.value(), QByteArray("mysecret"));
+   
+   // set and re-read item properties
+   ifaceItem.setProperty("Label", QString("item2"));
+   propLabel = ifaceItem.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QLatin1String("item2"));
+   propAttributesMap["attribute3"] = "value3";
+   propAttributesMap["attribute1"] = "othervalue";
+   propAttributesMap.remove("attribute2");
+   ifaceItem.setProperty("Attributes", QVariant::fromValue<StringStringMap>(propAttributesMap));
+   propAttributes = ifaceItem.property("Attributes");
+   QVERIFY(propAttributes.isValid());
+   QCOMPARE(propAttributes.userType(), qMetaTypeId<StringStringMap>());
+   propAttributesMap = propAttributes.value<StringStringMap>();
+   QCOMPARE(propAttributesMap.size(), 2);
+   QCOMPARE(propAttributesMap.value("attribute1"), QLatin1String("othervalue"));
+   QCOMPARE(propAttributesMap.value("attribute3"), QLatin1String("value3"));
+   
+   // set and re-read the secret
+   secret.setValue("mysecret2");
+   secretReply = ifaceItem.call(QDBus::Block, "SetSecret", QVariant::fromValue<Secret>(secret));
+   QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
+   secretReply = ifaceItem.call(QDBus::Block, "GetSecret",
+                                QVariant::fromValue<QDBusObjectPath>(sessionPath));
+   QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
+   secretOutput = secretReply.arguments();
+   QCOMPARE(secretOutput.count(), 1);
+   outsecret = qdbus_cast<Secret>(secretOutput.at(0));
+   QCOMPARE(outsecret.session(), sessionPath);
+   QCOMPARE(outsecret.value(), QByteArray("mysecret2"));
+   
+
+   // we should have received 2 ItemChanged signals
+   if (changedSpy.size() < 3) {
+      changedSpy.waitForSignals(3, 5000);
+   }
+   QCOMPARE(changedSpy.size(), 3);
+   QCOMPARE(changedSpy.takeFirst(), itemPath);
+   QCOMPARE(changedSpy.takeFirst(), itemPath);
+   QCOMPARE(changedSpy.takeFirst(), itemPath);
+   
+   // delete the item
+   QDBusMessage deleteReply = ifaceItem.call(QDBus::Block, "Delete");
+   QCOMPARE(deleteReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> deleteArgs = deleteReply.arguments();
+   QCOMPARE(deleteArgs.size(), 1);
+   QCOMPARE(deleteArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TemporaryItem is non-blocking, so the output (prompt) should be "/"
+   QCOMPARE(deleteArgs.at(0).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   // make sure the item is gone
+   QCOMPARE(ifaceItem.call("Introspect").type(), QDBusMessage::ErrorMessage);
+   
+   // make sure the ItemDeleted signal was sent
+   if (deletedSpy.size() < 1) {
+      deletedSpy.waitForSignal(5000);
+   }
+   QCOMPARE(deletedSpy.size(), 1);
+   QCOMPARE(deletedSpy.takeFirst(), itemPath);
+   
+   // delete the collection
+   ifaceColl.call(QDBus::Block, "Delete");
+   // close the session
+   QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
 }
 
 void ServiceTest::cleanupTestCase()
@@ -245,16 +441,27 @@ bool ObjectPathSignalSpy::isValid() const
 
 void ObjectPathSignalSpy::waitForSignal(int time)
 {
-   QEventLoop loop;
-   loop.connect(this, SIGNAL(doneWaiting()), SLOT(quit()));
-   QTimer::singleShot(time, &loop, SLOT(quit()));
-   loop.exec();
+   waitForSignals(1, time);
+}
+
+void ObjectPathSignalSpy::waitForSignals(int num, int time)
+{
+   m_numWaiting = num;
+   if (count() < m_numWaiting)
+   {
+      QEventLoop loop;
+      loop.connect(this, SIGNAL(doneWaiting()), SLOT(quit()));
+      QTimer::singleShot(time, &loop, SLOT(quit()));
+      loop.exec();
+   }
 }
 
 void ObjectPathSignalSpy::slotReceived(const QDBusObjectPath &objectPath)
 {
    append(objectPath);
-   emit doneWaiting();
+   if (count() >= m_numWaiting) {
+      emit doneWaiting();
+   }
 }
 
 #include "servicetest.moc"

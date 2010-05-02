@@ -53,6 +53,9 @@ private Q_SLOTS:
 
    // create and remove collections
    void nonBlockingCollection();
+   
+   // create and remove items
+   void nonBlockingItem();
 
    // cleanup
    void cleanupTestCase();
@@ -75,6 +78,9 @@ public:
    
    // wait a specified number of ms for the signal to be received.
    void waitForSignal(int time);
+   
+   // wait a specified number of ms for multiple signals to be received
+   void waitForSignals(int num, int time);
 
 Q_SIGNALS:
    // stop waiting for the signal.
@@ -86,6 +92,7 @@ private Q_SLOTS:
    
 private:
    bool m_valid;
+   int m_numWaiting;
 };
 
 #endif

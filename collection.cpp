@@ -30,6 +30,8 @@
 
 #include <QtDBus/QDBusConnection>
 
+#include <QtCore/QDebug>
+
 Collection::Collection(BackendCollection *collection, Service *service)
  : QObject(service), m_service(service), m_collection(collection)
 {
@@ -139,12 +141,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
       locked = properties["Locked"].toBool();
    }
    if (properties.contains("Attributes")) {
-      QMap<QString, QVariant> tempMap = properties["Attributes"].toMap();
-      QMap<QString, QVariant>::const_iterator it = tempMap.constBegin();
-      QMap<QString, QVariant>::const_iterator end = tempMap.constEnd();
-      for ( ; it != end; ++it) {
-         attributes.insert(it.key(), it.value().toString());
-      }
+      attributes = qdbus_cast<StringStringMap>(properties["Attributes"].value<QDBusArgument>());
    }
 
    // TODO: check the parameters before creating the prompt
