@@ -33,21 +33,23 @@
 #include <QtDBus/QDBusMetaType>
 #include <QtDBus/QDBusMessage>
 
-Service::Service(QObject *parent)
- : QObject(parent), m_master(this), m_basePath("/org/freedesktop/secrets")
+Service::Service(BackendMaster *master, QObject *parent)
+ : QObject(parent), m_master(master), m_basePath("/org/freedesktop/secrets")
 {
+   Q_ASSERT(master);
+   
    new orgFreedesktopSecret::ServiceAdaptor(this);
    QDBusConnection::sessionBus().registerObject(m_basePath.path(), this);
 
    // TODO: make master singleton so we can get a KWallet-compatible interface
    //       on top of it as well.
 
-   connect(&m_master, SIGNAL(collectionCreated(Collection*)),
-                      SLOT(slotCollectionCreated(Collection*)));
-   connect(&m_master, SIGNAL(collectionDeleted(Collection*)),
-                      SLOT(slotCollectionDeleted(Collection*)));
-   connect(&m_master, SIGNAL(collectionChanged(Collection*)),
-                      SLOT(slotCollectionChanged(Collection*)));
+   connect(m_master, SIGNAL(collectionCreated(Collection*)),
+                     SLOT(slotCollectionCreated(Collection*)));
+   connect(m_master, SIGNAL(collectionDeleted(Collection*)),
+                     SLOT(slotCollectionDeleted(Collection*)));
+   connect(m_master, SIGNAL(collectionChanged(Collection*)),
+                     SLOT(slotCollectionChanged(Collection*)));
 
    // TODO: add managers to master
 }
@@ -85,14 +87,30 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
 QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &properties,
                                           QDBusObjectPath &prompt)
 {
-   // TODO: bypass prompt
-   // TODO: check if session exists
-   // TODO: figure out which manager to call
-   PromptBase *p = new PromptServiceCreateCollection(properties["Label"].toString(),
-                                                     properties["Locked"].toBool(),
-                                                     this, this);
-   prompt = p->objectPath();
-   return QDBusObjectPath("/");
+   QString label;
+   bool locked = false;
+
+   if (properties.contains("Label")) {
+      label = properties["Label"].toString();
+   }
+   if (properties.contains("Locked")) {
+      locked = properties["Locked"].toBool();
+   }
+   
+   if (m_master->isCallImmediate(AsyncCall::AsyncCreateCollectionMaster)) {
+      BackendReturn<BackendCollection*> rc = m_master->createCollection(label, locked);
+      if (rc.isError()) {
+         // TODO: error creating the collection
+      }
+
+      prompt.setPath("/");
+      QDBusObjectPath collPath(m_basePath.path() + "/collection/" + rc.value()->id());
+      return collPath;
+   } else {
+      PromptBase *p = new PromptServiceCreateCollection(label, locked, m_master, this, this);
+      prompt = p->objectPath();
+      return QDBusObjectPath("/");
+   }
 }
 
 QList<QDBusObjectPath> Service::searchItems(const QMap<QString, QString> &attributes,
@@ -101,7 +119,7 @@ QList<QDBusObjectPath> Service::searchItems(const QMap<QString, QString> &attrib
    // TODO: check if session exists
    // TODO: should this rather be implemented using Daemon::Collection?
    QList<QDBusObjectPath> unlocked;
-   Q_FOREACH(BackendCollection* collection, m_master.collections()) {
+   Q_FOREACH(BackendCollection* collection, m_master->collections()) {
       QString collPath = m_basePath.path() + "/collection/" + collection->id();
       BackendReturn<QList<BackendItem*> > rc = collection->searchItems(attributes);
       if (!rc.isError()) {

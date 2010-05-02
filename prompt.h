@@ -135,12 +135,16 @@ public:
    /**
     * Constructor.
     *
-    * @param properties Properties to set for the new collection
+    * @param label Label to use for the new collection
+    * @param locked if true, lock the new collection after creating it, if false,
+    *               keep it open
+    * @param master the master object that will be called to create the collection
+    *               (the master has to figure out which BackendManager to use)
     * @param service Service object (used to derive the object path of the prompt)
     * @param parent Parent object (the object that created the call)
     */
-   PromptServiceCreateCollection(const QString &label, bool locked, Service *service,
-                                 QObject *parent = 0);
+   PromptServiceCreateCollection(const QString &label, bool locked, BackendMaster *master,
+                                 Service *service, QObject *parent = 0);
 
 protected:
    /**
@@ -151,7 +155,7 @@ protected:
    virtual QVariant getResult() const;
 
 private:
-   AsyncCreateCollection *m_call;
+   AsyncCreateCollectionMaster *m_call;
 };
 
 /**

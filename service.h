@@ -47,9 +47,10 @@ public:
    /**
     * Constructor.
     *
+    * @param master Backend master to use
     * @param parent Parent object
     */
-   Service(QObject *parent = 0);
+   Service(BackendMaster *master, QObject *parent = 0);
 
    /**
     * Return the service's path on the D-Bus.
@@ -155,7 +156,7 @@ private Q_SLOTS:
    void slotCollectionChanged(BackendCollection *collection);
    
 private:
-   BackendMaster m_master;
+   BackendMaster *m_master;
    QList<QDBusObjectPath> m_collections; // cache object paths of collections
    const QDBusObjectPath m_basePath;
 };

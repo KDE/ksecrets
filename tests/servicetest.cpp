@@ -43,8 +43,8 @@ void ServiceTest::initTestCase()
    QCA::init();
    
    m_master = new BackendMaster;
-   m_service = new Service;
    m_master->addManager(new TemporaryCollectionManager(m_master));
+   m_service = new Service(m_master);
 }
 
 void ServiceTest::dbusService()
@@ -76,7 +76,7 @@ void ServiceTest::session()
    // "plain" session algorithm
    QDBusObjectPath plainPath;
    QList<QVariant> plainInput;
-   plainInput << QString("plain") << QVariant::fromValue(QDBusVariant(50));
+   plainInput << QString("plain") << QVariant::fromValue(QDBusVariant(""));
    QDBusMessage plainReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
                                                                plainInput);
    QCOMPARE(plainReply.type(), QDBusMessage::ReplyMessage);
@@ -127,6 +127,66 @@ void ServiceTest::session()
    QDBusMessage dhReply2 = dhIface.call("Close");
    QCOMPARE(dhReply2.type(), QDBusMessage::ReplyMessage);
    QCOMPARE(dhIface.call("Introspect").type(), QDBusMessage::ErrorMessage);
+}
+
+void ServiceTest::collection()
+{
+   QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+   QVERIFY(ifaceService.isValid());
+
+   // create a session
+   QDBusObjectPath sessionPath;
+   QList<QVariant> sessionInput;
+   sessionInput << QString("plain") << QVariant::fromValue(QDBusVariant(""));
+   QDBusMessage sessionReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
+                                                                 sessionInput);
+   sessionPath = sessionReply.arguments().at(1).value<QDBusObjectPath>();
+
+   // listen to CollectionCreated/CollectionDeleted/CollectionChanged signals
+   QSignalSpy createdSpy(&ifaceService, SIGNAL(CollectionCreated(QDBusObjectPath)));
+   QSignalSpy deletedSpy(&ifaceService, SIGNAL(CollectionDeleted(QDBusObjectPath)));
+   QSignalSpy changedSpy(&ifaceService, SIGNAL(CollectionChanged(QDBusObjectPath)));
+
+   // create a collection
+   QDBusObjectPath collectionPath;
+   QMap<QString, QVariant> createProperties;
+   QList<QVariant> createInput;
+   createProperties["Label"] = "test";
+   createProperties["Locked"] = false; // create collection unlocked
+   createInput << QVariant::fromValue(createProperties);
+   QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
+                                                                createInput);
+   QCOMPARE(createReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> createArgs = createReply.arguments();
+   QCOMPARE(createArgs.size(), 2);
+   QCOMPARE(createArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   QCOMPARE(createArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TemporaryCollection is non-blocking, so the second output (prompt) should be "/".
+   QCOMPARE(createArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   collectionPath = createArgs.at(0).value<QDBusObjectPath>();
+   QVERIFY(collectionPath.path().startsWith(
+           QLatin1String("/org/freedesktop/secrets/collection/")));
+   QDBusInterface ifaceCollection("org.freedesktop.Secret", collectionPath.path(),
+                                  "org.freedesktop.Secret.Collection");
+   QVERIFY(ifaceCollection.isValid());
+
+   // make sure the CreateCollection signal was sent
+   QCOMPARE(createdSpy.size(), 1);
+   QList<QVariant> createSpyArgs = createdSpy.takeFirst();
+   QCOMPARE(createSpyArgs.at(0).value<QDBusObjectPath>(), collectionPath);
+
+   // TODO: read collection properties
+
+   // delete the collection
+   QDBusMessage deleteReply = ifaceCollection.call(QDBus::Block, "Delete");
+   QCOMPARE(deleteReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> deleteArgs = deleteReply.arguments();
+   QCOMPARE(deleteArgs.size(), 1);
+   QCOMPARE(deleteArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TemporaryCollection is non-blocking, so the output (prompt) should be "/".
+   QCOMPARE(deleteArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   // make sure the collection is gone
+   QCOMPARE(ifaceCollection.call("Introspect").type(), QDBusMessage::ErrorMessage);
 }
 
 void ServiceTest::cleanupTestCase()

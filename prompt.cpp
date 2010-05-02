@@ -102,11 +102,11 @@ void PromptBase::slotCompleted(AsyncCall *call, bool dismissed)
 }
 
 PromptServiceCreateCollection::PromptServiceCreateCollection(const QString &label, bool locked,
+                                                             BackendMaster *master,
                                                              Service *service, QObject *parent)
  : PromptBase(service, parent)
 {
-   // TODO: find out which manager to use.
-   m_call = new AsyncCreateCollection(label, locked, 0);
+   m_call = new AsyncCreateCollectionMaster(label, locked, master);
    addCall(m_call);
 }
 

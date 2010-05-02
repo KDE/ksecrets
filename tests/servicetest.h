@@ -48,6 +48,9 @@ private Q_SLOTS:
    // open various sessions, make sure they are available on the bus, then close them.
    void session();
 
+   // create and remove collections
+   void collection();
+
    // cleanup
    void cleanupTestCase();
 };
