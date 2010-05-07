@@ -7,7 +7,12 @@ INCLUDE_DIRECTORIES (
    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-KDE4_ADD_EXECUTABLE (ksecretservice_daemon_test servicetest.cpp)
+KDE4_ADD_EXECUTABLE (ksecretservice_daemon_test
+   servicetest.cpp
+   tempblockingcollectionmanager.cpp
+   tempblockingcollection.cpp
+   tempblockingitem.cpp
+)
 TARGET_LINK_LIBRARIES (ksecretservice_daemon_test
    ksecretservicebackend
    ksecretservicedaemon

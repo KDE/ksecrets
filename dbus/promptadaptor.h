@@ -50,8 +50,11 @@ public Q_SLOTS:
    void Dismiss();
 
 Q_SIGNALS:
-   void Completed(bool dismissed, QVariant result);
+   void Completed(bool dismissed, QDBusVariant result);
 
+private Q_SLOTS:
+   void slotCompleted(bool dismissed, const QVariant &result);
+   
 private:
    PromptBase *m_prompt;
 };

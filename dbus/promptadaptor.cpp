@@ -29,7 +29,7 @@ PromptAdaptor::PromptAdaptor(PromptBase *prompt)
 {
    Q_ASSERT(prompt);
 
-   connect(prompt, SIGNAL(completed(bool, QVariant)), SIGNAL(Completed(bool, QVariant)));
+   connect(prompt, SIGNAL(completed(bool, QVariant)), SLOT(slotCompleted(bool, QVariant)));
 }
 
 void PromptAdaptor::Prompt(const QString &windowId)
@@ -40,6 +40,11 @@ void PromptAdaptor::Prompt(const QString &windowId)
 void PromptAdaptor::Dismiss()
 {
    m_prompt->dismiss();
+}
+
+void PromptAdaptor::slotCompleted(bool dismissed, const QVariant &result)
+{
+   emit Completed(dismissed, QDBusVariant(result));
 }
 
 }

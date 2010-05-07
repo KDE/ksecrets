@@ -23,11 +23,16 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
+#include <QtCore/QVariant>
+#include <QtCore/QEventLoop>
+#include <QtDBus/QDBusVariant>
 #include <QtDBus/QDBusObjectPath>
+#include <QtDBus/QDBusInterface>
 
 class BackendMaster;
+class TemporaryCollectionManager;
+class TempBlockingCollectionManager;
 class Service;
-class QDBusInterface;
 class QDBusAbstractInterface;
 
 /**
@@ -39,6 +44,8 @@ class ServiceTest : public QObject
 
 private:
    BackendMaster *m_master;
+   TemporaryCollectionManager *m_tempCollMan;
+   TempBlockingCollectionManager *m_tempBlockCollMan;
    Service *m_service;
 
 private Q_SLOTS:
@@ -56,6 +63,15 @@ private Q_SLOTS:
    
    // create and remove items
    void nonBlockingItem();
+
+   // change some of the parameters of the testcase needed for the tests to come
+   void reInitTestCase();
+   
+   // create and remove blocking collections
+   void blockingCollection();
+
+   // create and remove blocking items
+   void blockingItem();
 
    // cleanup
    void cleanupTestCase();
@@ -93,6 +109,54 @@ private Q_SLOTS:
 private:
    bool m_valid;
    int m_numWaiting;
+};
+
+/**
+ * Client mini-stub for org.freedesktop.Secret.Prompt.
+ */
+class ClientPrompt : public QObject
+{
+   Q_OBJECT
+
+public:
+   // constructor. wraps around the prompt at promptPath.
+   ClientPrompt(QDBusObjectPath promptPath);
+
+   // Call the Prompt method and wait some time for completion
+   // (sends bogus window-id)
+   void promptAndWait(int time);
+
+   // Call the Dismiss method and wait some time for completion
+   void dismissAndWait(int time);
+
+   // check if the call has been completed
+   bool completed() const {
+      return m_completed;
+   }
+
+   // check if the call was dismissed
+   bool dismissed() const {
+      return m_dismissed;
+   }
+
+   // get the call's result
+   const QVariant &result() const {
+      return m_result;
+   }
+
+private Q_SLOTS:
+   // listens for Completed signals of the D-Bus prompt.
+   void slotCompleted(bool dismissed, const QDBusVariant &result);
+
+private:
+   // just wait (called by *AndWait methods)
+   void justWait(int time);
+   
+   bool m_completed;
+   bool m_dismissed;
+   QVariant m_result;
+   QDBusInterface m_interface;
+   QEventLoop m_loop;
 };
 
 #endif

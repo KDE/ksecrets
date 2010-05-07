@@ -22,6 +22,7 @@
 
 #include "backend/backendmaster.h"
 #include "backend/temporarycollectionmanager.h"
+#include "tempblockingcollectionmanager.h"
 #include "daemon/service.h"
 #include "daemon/dbus/dbustypes.h"
 
@@ -44,7 +45,8 @@ void ServiceTest::initTestCase()
    QCA::init();
    
    m_master = new BackendMaster;
-   m_master->addManager(new TemporaryCollectionManager(m_master));
+   m_tempCollMan = new TemporaryCollectionManager(m_master);
+   m_master->addManager(m_tempCollMan);
    m_service = new Service(m_master);
 }
 
@@ -213,7 +215,7 @@ void ServiceTest::nonBlockingCollection()
    
    // make sure the CollectionChanged signal was sent
    if (changedSpy.size() < 1) {
-      changedSpy.waitForSignal(1);
+      changedSpy.waitForSignal(5000);
    }
    QCOMPARE(changedSpy.size(), 1);
    QCOMPARE(changedSpy.takeFirst(), collectionPath);
@@ -418,6 +420,188 @@ void ServiceTest::nonBlockingItem()
    QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
 }
 
+void ServiceTest::reInitTestCase()
+{
+   // remove the TemporaryCollectionManager and replace it with a TempBlockingCollectionManager
+   m_master->removeManager(m_tempCollMan);
+   delete m_tempCollMan;
+   m_tempBlockCollMan = new TempBlockingCollectionManager(m_master);
+   m_master->addManager(m_tempBlockCollMan);
+}
+
+void ServiceTest::blockingCollection()
+{
+   ClientPrompt *prompt = 0;
+   
+   QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+   QVERIFY(ifaceService.isValid());
+
+   // create a session
+   // create a session
+   QDBusObjectPath sessionPath;
+   QList<QVariant> sessionInput;
+   sessionInput << QString("plain") << QVariant::fromValue(QDBusVariant(""));
+   QDBusMessage sessionReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
+                                                                 sessionInput);
+   sessionPath = sessionReply.arguments().at(1).value<QDBusObjectPath>();
+
+   // listen to CollectionCreated/CollectionDeleted/CollectionChanged signals
+   ObjectPathSignalSpy createdSpy(&ifaceService, SIGNAL(CollectionCreated(QDBusObjectPath)));
+   QVERIFY(createdSpy.isValid());
+   ObjectPathSignalSpy deletedSpy(&ifaceService, SIGNAL(CollectionDeleted(QDBusObjectPath)));
+   QVERIFY(deletedSpy.isValid());
+   ObjectPathSignalSpy changedSpy(&ifaceService, SIGNAL(CollectionChanged(QDBusObjectPath)));
+   QVERIFY(changedSpy.isValid());
+
+   // create a collection
+   QDBusObjectPath promptPath;
+   QMap<QString, QVariant> createProperties;
+   QList<QVariant> createInput;
+   createProperties["Label"] = "test";
+   createProperties["Locked"] = false; // create collection unlocked
+   createInput << QVariant::fromValue(createProperties);
+   QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
+                                                                createInput);
+   QCOMPARE(createReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> createArgs = createReply.arguments();
+   QCOMPARE(createArgs.size(), 2);
+   QCOMPARE(createArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   QCOMPARE(createArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TempBlockingCollection is blocking, so the first output (path) should be "/".
+   QCOMPARE(createArgs.at(0).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   promptPath = createArgs.at(1).value<QDBusObjectPath>();
+   QVERIFY(promptPath.path().startsWith(
+           QLatin1String("/org/freedesktop/secrets/prompts/")));
+
+   // dismiss the prompt and wait for the result.
+   prompt = new ClientPrompt(promptPath);
+   prompt->dismissAndWait(5000);
+   QVERIFY(prompt->completed());
+   QVERIFY(prompt->dismissed());
+   delete prompt;
+
+   createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
+                                                   createInput);
+   QCOMPARE(createReply.type(), QDBusMessage::ReplyMessage);
+   createArgs = createReply.arguments();
+   QCOMPARE(createArgs.size(), 2);
+   QCOMPARE(createArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   QCOMPARE(createArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TempBlockingCollection is blocking, so the first output (path) should be "/".
+   QCOMPARE(createArgs.at(0).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   promptPath = createArgs.at(1).value<QDBusObjectPath>();
+   QVERIFY(promptPath.path().startsWith(
+           QLatin1String("/org/freedesktop/secrets/prompts/")));
+
+   // prompt and wait for the result.
+   prompt = new ClientPrompt(promptPath);
+   prompt->promptAndWait(5000);
+   QVERIFY(prompt->completed());
+   QVERIFY(!prompt->dismissed());
+   QCOMPARE(prompt->result().userType(), qMetaTypeId<QDBusObjectPath>());
+   QDBusObjectPath collectionPath = prompt->result().value<QDBusObjectPath>();
+   QVERIFY(collectionPath.path().startsWith(
+           QLatin1String("/org/freedesktop/secrets/collection/")));
+   QDBusInterface ifaceCollection("org.freedesktop.Secret", collectionPath.path(),
+                                  "org.freedesktop.Secret.Collection");
+   QVERIFY(ifaceCollection.isValid());
+   delete prompt;
+
+   // make sure the CollectionCreated signal was sent
+   if (createdSpy.size() < 1) {
+      createdSpy.waitForSignal(5000);
+   }
+   QCOMPARE(createdSpy.size(), 1);
+   QCOMPARE(createdSpy.takeFirst(), collectionPath);
+
+   // read collection properties
+   QVariant propItems = ifaceCollection.property("Items");
+   QVERIFY(propItems.isValid());
+   QVERIFY(propItems.canConvert<QList<QDBusObjectPath> >());
+   QList<QDBusObjectPath> propItemsList = propItems.value<QList<QDBusObjectPath> >();
+   QVERIFY(propItemsList.isEmpty());
+   QVariant propLabel = ifaceCollection.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QString("test"));
+   QVariant propLocked = ifaceCollection.property("Locked");
+   QVERIFY(propLocked.isValid());
+   QCOMPARE(propLocked.value<bool>(), false);
+   QVariant propCreated = ifaceCollection.property("Created");
+   QVERIFY(propCreated.isValid());
+   QCOMPARE(propCreated.type(), QVariant::ULongLong);
+   qulonglong propCreatedUll = propCreated.value<qulonglong>();
+   QVERIFY(QDateTime::currentDateTime().toTime_t() - propCreatedUll < 60);
+   QVariant propModified = ifaceCollection.property("Modified");
+   QVERIFY(propModified.isValid());
+   QCOMPARE(propModified.type(), QVariant::ULongLong);
+   QCOMPARE(propModified.value<qulonglong>(), propCreatedUll);
+
+   // set the label and re-read it.
+   ifaceCollection.setProperty("Label", QString("test2"));
+   propLabel = ifaceCollection.property("Label");
+   QVERIFY(propLabel.isValid());
+   QCOMPARE(propLabel.type(), QVariant::String);
+   QCOMPARE(propLabel.value<QString>(), QString("test2"));
+
+   // make sure the CollectionChanged signal was sent
+   if (changedSpy.size() < 1) {
+      changedSpy.waitForSignal(5000);
+   }
+   QCOMPARE(changedSpy.size(), 1);
+   QCOMPARE(changedSpy.takeFirst(), collectionPath);
+
+   // delete the collection
+   QDBusMessage deleteReply = ifaceCollection.call(QDBus::Block, "Delete");
+   QCOMPARE(deleteReply.type(), QDBusMessage::ReplyMessage);
+   QList<QVariant> deleteArgs = deleteReply.arguments();
+   QCOMPARE(deleteArgs.size(), 1);
+   QCOMPARE(deleteArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TempBlockingCollection is blocking, so the output (prompt) should be a valid one.
+   promptPath = deleteArgs.at(0).value<QDBusObjectPath>();
+   QVERIFY(promptPath.path().startsWith(QLatin1String("/org/freedesktop/secrets/prompts/")));
+
+   // dismiss the prompt and wait for the result.
+   prompt = new ClientPrompt(promptPath);
+   prompt->dismissAndWait(5000);
+   QVERIFY(prompt->completed());
+   QVERIFY(prompt->dismissed());
+   delete prompt;
+
+   // retry and complete the prompt this time
+   deleteReply = ifaceCollection.call(QDBus::Block, "Delete");
+   QCOMPARE(deleteReply.type(), QDBusMessage::ReplyMessage);
+   deleteArgs = deleteReply.arguments();
+   QCOMPARE(deleteArgs.size(), 1);
+   QCOMPARE(deleteArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
+   // TempBlockingCollection is blocking, so the output (prompt) should be a valid one.
+   promptPath = deleteArgs.at(0).value<QDBusObjectPath>();
+   QVERIFY(promptPath.path().startsWith(QLatin1String("/org/freedesktop/secrets/prompts/")));
+   prompt = new ClientPrompt(promptPath);
+   prompt->promptAndWait(5000);
+   QVERIFY(prompt->completed());
+   QVERIFY(!prompt->dismissed());
+   delete prompt;
+
+   // make sure the collection is gone
+   QCOMPARE(ifaceCollection.call("Introspect").type(), QDBusMessage::ErrorMessage);
+
+   // make sure the CollectionDeleted signal was sent
+   if (deletedSpy.size() < 1) {
+      deletedSpy.waitForSignal(5000);
+   }
+   QCOMPARE(deletedSpy.size(), 1);
+   QCOMPARE(deletedSpy.takeFirst(), collectionPath);
+
+   // close the session
+   QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
+}
+
+void ServiceTest::blockingItem()
+{
+   // TODO: test
+}
+
 void ServiceTest::cleanupTestCase()
 {
    delete m_service;
@@ -462,6 +646,45 @@ void ObjectPathSignalSpy::slotReceived(const QDBusObjectPath &objectPath)
    if (count() >= m_numWaiting) {
       emit doneWaiting();
    }
+}
+
+ClientPrompt::ClientPrompt(QDBusObjectPath promptPath)
+ : m_completed(false), m_dismissed(false),
+   m_interface("org.freedesktop.Secret", promptPath.path())
+{
+   Q_ASSERT(m_interface.isValid());
+   connect(&m_interface, SIGNAL(Completed(bool, QDBusVariant)),
+                         SLOT(slotCompleted(bool, QDBusVariant)));
+}
+
+void ClientPrompt::promptAndWait(int time)
+{
+   QDBusMessage reply = m_interface.call(QDBus::Block, "Prompt", QString(""));
+   Q_ASSERT(reply.type() == QDBusMessage::ReplyMessage);
+   justWait(time);
+}
+
+void ClientPrompt::dismissAndWait(int time)
+{
+   QDBusMessage reply = m_interface.call(QDBus::Block, "Dismiss");
+   Q_ASSERT(reply.type() == QDBusMessage::ReplyMessage);
+   justWait(time);
+}
+
+void ClientPrompt::slotCompleted(bool dismissed, const QDBusVariant &result)
+{
+   m_completed = true;
+   m_dismissed = dismissed;
+   m_result = result.variant();
+   m_loop.quit();
+}
+
+void ClientPrompt::justWait(int time)
+{
+   if (time > 0) {
+      QTimer::singleShot(time, &m_loop, SLOT(quit()));
+   }
+   m_loop.exec();
 }
 
 #include "servicetest.moc"

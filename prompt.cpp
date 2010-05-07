@@ -93,7 +93,7 @@ void PromptBase::slotCompleted(AsyncCall *call, bool dismissed)
 
    // TODO: handle errors
    if (dismissed) {
-      emit completed(true, QVariant());
+      emit completed(true, QVariant(""));
    } else {
       emit completed(false, getResult());
    }
