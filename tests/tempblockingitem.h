@@ -21,7 +21,7 @@
 #ifndef TEMPBLOCKINGITEM_H
 #define TEMPBLOCKINGITEM_H
 
-#include "backend/temporaryitem.h"
+#include "backend/temporary/temporaryitem.h"
 
 class TempBlockingCollection;
 

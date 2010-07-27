@@ -21,7 +21,7 @@
 #include "servicetest.h"
 
 #include "backend/backendmaster.h"
-#include "backend/temporarycollectionmanager.h"
+#include "backend/temporary/temporarycollectionmanager.h"
 #include "tempblockingcollectionmanager.h"
 #include "daemon/service.h"
 #include "daemon/dbus/dbustypes.h"

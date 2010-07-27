@@ -21,7 +21,7 @@
 #ifndef TEMPBLOCKINGCOLLECTIONMANAGER_H
 #define TEMPBLOCKINGCOLLECTIONMANAGER_H
 
-#include "backend/temporarycollectionmanager.h"
+#include "backend/temporary/temporarycollectionmanager.h"
 
 class TempBlockingCollection;
 

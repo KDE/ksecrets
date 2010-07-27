@@ -21,7 +21,7 @@
 #ifndef TEMPBLOCKINGCOLLECTION_H
 #define TEMPBLOCKINGCOLLECTION_H
 
-#include "backend/temporarycollection.h"
+#include "backend/temporary/temporarycollection.h"
 
 // implement a temporary collection that blocks every call.
 class TempBlockingCollection : public TemporaryCollection
