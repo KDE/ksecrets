@@ -16,6 +16,7 @@ KDE4_ADD_EXECUTABLE (ksecretservice_daemon_test
 TARGET_LINK_LIBRARIES (ksecretservice_daemon_test
    ksecretservicebackend
    ksecretservicedaemon
+   ksecretservicelib
    ${QT_QTTEST_LIBRARIES}
 )
 
