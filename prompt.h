@@ -21,301 +21,185 @@
 #ifndef DAEMON_PROMPT_H
 #define DAEMON_PROMPT_H
 
-#include <backend/asynccall.h>
+#include <backend/backendjob.h>
 
 #include <QtCore/QObject>
+#include <QtCore/QSet>
 #include <QtDBus/QDBusObjectPath>
 #include <QtDBus/QDBusContext>
-
-// TODO: when doing getResult() calls, be sure to check for errors!!!
 
 class Service;
 
 /**
- * Implemention of prompt objects according to the org.freedesktop.Secret.Prompt
+ * Implementation of prompt objects according to the org.freedesktop.Secret.Prompt
  * interface.
- *
- * @remarks a Prompt can contain several PendingCall objects which are all executed
- *          when prompt() is called.
  */
 class PromptBase : public QObject, protected QDBusContext
 {
    Q_OBJECT
-
+   
 public:
    /**
     * Constructor.
     *
     * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object (the object that created the call)
+    * @param job the job encapsulated by the prompt
+    * @param parent Parent object
     */
-   PromptBase(Service *service, QObject *parent = 0);
-
+   PromptBase(Service *service, QObject *parent);
+   
+   /**
+    * Destructor.
+    */
+   virtual ~PromptBase();
+   
    /**
     * Return the prompt's path on the D-Bus.
     *
     * @return the Prompt object's path
     */
    const QDBusObjectPath &objectPath() const;
-
+   
+   /**
+    * Return the service object's path on the D-Bus.
+    *
+    * @return the Service object's path
+    */
+   const QDBusObjectPath &serviceObjectPath() const;
+   
    /**
     * Perform the prompt.
     *
     * @param windowId Platform specific window handle to use for showing the prompt
     * @todo implement window handle handling
     */
-   void prompt(const QString &windowId);
-
+   virtual void prompt(const QString &windowId) = 0;
+   
    /**
     * Dismiss the prompt.
     */
-   void dismiss();
-
+   virtual void dismiss() = 0;
+   
 Q_SIGNALS:
    /**
     * Emitted when the operation performed by the prompt was completed
     *
     * @param dismissed if true the prompt was dismissed, if false it was completed
-    * @param result result of the operation encapsulated by the prompt object
+    * @param result result of the operation encapulated by the prompt object
     */
    void completed(bool dismissed, QVariant result);
-
+   
 protected:
    /**
-    * This method is called after all pending calls this prompt is attached to
-    * have completed. It extracts the results from the pending calls and marshalls
-    * them into a result variant to transmit to the client.
+    * Used to emit completed() signals in derived classes.
     *
-    * @return the result of the call marshalled as a variant
-    * @remarks implemented in inherited classes only
+    * @param dismissed if true the prompt was dismissed, if false it was completed
+    * @param result result of the operation encapsulated by the prompt object
     */
-   virtual QVariant getResult() const = 0;
-
-   /**
-    * Get the service's object path.
-    *
-    * @return the objectpath of the service that created the call
-    * @remarks called by inherited classes
-    */
-   const QDBusObjectPath &serviceObjectPath() const;
-
-   /**
-    * Add a call to the list of pending calls to wait for.
-    *
-    * @param call the call to add
-    * @remarks each inherited class must call this for every pending call it creates
-    */
-   void addCall(AsyncCall *call);
-
-private Q_SLOTS:
-   /**
-    * Connected to the pending call's completed() signal this notifies about
-    * the call's completion.
-    *
-    * @param call the pending call
-    * @param dismissed true if the call was dismissed, false else
-    */
-   void slotCompleted(AsyncCall *call, bool dismissed);
+   void emitCompleted(bool dismissed, const QVariant &result);
    
 private:
-   bool m_prompted;
-   QDBusObjectPath m_objectPath;
-   QDBusObjectPath m_serviceObjectPath;
-   QList<AsyncCall*> m_pendingCalls; // calls we are still waiting for
+   QDBusObjectPath m_objectPath; // the prompt object's objectpath
+   QDBusObjectPath m_serviceObjectPath; // the service's objectpath
 };
 
 /**
- * Prompt for the Service::createCollection() call.
+ * Prompt object encapsulating a single BackendJob.
  */
-class PromptServiceCreateCollection : public PromptBase
+class SingleJobPrompt : public PromptBase
 {
    Q_OBJECT
-
+   
 public:
    /**
     * Constructor.
     *
-    * @param label Label to use for the new collection
-    * @param locked if true, lock the new collection after creating it, if false,
-    *               keep it open
-    * @param master the master object that will be called to create the collection
-    *               (the master has to figure out which BackendManager to use)
     * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object (the object that created the call)
-    */
-   PromptServiceCreateCollection(const QString &label, bool locked, BackendMaster *master,
-                                 Service *service, QObject *parent = 0);
-
-protected:
-   /**
-    * Returns the results of the pending createCollection call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
-    */
-   virtual QVariant getResult() const;
-
-private:
-   AsyncCreateCollectionMaster *m_call;
-};
-
-/**
- * Prompt for the Service::unlock() call.
- */
-class PromptServiceUnlock : public PromptBase
-{
-   Q_OBJECT
-
-public:
-   /**
-    * Constructor.
-    *
-    * @param objects map of backend objects to corresponding dbus paths to unlock
-    * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object (the object that created the call)
-    * @remarks collections and items in the objectMap so when the pending calls finish the
-    *          backend objects can be mapped back to the corresponding D-Bus paths
-    */
-   PromptServiceUnlock(const QMap<BackendBase*, QDBusObjectPath> &objects,
-                       Service *service, QObject *parent = 0);
-
-protected:
-   /**
-    * Returns the results of the pending unlock call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
-    */
-   virtual QVariant getResult() const;
-
-private:
-   QMap<BackendBase*, QDBusObjectPath> m_objects;
-   QList<AsyncSimpleBooleanCall*> m_calls;
-};
-
-/**
- * Prompt for the Service::lock() call.
- */
-class PromptServiceLock : public PromptBase
-{
-   Q_OBJECT
-
-public:
-   /**
-    * Constructor.
-    *
-    * @param objects map of backend objects to corresponding dbus paths to lock
-    * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object (the object that created the call)
-    */
-   PromptServiceLock(const QMap<BackendBase*, QDBusObjectPath> &objects,
-                     Service *service, QObject *parent = 0);
-
-protected:
-   /**
-    * Returns the results of the pending lock call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
-    */
-   virtual QVariant getResult() const;
-
-private:
-   QMap<BackendBase*, QDBusObjectPath> m_objects;
-   QList<AsyncSimpleBooleanCall*> m_calls;
-};
-
-/**
- * Prompt for the Collection::delete() call.
- */
-class PromptCollectionDelete : public PromptBase
-{
-   Q_OBJECT
-
-public:
-   /**
-    * Constructor.
-    *
-    * @param collection the backend collection to delete
-    * @param service Service object (used to derive the object path of the prompt)
+    * @param job the job encapsulated by the prompt
     * @param parent Parent object
     */
-   PromptCollectionDelete(BackendCollection *collection, Service *service, QObject *parent = 0);
-
-protected:
+   SingleJobPrompt(Service *service, BackendJob *job, QObject *parent = 0);
+   
    /**
-    * Returns the results of the pending delete call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
+    * Destructor.
     */
-   virtual QVariant getResult() const;
+   virtual ~SingleJobPrompt();
+   
+   /**
+    * Perform the prompt.
+    *
+    * @param windowId Platform specific window handle to use for showing the prompt
+    * @todo implement window handle handling
+    */
+   virtual void prompt(const QString &windowId);
+   
+   /**
+    * Dismiss the prompt.
+    */
+   virtual void dismiss();
+   
+private Q_SLOTS:
+   /**
+    * Connected to the backend job's result() signal this notifies about
+    * the job's completion.
+    *
+    * @param job the job that finished
+    */
+   void jobResult(QueuedJob *job);
 
 private:
-   AsyncSimpleBooleanCall *m_call;
+   bool m_prompted; // true if one of the prompt()/dismiss() methods has been called already
+   BackendJob *m_job; // the encapulated job
 };
 
 /**
- * Prompt for the Collection::createItem() call.
+ * Prompt object encapsulating a Service.Unlock or a Service.Lock call with multiple targets.
  */
-class PromptCollectionCreateItem : public PromptBase
+class ServiceMultiPrompt : public PromptBase
 {
    Q_OBJECT
-
+   
 public:
    /**
     * Constructor.
     *
-    * @param collection the backend collection to create the item in
-    * @param label label for the new item
-    * @param attributes attributes for the new item
-    * @param locked if true, try to lock the item after creation, if false try to unlock the
-    *               item after creation
-    * @param secret secret to store
-    * @param replace if true an existing item with the same attributes will be replaced
     * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object
+    * @param jobs the unlock jobs to encapsulate
+    * @param parent parent object
     */
-   PromptCollectionCreateItem(BackendCollection *collection,
-                              const QString &label, const QMap<QString, QString> &attributes,
-                              bool locked, const QCA::SecureArray &secret, bool replace,
-                              Service *service, QObject *parent = 0);
-
-protected:
+   ServiceMultiPrompt(Service *service, const QSet<BackendJob*> jobs, QObject *parent = 0);
+   
    /**
-    * Returns the results of the pending createItem call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
+    * Destructor.
     */
-   virtual QVariant getResult() const;
-
+   virtual ~ServiceMultiPrompt();
+   
+   /**
+    * Perform the prompt.
+    *
+    * @pararm windowId Platform specific window handle to use for showing the prompt
+    * @todo implement window handling
+    */
+   virtual void prompt(const QString &windowId);
+   
+   /**
+    * Dismiss this prompt.
+    */
+   virtual void dismiss();
+   
+private Q_SLOTS:
+   /**
+    * Connected to the backend jobs' result() signals this notifies about a
+    * job's completion.
+    *
+    * @param job the job that finished
+    */
+   void jobResult(QueuedJob *job);
+   
 private:
-   AsyncCreateItem *m_call;
-};
-
-/**
- * Prompt for the Item::delete() call.
- */
-class PromptItemDelete : public PromptBase
-{
-   Q_OBJECT
-
-public:
-   /**
-    * Constructor.
-    *
-    * @param item the backend item to delete
-    * @param service Service object (used to derive the object path of the prompt)
-    * @param parent Parent object
-    */
-   PromptItemDelete(BackendItem *item, Service *service, QObject *parent = 0);
-
-protected:
-   /**
-    * Returns the results of the pending deleteItem call as a variant.
-    *
-    * @return the result of the call marshalled as a variant
-    */
-   virtual QVariant getResult() const;
-
-private:
-   AsyncSimpleBooleanCall *m_call;
+   bool m_prompted; // true if one of the prompt()/dismiss() methods has been called already
+   QList<QDBusObjectPath> m_result; // resulting unlocked/locked object paths
+   QSet<BackendJob*> m_jobs; // encapsulated jobs
 };
 
 #endif

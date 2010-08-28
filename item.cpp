@@ -95,15 +95,13 @@ qulonglong Item::modified() const
 
 QDBusObjectPath Item::deleteItem()
 {
-   // bypass prompt?
-   if (m_item->isCallImmediate(AsyncCall::AsyncDeleteItem)) {
-      m_item->deleteItem();
+   DeleteItemJob *dij = m_item->createDeleteJob();
+   if (dij->isImmediate()) {
+      dij->exec();
       return QDBusObjectPath("/");
    } else {
-      // FIXME: needs the service as well as some QObject.
-      //        I'd say the whole constructor should be checked
-      //        and its signature changed.
-      PromptItemDelete *p = new PromptItemDelete(m_item, 0, 0);
+      // FIXME: needs the service!
+      SingleJobPrompt *p = new SingleJobPrompt(0, dij, this);
       return p->objectPath();
    }
 }

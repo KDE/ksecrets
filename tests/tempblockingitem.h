@@ -21,12 +21,12 @@
 #ifndef TEMPBLOCKINGITEM_H
 #define TEMPBLOCKINGITEM_H
 
-#include "backend/temporary/temporaryitem.h"
+#include "backend/backenditem.h"
 
 class TempBlockingCollection;
 
 // temporary item that blocks every call
-class TempBlockingItem : public TemporaryItem
+class TempBlockingItem : public BackendItem
 {
    Q_OBJECT
 
@@ -35,7 +35,35 @@ public:
 
    TempBlockingItem(const QString &id, TempBlockingCollection *parent);
    ~TempBlockingItem();
-   virtual bool isCallImmediate(AsyncCall::AsyncType type) const;
+   virtual QString id() const;
+   virtual BackendReturn<QString> label() const;
+   virtual BackendReturn<void> setLabel(const QString &label);
+   virtual BackendReturn<QCA::SecureArray> secret() const;
+   virtual BackendReturn<void> setSecret(const QCA::SecureArray &secret);
+   virtual BackendReturn<QMap<QString, QString> > attributes() const;
+   virtual BackendReturn<void> setAttributes(const QMap<QString, QString> &attributes);
+   virtual QDateTime created() const;
+   virtual QDateTime modified() const;
+   virtual bool isLocked() const;
+   virtual UnlockItemJob *createUnlockJob();
+   virtual LockItemJob *createLockJob();
+   virtual DeleteItemJob *createDeleteJob();
+   virtual ChangeAuthenticationItemJob *createChangeAuthenticationJob();
+   bool matches(const QMap<QString, QString> &attributes);
+   
+private Q_SLOTS:
+   void deleteItemJobResult(QueuedJob *job);
+   
+private:
+   void markAsModified();
+   
+   QString m_id;
+   QString m_label;
+   QDateTime m_created;
+   QDateTime m_modified;
+   QMap<QString, QString> m_attributes;
+   
+   QCA::SecureArray m_secret;
 };
 
 #endif

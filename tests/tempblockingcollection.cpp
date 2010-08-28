@@ -20,16 +20,53 @@
 
 #include "tempblockingcollection.h"
 #include "tempblockingitem.h"
+#include "tempblockingjobs.h"
 
 #include <secrettool.h>
 
 TempBlockingCollection::TempBlockingCollection(const QString &id, BackendCollectionManager *parent)
- : TemporaryCollection(id, parent)
+ : BackendCollection(parent)
 {
+   m_id = id;
+   QDateTime now = QDateTime::currentDateTime();
+   m_created = now;
+   m_modified = now;
 }
 
 TempBlockingCollection::~TempBlockingCollection()
 {
+}
+
+QString TempBlockingCollection::id() const
+{
+   return m_id;
+}
+
+BackendReturn<QString> TempBlockingCollection::label() const
+{
+   return m_label;
+}
+
+BackendReturn<void> TempBlockingCollection::setLabel(const QString &label)
+{
+   m_label = label;
+   emit collectionChanged(this);
+   return BackendReturn<void>();
+}
+
+QDateTime TempBlockingCollection::created() const
+{
+   return m_created;
+}
+
+QDateTime TempBlockingCollection::modified() const
+{
+   return m_modified;
+}
+
+bool TempBlockingCollection::isLocked() const
+{
+   return false;
 }
 
 BackendReturn<QList<BackendItem*> > TempBlockingCollection::items() const
@@ -51,16 +88,41 @@ BackendReturn<QList<BackendItem*> > TempBlockingCollection::searchItems(
    return foundItems;
 }
 
-bool TempBlockingCollection::isCallImmediate(AsyncCall::AsyncType type) const
+UnlockCollectionJob *TempBlockingCollection::createUnlockJob()
 {
-   Q_UNUSED(type);
-   return false;
+   return new TempBlockingUnlockCollectionJob(this);
+}
+
+LockCollectionJob *TempBlockingCollection::createLockJob()
+{
+   return new TempBlockingLockCollectionJob(this);
+}
+
+DeleteCollectionJob *TempBlockingCollection::createDeleteJob()
+{
+   TempBlockingDeleteCollectionJob *job = new TempBlockingDeleteCollectionJob(this);
+   connect(job, SIGNAL(result(QueuedJob*)),
+                SLOT(deleteCollectionJobResult(QueuedJob*)));
+   return job;
+}
+
+CreateItemJob *TempBlockingCollection::createCreateItemJob(const QString &label,
+                                                           const QMap<QString, QString> &attributes,
+                                                           const QCA::SecureArray &secret,
+                                                           bool locked, bool replace)
+{
+   return new TempBlockingCreateItemJob(label, attributes, secret, locked, replace, this);
+}
+
+ChangeAuthenticationCollectionJob *TempBlockingCollection::createChangeAuthenticationJob()
+{
+   return new TempBlockingChangeAuthenticationCollectionJob(this);
 }
 
 BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &label,
                                                                const QMap<QString, QString> &attributes,
                                                                const QCA::SecureArray &secret,
-                                                               bool replace, bool locked)
+                                                               bool locked, bool replace)
 {
    Q_UNUSED(locked);
 
@@ -89,9 +151,11 @@ BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &la
    if (!item) {
       item = new TempBlockingItem(createId(), this);
    }
+   item->blockSignals(true);
    item->setLabel(label);
    item->setAttributes(attributes);
    item->setSecret(secret);
+   item->blockSignals(false);
 
    if (replacing) {
       emit itemChanged(item);
@@ -110,6 +174,16 @@ void TempBlockingCollection::slotItemDeleted(BackendItem *item)
 {
    m_items.removeAll(item);
    emit itemDeleted(item);
+}
+
+void TempBlockingCollection::deleteCollectionJobResult(QueuedJob *job)
+{
+   TempBlockingDeleteCollectionJob * dcj = qobject_cast<TempBlockingDeleteCollectionJob*>(job);
+   Q_ASSERT(dcj);
+   if (!dcj->result()) {
+      return;
+   }
+   emit collectionDeleted(this);
 }
 
 #include "tempblockingcollection.moc"

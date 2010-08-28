@@ -20,11 +20,12 @@
 
 #include "tempblockingcollectionmanager.h"
 #include "tempblockingcollection.h"
+#include "tempblockingjobs.h"
 
 #include <secrettool.h>
 
 TempBlockingCollectionManager::TempBlockingCollectionManager(QObject *parent)
- : TemporaryCollectionManager(parent)
+ : BackendCollectionManager(parent)
 {
 }
 
@@ -32,26 +33,30 @@ TempBlockingCollectionManager::~TempBlockingCollectionManager()
 {
 }
 
-bool TempBlockingCollectionManager::isCallImmediate(AsyncCall::AsyncType type) const
+CreateCollectionJob *TempBlockingCollectionManager::createCreateCollectionJob(const QString &label,
+                                                                              bool locked)
 {
-   Q_UNUSED(type);
-   return false;
+   TempBlockingCreateCollectionJob *job = new TempBlockingCreateCollectionJob(label,
+                                                                              locked,
+                                                                              this);
+   connect(job, SIGNAL(result(QueuedJob*)),
+                SLOT(createCollectionJobResult(QueuedJob*)));
+   return job;
 }
 
-BackendReturn<BackendCollection*> TempBlockingCollectionManager::createCollection(
-   const QString &label, bool locked)
+void TempBlockingCollectionManager::createCollectionJobResult(QueuedJob *job)
 {
-   Q_UNUSED(locked);
-
-   TempBlockingCollection *coll = new TempBlockingCollection(createId(), this);
-   coll->setLabel(label);
-
+   CreateCollectionJob *ccj = qobject_cast<CreateCollectionJob*>(job);
+   Q_ASSERT(ccj);
+   
+   if (!ccj->collection()) {
+      return;
+   }
+   
    // connect signals
-   connect(coll, SIGNAL(collectionDeleted(BackendCollection*)),
-                 SIGNAL(collectionDeleted(BackendCollection*)));
-   emit collectionCreated(coll);
-
-   return coll;
+   connect(ccj->collection(), SIGNAL(collectionDeleted(BackendCollection*)),
+                              SIGNAL(collectionDeleted(BackendCollection*)));
+   emit collectionCreated(ccj->collection());
 }
 
 #include "tempblockingcollectionmanager.moc"

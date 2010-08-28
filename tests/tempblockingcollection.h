@@ -21,29 +21,51 @@
 #ifndef TEMPBLOCKINGCOLLECTION_H
 #define TEMPBLOCKINGCOLLECTION_H
 
-#include "backend/temporary/temporarycollection.h"
+#include "backend/backendcollection.h"
 
 // implement a temporary collection that blocks every call.
-class TempBlockingCollection : public TemporaryCollection
+class TempBlockingCollection : public BackendCollection
 {
    Q_OBJECT
 
 public:
    TempBlockingCollection(const QString &id, BackendCollectionManager *parent);
    virtual ~TempBlockingCollection();
-   virtual bool isCallImmediate(AsyncCall::AsyncType type) const;
+   virtual QString id() const;
+   virtual BackendReturn<QString> label() const;
+   virtual BackendReturn<void> setLabel(const QString &label);
+   virtual QDateTime created() const;
+   virtual QDateTime modified() const;
+   virtual bool isLocked() const;
    virtual BackendReturn<QList<BackendItem*> > items() const;
    virtual BackendReturn<QList<BackendItem*> > searchItems(const QMap<QString, QString> &attributes) const;
-   
-   virtual BackendReturn<BackendItem*> createItem(const QString &label,
-                                                  const QMap<QString, QString> &attributes,
-                                                  const QCA::SecureArray &secret, bool replace,
-                                                  bool locked);
+   virtual UnlockCollectionJob *createUnlockJob();
+   virtual LockCollectionJob *createLockJob();
+   virtual DeleteCollectionJob *createDeleteJob();
+   virtual CreateItemJob *createCreateItemJob(const QString &label,
+                                              const QMap<QString, QString> &attributes,
+                                              const QCA::SecureArray &secret, bool locked,
+                                              bool replace);
+   virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob();
+
+protected:
+   BackendReturn<BackendItem*> createItem(const QString &label,
+                                          const QMap<QString, QString> &attributes,
+                                          const QCA::SecureArray &secret, bool locked,
+                                          bool replace);
 
 private Q_SLOTS:
    void slotItemDeleted(BackendItem *item);
+   void deleteCollectionJobResult(QueuedJob *job);
 
 private:
+   friend class TempBlockingCreateItemJob;
+   
+   QString m_id;
+   QString m_label;
+   QDateTime m_created;
+   QDateTime m_modified;
+
    QList<BackendItem*> m_items;
 };
 

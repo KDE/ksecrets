@@ -20,20 +20,126 @@
 
 #include "tempblockingitem.h"
 #include "tempblockingcollection.h"
+#include "tempblockingjobs.h"
 
 TempBlockingItem::TempBlockingItem(const QString &id, TempBlockingCollection *parent)
- : TemporaryItem(id, parent)
+ : BackendItem(parent), m_id(id)
 {
+   QDateTime now = QDateTime::currentDateTime();
+   m_created = now;
+   m_modified = now;
 }
 
 TempBlockingItem::~TempBlockingItem()
 {
 }
 
-bool TempBlockingItem::isCallImmediate(AsyncCall::AsyncType type) const
+QString TempBlockingItem::id() const
 {
-   Q_UNUSED(type);
+   return m_id;
+}
+
+BackendReturn<QString> TempBlockingItem::label() const
+{
+   return m_label;
+}
+
+BackendReturn<void> TempBlockingItem::setLabel(const QString &label)
+{
+   m_label = label;
+   markAsModified();
+   return BackendReturn<void>();
+}
+
+BackendReturn<QCA::SecureArray> TempBlockingItem::secret() const
+{
+   return m_secret;
+}
+
+BackendReturn<void> TempBlockingItem::setSecret(const QCA::SecureArray &secret)
+{
+   m_secret = secret;
+   markAsModified();
+   return BackendReturn<void>();
+}
+
+BackendReturn<QMap<QString, QString> > TempBlockingItem::attributes() const
+{
+   return m_attributes;
+}
+
+BackendReturn<void> TempBlockingItem::setAttributes(const QMap<QString, QString> &attributes)
+{
+   m_attributes = attributes;
+   markAsModified();
+   return BackendReturn<void>();
+}
+
+QDateTime TempBlockingItem::created() const
+{
+   return m_created;
+}
+
+QDateTime TempBlockingItem::modified() const
+{
+   return m_modified;
+}
+
+bool TempBlockingItem::isLocked() const
+{
    return false;
+}
+
+UnlockItemJob *TempBlockingItem::createUnlockJob()
+{
+   return new TempBlockingUnlockItemJob(this);
+}
+
+LockItemJob *TempBlockingItem::createLockJob()
+{
+   return new TempBlockingLockItemJob(this);
+}
+
+DeleteItemJob *TempBlockingItem::createDeleteJob()
+{
+   TempBlockingDeleteItemJob *job = new TempBlockingDeleteItemJob(this);
+   connect(job, SIGNAL(result(QueuedJob*)), SLOT(deleteItemJobResult(QueuedJob*)));
+   return job;
+}
+
+ChangeAuthenticationItemJob *TempBlockingItem::createChangeAuthenticationJob()
+{
+   return new TempBlockingChangeAuthenticationItemJob(this);
+}
+
+bool TempBlockingItem::matches(const QMap<QString, QString> &attributes)
+{
+   QMap<QString, QString>::const_iterator it = attributes.constBegin();
+   QMap<QString, QString>::const_iterator end = attributes.constEnd();
+   for ( ; it != end; ++it) {
+      if (!m_attributes.contains(it.key()) ||
+          m_attributes.value(it.key()) != it.value()) {
+         return false;
+      }
+   }
+   
+   return true;
+}
+
+void TempBlockingItem::deleteItemJobResult(QueuedJob *job)
+{
+   TempBlockingDeleteItemJob *dij = qobject_cast<TempBlockingDeleteItemJob*>(job);
+   Q_ASSERT(dij);
+   if (!dij->result()) {
+      return;
+   }
+   emit itemDeleted(this);
+}
+
+void TempBlockingItem::markAsModified()
+{
+   m_modified = QDateTime::currentDateTime();
+   emit itemChanged(this);
 }
 
 #include "tempblockingitem.moc"

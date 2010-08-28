@@ -93,12 +93,12 @@ qulonglong Collection::modified() const
 
 QDBusObjectPath Collection::deleteCollection()
 {
-   // bypass prompt?
-   if (m_collection->isCallImmediate(AsyncCall::AsyncDeleteCollection)) {
-      m_collection->deleteCollection();
+   DeleteCollectionJob *dcj = m_collection->createDeleteJob();
+   if (dcj->isImmediate()) {
+      dcj->exec();
       return QDBusObjectPath("/");
    } else {
-      PromptCollectionDelete *p = new PromptCollectionDelete(m_collection, m_service);
+      SingleJobPrompt *p = new SingleJobPrompt(m_service, dcj, this);
       return p->objectPath();
    }
 }
@@ -122,7 +122,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
                                        const Secret &secret, bool replace,
                                        QDBusObjectPath &prompt)
 {
-   // TODO: bypass prompt
+   // default label?
    QString label;
    QMap<QString, QString> attributes;
    bool locked = false;
@@ -150,21 +150,20 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
    if (!ok) {
       // TODO: invalid session
    }
-   if (m_collection->isCallImmediate(AsyncCall::AsyncCreateItem)) {
-      BackendReturn<BackendItem*> rc = m_collection->createItem(label, attributes, secretValue,
-                                                                replace, locked);
-      if (rc.isError()) {
+   CreateItemJob *cij = m_collection->createCreateItemJob(label, attributes, secretValue,
+                                                          replace, locked);
+   if (cij->isImmediate()) {
+      cij->exec();
+      if (cij->error() != NoError || !cij->item()) {
          // TODO: error creating the item
       }
       
-      // the item is already created inside slotItemCreated()
+      // the Item is already created inside slotItemCreated()
       prompt.setPath("/");
-      QDBusObjectPath itemPath(m_objectPath.path() + "/" + rc.value()->id());
+      QDBusObjectPath itemPath(m_objectPath.path() + "/" + cij->item()->id());
       return itemPath;
    } else {
-      PromptBase *p = new PromptCollectionCreateItem(m_collection, label, attributes, locked,
-                                                   secret.value(), replace, m_service, this);
-                                                   
+      SingleJobPrompt *p = new SingleJobPrompt(m_service, cij, this);
       prompt = p->objectPath();
       return QDBusObjectPath("/");
    }

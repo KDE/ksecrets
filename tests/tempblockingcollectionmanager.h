@@ -21,12 +21,12 @@
 #ifndef TEMPBLOCKINGCOLLECTIONMANAGER_H
 #define TEMPBLOCKINGCOLLECTIONMANAGER_H
 
-#include "backend/temporary/temporarycollectionmanager.h"
+#include "backend/backendcollectionmanager.h"
 
 class TempBlockingCollection;
 
 // implement a temporary collection manager that blocks every call.
-class TempBlockingCollectionManager : public TemporaryCollectionManager
+class TempBlockingCollectionManager : public BackendCollectionManager
 {
    Q_OBJECT
 
@@ -36,8 +36,11 @@ public:
 public:
    TempBlockingCollectionManager(QObject *parent = 0);
    virtual ~TempBlockingCollectionManager();
-   virtual bool isCallImmediate(AsyncCall::AsyncType type) const;
-   virtual BackendReturn<BackendCollection*> createCollection(const QString &label, bool locked);
+   virtual CreateCollectionJob *createCreateCollectionJob(const QString &label,
+                                                          bool locked);
+                                                          
+private Q_SLOTS:
+   void createCollectionJobResult(QueuedJob *job);
 };
 
 #endif

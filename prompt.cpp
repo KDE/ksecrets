@@ -30,7 +30,7 @@
 #include <QtDBus/QDBusObjectPath>
 
 PromptBase::PromptBase(Service *service, QObject *parent)
- : QObject(parent), m_prompted(false), m_serviceObjectPath(service->objectPath())
+ : QObject(parent), m_serviceObjectPath(service->objectPath())
 {
    Q_ASSERT(service);
    m_objectPath.setPath(service->objectPath().path() + "/prompts/" + createId());
@@ -39,34 +39,13 @@ PromptBase::PromptBase(Service *service, QObject *parent)
    QDBusConnection::sessionBus().registerObject(m_objectPath.path(), this);
 }
 
+PromptBase::~PromptBase()
+{
+}
+
 const QDBusObjectPath &PromptBase::objectPath() const
 {
    return m_objectPath;
-}
-
-void PromptBase::prompt(const QString &windowId)
-{
-   Q_ASSERT(!m_prompted);
-   Q_ASSERT(!m_pendingCalls.isEmpty());
-
-   m_prompted = true;
-   
-   // TODO: convert windowId to a WId
-   Q_FOREACH(AsyncCall *call, m_pendingCalls) {
-      call->enqueue(windowId);
-   }
-}
-
-void PromptBase::dismiss()
-{
-   Q_ASSERT(!m_prompted);
-   Q_ASSERT(!m_pendingCalls.isEmpty());
-
-   m_prompted = true;
-
-   Q_FOREACH(AsyncCall *call, m_pendingCalls) {
-      call->dismiss();
-   }
 }
 
 const QDBusObjectPath &PromptBase::serviceObjectPath() const
@@ -74,156 +53,261 @@ const QDBusObjectPath &PromptBase::serviceObjectPath() const
    return m_serviceObjectPath;
 }
 
-void PromptBase::addCall(AsyncCall *call)
+void PromptBase::emitCompleted(bool dismissed, const QVariant &result)
 {
-   Q_ASSERT(call);
-   Q_ASSERT(!m_prompted);
-
-   m_pendingCalls.append(call);
-   connect(call, SIGNAL(completed(AsyncCall*, bool)), SLOT(slotCompleted(AsyncCall*, bool)));
+   emit completed(dismissed, result);
 }
 
-void PromptBase::slotCompleted(AsyncCall *call, bool dismissed)
+SingleJobPrompt::SingleJobPrompt(Service* service, BackendJob* job, QObject* parent)
+ : PromptBase(service, parent), m_prompted(false), m_job(job)
 {
-   Q_ASSERT(m_pendingCalls.contains(call));
-   m_pendingCalls.removeAll(call);
-   if (m_pendingCalls.size() > 0) {
-      return; // still waiting for more calls to complete
-   }
+   connect(job, SIGNAL(result(QueuedJob*)), SLOT(jobResult(QueuedJob*)));
+}
 
-   // TODO: handle errors
-   if (dismissed) {
+SingleJobPrompt::~SingleJobPrompt()
+{
+   // TODO: delete the job?
+}
+
+void SingleJobPrompt::prompt(const QString &windowId)
+{
+   Q_UNUSED(windowId);
+   if (m_prompted) {
+      return;
+   }
+   m_prompted = true;
+   
+   // TODO: convert windowId to a WId and pass it to the job
+   m_job->start();
+}
+
+void SingleJobPrompt::dismiss()
+{
+   if (m_prompted) {
+      return;
+   }
+   m_prompted = true;
+
+   m_job->dismiss();
+}
+
+void SingleJobPrompt::jobResult(QueuedJob *job)
+{
+   Q_ASSERT(job == m_job);
+   // check for errors first
+   if (m_job->isDismissed()) {
       emit completed(true, QVariant(""));
+   } else if (m_job->error() != NoError) {
+      // TODO: figure out how to handle errors gracefully.      
+      emit completed(false, QVariant(""));
    } else {
-      emit completed(false, getResult());
+      switch (m_job->type()) {
+         
+      case BackendJob::TypeUnlockCollection:
+      case BackendJob::TypeLockCollection:
+      case BackendJob::TypeDeleteCollection:
+      case BackendJob::TypeChangeAuthenticationCollection:
+      case BackendJob::TypeDeleteItem:
+      case BackendJob::TypeLockItem:
+      case BackendJob::TypeUnlockItem:
+      case BackendJob::TypeChangeAuthenticationItem:
+         {
+            BooleanResultJob *brj = qobject_cast<BooleanResultJob*>(m_job);
+            Q_ASSERT(brj);
+            emitCompleted(false, QVariant(brj->result()));
+         }
+         break;
+         
+      case BackendJob::TypeCreateCollectionMaster:
+         {
+            CreateCollectionMasterJob *ccmj = qobject_cast<CreateCollectionMasterJob*>(m_job);
+            Q_ASSERT(ccmj);
+            QDBusObjectPath result("/");
+            if (ccmj->collection()) {
+               BackendCollection *coll = ccmj->collection();
+               result.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+            }
+            
+            emitCompleted(false, qVariantFromValue(result));
+         }
+         break;
+         
+      case BackendJob::TypeCreateCollection:
+         {
+            CreateCollectionJob *ccj = qobject_cast<CreateCollectionJob*>(m_job);
+            Q_ASSERT(ccj);
+            QDBusObjectPath result("/");
+            if (ccj->collection()) {
+               BackendCollection *coll = ccj->collection();
+               result.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+            }
+            
+            emitCompleted(false, qVariantFromValue(result));
+         }
+         break;
+         
+      case BackendJob::TypeCreateItem:
+         {
+            CreateItemJob *cij = qobject_cast<CreateItemJob*>(m_job);
+            Q_ASSERT(cij);
+            QDBusObjectPath result("/");
+            if (cij->item()) {
+               BackendItem *item = cij->item();
+               result.setPath(serviceObjectPath().path() + "/collection/" +
+                  cij->collection()->id() + "/" + item->id());
+            }
+            
+            emitCompleted(false, qVariantFromValue(result));
+         }
+         break;
+         
+      default:
+         // should not happen!
+         Q_ASSERT(false);
+      }
    }
-
+   
    deleteLater();
 }
 
-PromptServiceCreateCollection::PromptServiceCreateCollection(const QString &label, bool locked,
-                                                             BackendMaster *master,
-                                                             Service *service, QObject *parent)
- : PromptBase(service, parent)
+ServiceMultiPrompt::ServiceMultiPrompt(Service *service, const QSet<BackendJob*> jobs,
+                                     QObject *parent)
+ : PromptBase(service, parent), m_prompted(false), m_jobs(jobs)
 {
-   m_call = new AsyncCreateCollectionMaster(label, locked, master);
-   addCall(m_call);
+   bool jobTypeDetermined = false;
+   bool jobTypeUnlock = false;
+   
+   Q_FOREACH(BackendJob *job, m_jobs) {
+      // make sure the subjobs are either all unlock or all lock calls
+      bool currentJobTypeUnlock = (job->type() == BackendJob::TypeUnlockCollection ||
+                                   job->type() == BackendJob::TypeUnlockItem);
+      if (jobTypeDetermined && jobTypeUnlock != currentJobTypeUnlock) {
+         Q_ASSERT(false);
+      } else if (!jobTypeDetermined) {
+         jobTypeUnlock = currentJobTypeUnlock;
+         jobTypeDetermined = true;
+      }
+      connect(job, SIGNAL(result(QueuedJob*)), SLOT(jobResult(QueuedJob*)));
+   }
 }
 
-QVariant PromptServiceCreateCollection::getResult() const
+ServiceMultiPrompt::~ServiceMultiPrompt()
 {
-   QDBusObjectPath result("/");
-   if (m_call->result()) {
-      result.setPath(serviceObjectPath().path() + "/collection/" + m_call->result()->id());
+   // TODO: delete jobs if not started?
+}
+
+void ServiceMultiPrompt::prompt(const QString &windowId)
+{
+   Q_UNUSED(windowId);
+   if (m_prompted) {
+      return;
+   }
+   m_prompted = true;
+   
+   // TODO: convert windowId to a WId and pass it to the job
+   Q_FOREACH(BackendJob *job, m_jobs) {
+      job->start();
+   }
+}
+
+void ServiceMultiPrompt::dismiss()
+{
+   if (m_prompted) {
+      return;
+   }
+   m_prompted = true;
+   
+   Q_FOREACH(BackendJob *job, m_jobs) {
+      disconnect(job, SIGNAL(result(QueuedJob*)), this, SLOT(jobResult(QueuedJob*)));
+      job->dismiss();
+   }
+
+   // emit result right away so we don't have to catch all result() signals
+   // from individual jobs.
+   emitCompleted(true, qVariantFromValue(QList<QDBusObjectPath>()));
+   deleteLater();
+}
+
+void ServiceMultiPrompt::jobResult(QueuedJob *job)
+{
+   BackendJob *bj = qobject_cast<BackendJob*>(job);
+   Q_ASSERT(bj);
+   Q_ASSERT(m_jobs.contains(bj));
+   // remove job from the set of jobs we're waiting for
+   m_jobs.remove(bj);
+   if (bj->error() != NoError) {
+      // TODO: figure out what to do with erroneous jobs
+   } else {
+      switch (bj->type()) {
+         
+      case BackendJob::TypeUnlockCollection:
+         {
+            UnlockCollectionJob *ucj = qobject_cast<UnlockCollectionJob*>(bj);
+            Q_ASSERT(ucj);
+            if (ucj->result()) {
+               BackendCollection *coll = ucj->collection();
+               QDBusObjectPath path;
+               path.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+               m_result.append(path);
+            }
+         }
+         break;
+
+      case BackendJob::TypeLockCollection:
+         {
+            LockCollectionJob *lcj = qobject_cast<LockCollectionJob*>(bj);
+            Q_ASSERT(lcj);
+            if (lcj->result()) {
+               BackendCollection *coll = lcj->collection();
+               QDBusObjectPath path;
+               path.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+               m_result.append(path);
+            }
+         }
+         break;
+         
+      case BackendJob::TypeUnlockItem:
+         {
+            UnlockItemJob *uij = qobject_cast<UnlockItemJob*>(bj);
+            Q_ASSERT(uij);
+            if (uij->result()) {
+               BackendItem *item = uij->item();
+               BackendCollection *coll = 0;
+               // TODO: I NEED THE COLLECTION DAMMIT
+               QDBusObjectPath path;
+               path.setPath(serviceObjectPath().path() + "/collection/" + coll->id() +
+                            "/" + item->id());
+               m_result.append(path);
+            }
+         }
+         break;
+
+      case BackendJob::TypeLockItem:
+         {
+            LockItemJob *lij = qobject_cast<LockItemJob*>(bj);
+            Q_ASSERT(lij);
+            if (lij->result()) {
+               BackendItem *item = lij->item();
+               BackendCollection *coll = 0;
+               // TODO: I NEED THE COLLECTION DAMMIT
+               QDBusObjectPath path;
+               path.setPath(serviceObjectPath().path() + "/collection/" + coll->id() +
+                            "/" + item->id());
+               m_result.append(path);
+            }
+         }
+         break;
+         
+      default:
+         Q_ASSERT(false);
+      }
    }
    
-   return qVariantFromValue(result);
-}
-
-PromptServiceUnlock::PromptServiceUnlock(const QMap<BackendBase*, QDBusObjectPath> &objects,
-                                         Service *service, QObject *parent)
- : PromptBase(service, parent), m_objects(objects)
-{
-   AsyncSimpleBooleanCall *call;
-
-   // TODO: get rid of the cast
-   Q_FOREACH(BackendBase *object, objects.keys()) {
-      call = new AsyncSimpleBooleanCall(AsyncCall::AsyncUnlock, object);
-      addCall(call);
-      m_calls.append(call);
+   if (m_jobs.isEmpty()) {
+      // all jobs finished
+      emitCompleted(false, qVariantFromValue(m_result));
+      deleteLater();
    }
-}
-
-QVariant PromptServiceUnlock::getResult() const
-{
-   QList<QDBusObjectPath> paths;
-
-   Q_FOREACH(AsyncSimpleBooleanCall *call, m_calls) {
-      if (call->result()) {
-         if (m_objects.contains(call->destination())) {
-            paths.append(m_objects[call->destination()]);
-         }
-      }
-   }
-
-   return qVariantFromValue(paths);
-}
-
-PromptServiceLock::PromptServiceLock(
-   const QMap<BackendBase*, QDBusObjectPath> &objects,
-   Service *service, QObject *parent)
- : PromptBase(service, parent), m_objects(objects)
-{
-   AsyncSimpleBooleanCall *call;
-
-   Q_FOREACH(BackendBase *object, objects.keys()) {
-      call = new AsyncSimpleBooleanCall(AsyncCall::AsyncLock, object);
-      addCall(call);
-      m_calls.append(call);
-   }
-}
-
-QVariant PromptServiceLock::getResult() const
-{
-   QList<QDBusObjectPath> paths;
-
-   Q_FOREACH(AsyncSimpleBooleanCall *call, m_calls) {
-      if (call->result()) {
-         if (m_objects.contains(call->destination())) {
-            paths.append(m_objects[call->destination()]);
-         }
-      }
-   }
-
-   return qVariantFromValue(paths);
-}
-
-PromptCollectionDelete::PromptCollectionDelete(BackendCollection *collection, Service *service,
-                                               QObject *parent)
- : PromptBase(service, parent)
-{
-   m_call = new AsyncSimpleBooleanCall(AsyncCall::AsyncDeleteCollection, collection);
-   addCall(m_call);
-}
-
-QVariant PromptCollectionDelete::getResult() const
-{
-   return m_call->result();
-}
-
-PromptCollectionCreateItem::PromptCollectionCreateItem(BackendCollection *collection,
-                                                       const QString &label,
-                                                       const QMap<QString, QString> &attributes,
-                                                       bool locked, const QCA::SecureArray &secret,
-                                                       bool replace, Service *service,
-                                                       QObject *parent)
- : PromptBase(service, parent)
-{
-   m_call = new AsyncCreateItem(label, attributes, secret, locked, replace, collection);
-   addCall(m_call);
-}
-
-QVariant PromptCollectionCreateItem::getResult() const
-{
-   if (!m_call->result()) {
-      // no item created
-      return qVariantFromValue(QDBusObjectPath("/"));
-   } else {
-      return qVariantFromValue(QDBusObjectPath(serviceObjectPath().path() + "/collection/" +
-         m_call->collection()->id() + "/" + m_call->result()->id()));
-   }
-}
-
-PromptItemDelete::PromptItemDelete(BackendItem *item, Service *service, QObject *parent)
- : PromptBase(service, parent)
-{
-   m_call = new AsyncSimpleBooleanCall(AsyncCall::AsyncDeleteItem, item);
-   addCall(m_call);
-}
-
-QVariant PromptItemDelete::getResult() const
-{
-   return m_call->result();
 }
 
 #include "prompt.moc"

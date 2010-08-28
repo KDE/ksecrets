@@ -162,19 +162,31 @@ void ServiceTest::nonBlockingCollection()
    createInput << QVariant::fromValue(createProperties);
    QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
                                                                 createInput);
+                                                                
    QCOMPARE(createReply.type(), QDBusMessage::ReplyMessage);
    QList<QVariant> createArgs = createReply.arguments();
    QCOMPARE(createArgs.size(), 2);
    QCOMPARE(createArgs.at(0).userType(), qMetaTypeId<QDBusObjectPath>());
    QCOMPARE(createArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
-   // TemporaryCollection is non-blocking, so the second output (prompt) should be "/".
-   QCOMPARE(createArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
-   collectionPath = createArgs.at(0).value<QDBusObjectPath>();
+   // CreateCollection is blocking, so the first output (path) should be "/".
+   QCOMPARE(createArgs.at(0).value<QDBusObjectPath>().path(), QLatin1String("/"));
+   QDBusObjectPath promptPath = createArgs.at(1).value<QDBusObjectPath>();
+   QVERIFY(promptPath.path().startsWith(
+           QLatin1String("/org/freedesktop/secrets/prompts/")));
+
+   // prompt and wait for the result.
+   ClientPrompt *prompt = new ClientPrompt(promptPath);
+   prompt->promptAndWait(5000);
+   QVERIFY(prompt->completed());
+   QVERIFY(!prompt->dismissed());
+   QCOMPARE(prompt->result().userType(), qMetaTypeId<QDBusObjectPath>());
+   collectionPath = prompt->result().value<QDBusObjectPath>();
    QVERIFY(collectionPath.path().startsWith(
            QLatin1String("/org/freedesktop/secrets/collection/")));
    QDBusInterface ifaceCollection("org.freedesktop.Secret", collectionPath.path(),
                                   "org.freedesktop.Secret.Collection");
    QVERIFY(ifaceCollection.isValid());
+   delete prompt;
 
    // make sure the CollectionCreated signal was sent
    if (createdSpy.size() < 1) {
@@ -263,7 +275,12 @@ void ServiceTest::nonBlockingItem()
    collInput << QVariant::fromValue(collProperties);
    QDBusMessage collReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
                                                               collInput);
-   collectionPath = collReply.arguments()[0].value<QDBusObjectPath>();
+   QDBusObjectPath promptPath = collReply.arguments().at(1).value<QDBusObjectPath>();
+   ClientPrompt *prompt = new ClientPrompt(promptPath);
+   prompt->promptAndWait(5000);
+   QVERIFY(prompt->completed());
+   collectionPath = prompt->result().value<QDBusObjectPath>();
+   delete prompt;
    QDBusInterface ifaceColl("org.freedesktop.Secret", collectionPath.path());
    
    ObjectPathSignalSpy createdSpy(&ifaceColl, SIGNAL(ItemCreated(QDBusObjectPath)));

@@ -87,6 +87,7 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
 QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &properties,
                                           QDBusObjectPath &prompt)
 {
+   // TODO: default label
    QString label;
    bool locked = false;
 
@@ -97,17 +98,20 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
       locked = properties["Locked"].toBool();
    }
    
-   if (m_master->isCallImmediate(AsyncCall::AsyncCreateCollectionMaster)) {
-      BackendReturn<BackendCollection*> rc = m_master->createCollection(label, locked);
-      if (rc.isError()) {
+   CreateCollectionMasterJob *job = m_master->createCreateCollectionMasterJob(label, locked);
+   if (job->isImmediate()) {
+      job->exec();
+      if (job->error() != NoError || !job->collection()) {
          // TODO: error creating the collection
+         return QDBusObjectPath("/");
+      } else {
+         BackendCollection *coll = job->collection();
+         prompt.setPath("/");
+         QDBusObjectPath collPath(m_basePath.path() + "/collection/" + coll->id());
+         return collPath;
       }
-
-      prompt.setPath("/");
-      QDBusObjectPath collPath(m_basePath.path() + "/collection/" + rc.value()->id());
-      return collPath;
    } else {
-      PromptBase *p = new PromptServiceCreateCollection(label, locked, m_master, this, this);
+      PromptBase *p = new SingleJobPrompt(this, job, this);
       prompt = p->objectPath();
       return QDBusObjectPath("/");
    }
@@ -144,8 +148,8 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
 
    // objects already unlocked
    QList<QDBusObjectPath> rc;
-   // objects to unlock
-   QMap<BackendBase*, QDBusObjectPath> unlockObjects;
+   // jobs to call asynchronously
+   QSet<BackendJob*> unlockJobs;
    QObject *object;
    Item *item;
    Collection *collection;
@@ -158,40 +162,42 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
          continue;
       }
       if ((collection = qobject_cast<Collection*>(object))) {
-         if ((bc = collection->backendCollection())) {
+         bc = collection->backendCollection();
+         if (bc) {
             if (!bc->isLocked()) {
                rc.append(path);
             } else {
-               if (bc->isCallImmediate(AsyncCall::AsyncUnlock)) {
-                  // unlock without prompt?
-                  BackendReturn<bool> br = bc->unlock();
-                  if (!br.isError() && br.value()) {
-                     rc.append(path);
+               UnlockCollectionJob *ucj = bc->createUnlockJob();
+               if (ucj->isImmediate()) {
+                  ucj->exec();
+                  if (ucj->error() != NoError || !ucj->result()) {
+                     // not unlocked, maybe due to an error.
+                     // There's not much to do about it. Silently ignore.
                   } else {
-                     // fallback: try async unlocking
-                     unlockObjects.insert(bc, path);
+                     rc.append(path);
                   }
                } else {
-                  unlockObjects.insert(bc, path);
+                  unlockJobs.insert(ucj);
                }
             }
          }
       } else if ((item = qobject_cast<Item*>(object))) {
-         if ((bi = item->backendItem())) {
+         bi = item->backendItem();
+         if (bi) {
             if (!bi->isLocked()) {
                rc.append(path);
             } else {
-               if (bi->isCallImmediate(AsyncCall::AsyncUnlock)) {
-                  // unlock without prompt?
-                  BackendReturn<bool> br = bi->unlock();
-                  if (!br.isError() && br.value()) {
-                     rc.append(path);
+               UnlockItemJob *uij = bi->createUnlockJob();
+               if (uij->isImmediate()) {
+                  uij->exec();
+                  if (uij->error() != NoError ||!uij->result()) {
+                     // not unlocked, maybe due to an error.
+                     // There's not much to do about it. Silently ignore.
                   } else {
-                     // fallback: try async unlocking
-                     unlockObjects.insert(bi, path);
+                     rc.append(path);
                   }
                } else {
-                  unlockObjects.insert(bi, path);
+                  unlockJobs.insert(uij);
                }
             }
          }
@@ -199,8 +205,8 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
       // NOTE: objects which either don't exist or whose type is wrong are silently ignored.
    }
 
-   if (unlockObjects.size() > 0) {
-      PromptServiceUnlock *p = new PromptServiceUnlock(unlockObjects, this, this);
+   if (!unlockJobs.isEmpty()) {
+      ServiceMultiPrompt *p = new ServiceMultiPrompt(this, unlockJobs, this);
       prompt = p->objectPath();
    } else {
       prompt.setPath("/");
@@ -213,12 +219,11 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
                                      QDBusObjectPath &prompt)
 {
    // TODO: check is session exists
-   // TODO: bypass prompt
    
    // objects already locked
    QList<QDBusObjectPath> rc;
-   // objects to lock
-   QMap<BackendBase*, QDBusObjectPath> lockObjects;
+   // jobs to call asynchronously
+   QSet<BackendJob*> lockJobs;
    QObject *object;
    Item *item;
    Collection *collection;
@@ -231,40 +236,42 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
          continue;
       }
       if ((collection = qobject_cast<Collection*>(object))) {
-         if ((bc = collection->backendCollection())) {
+         bc = collection->backendCollection();
+         if (bc) {
             if (bc->isLocked()) {
                rc.append(path);
             } else {
-               if (bc->isCallImmediate(AsyncCall::AsyncLock)) {
-                  // lock without prompt?
-                  BackendReturn<bool> br = bc->lock();
-                  if (!br.isError() && br.value()) {
-                     rc.append(path);
+               LockCollectionJob *lcj = bc->createLockJob();
+               if (lcj->isImmediate()) {
+                  lcj->exec();
+                  if (lcj->error() != NoError || !lcj->result()) {
+                     // not locked, maybe due to an error.
+                     // There's not much to do about it. Silently ignore.
                   } else {
-                     // fallback: try async unlocking
-                     lockObjects.insert(bc, path);
+                     rc.append(path);
                   }
                } else {
-                  lockObjects.insert(bc, path);
+                  lockJobs.insert(lcj);
                }
             }
          }
       } else if ((item = qobject_cast<Item*>(object))) {
-         if ((bi = item->backendItem())) {
+         bi = item->backendItem();
+         if (bi) {
             if (bi->isLocked()) {
                rc.append(path);
             } else {
-               if (bi->isCallImmediate(AsyncCall::AsyncLock)) {
-                  // unlock without prompt?
-                  BackendReturn<bool> br = bi->lock();
-                  if (!br.isError() && br.value()) {
-                     rc.append(path);
+               LockItemJob *lij = bi->createLockJob();
+               if (lij->isImmediate()) {
+                  lij->exec();
+                  if (lij->error() != NoError || !lij->result()) {
+                     // not locked, maybe due to an error.
+                     // There's not much to do about it. Silently ignore.
                   } else {
-                     // fallback: try async unlocking
-                     lockObjects.insert(bi, path);
+                     rc.append(path);
                   }
                } else {
-                  lockObjects.insert(bi, path);
+                  lockJobs.insert(lij);
                }
             }
          }
@@ -272,8 +279,8 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
       // NOTE: objects which either don't exist or whose type is wrong are silently ignored.
    }
 
-   if (lockObjects.size() > 0) {
-      PromptServiceLock *p = new PromptServiceLock(lockObjects, this, this);
+   if (!lockJobs.isEmpty()) {
+      ServiceMultiPrompt *p = new ServiceMultiPrompt(this, lockJobs, this);
       prompt = p->objectPath();
    } else {
       prompt.setPath("/");
