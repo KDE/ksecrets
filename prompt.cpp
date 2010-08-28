@@ -78,7 +78,7 @@ void SingleJobPrompt::prompt(const QString &windowId)
    m_prompted = true;
    
    // TODO: convert windowId to a WId and pass it to the job
-   m_job->start();
+   m_job->enqueue();
 }
 
 void SingleJobPrompt::dismiss()
@@ -206,7 +206,7 @@ void ServiceMultiPrompt::prompt(const QString &windowId)
    
    // TODO: convert windowId to a WId and pass it to the job
    Q_FOREACH(BackendJob *job, m_jobs) {
-      job->start();
+      job->enqueue();
    }
 }
 
