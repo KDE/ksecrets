@@ -1,0 +1,271 @@
+This document describes the ksecret format for storing ksecretservice items and collection.
+
+The ksecret format is a binary format.
+
+
+Basic types
+===========
+
+BYTE
+   an 8-bit byte
+
+UINT
+   a 32-bit unsigned integer stored in big endian format
+
+DATETIME
+   a 64-bit unsigned integer stored in big endian format
+   
+BYTEARRAY = UINT *BYTE
+   a byte-array is stored as its length followed by each of the bytes
+
+STRING    = BYTEARRAY
+   a string is stored as a bytearray using UTF-8 encoding
+
+
+ksecret file
+============
+
+ksecret          = header *part
+
+
+file header
+===========
+
+The file header contains some magic to identify this file as a ksecret file, the
+version number, the algorithms used and a lookup table for the other parts of the
+file.
+The parts are basically containers which can be interpreted on their own. If a
+program reading a ksecret file can't handle a certain part, it should ignore it
+and one saving rewrite it as it was.
+When adding new features that make it impossible for an older version of ksecretservice
+to interpret the file's contents, version-major has to be increased. Like this
+forward- and backward-compatibility among the same major version can be sustained.
+
+header             = magic version algorithms verifier part-table
+
+magic              = "KSECRET\n\r\0\r\n"              ;; Magic to identify the file format
+
+version            = version-major version-minor
+
+   version-major   = UINT                             ;; Major version of the file format
+
+   version-minor   = UINT                             ;; Minor version of the file format
+
+algorithms         = algo-hash algo-encrypt
+
+   algo-hash       = UINT                             ;; Identifier for the hash algorithm
+   
+   algo-encrypt    = UINT                             ;; Identifer for the sym. encryption algorithm
+   
+part-table         = num-parts *part-desc
+
+   num-parts       = UINT                             ;; number of data parts in this file
+
+part-desc          = part-type part-pos part-length   ;; describes a part of the file
+
+   part-type       = UINT                             ;; describes the type of the part
+
+   part-pos        = UINT                             ;; describes the part's file position
+
+   part-length     = UINT                             ;; describes the part's length
+
+
+verifier
+========
+
+Once the master key (see "Symmetric Keys") has been derived, it's neccessary to check whether
+it's correct. Thus the header contains a chunk for verification. It consists of a block of
+encrypted random data as well as a hash of the random data. Upon deriving the master key,
+the random data and its hash are checked to verify that the key is indeed correct.
+
+HASH{} is the result of the hash function stored as a BYTEARRAY. It's used to verify that
+decrypting the data was successful. See "Encrypted Parts" for an explanation of ENCRYPT{}.
+
+verifier           = init-vector ENCRYPT{ random-data HASH{ random-data } }
+
+   random-data     = BYTEARRAY                        ;; random data used for verifying the master
+                                                         key
+
+
+parts
+=====
+
+Parts come in various flavours, including a part for hashes for item attribute lookup,
+a part containing the encrypted, symmetric keys as well as parts for the actual encrypted
+data. Parts can be identified using the part-table. Each part's semantics is defined by
+its type.
+
+part               = part-item-hashes / part-symkey / encrypted-part / mac-part
+
+
+The known values for part-type are:
+
+   0    part-item-hashes
+   1    part-symkey
+   2    part-items (encrypted)
+   3    part-acls (signed)
+   4    part-config (signed, once)
+   5    part-collprops (signed, once)
+
+
+Some parts should only be included once, namely part-config and part-collprops. If there are
+multiple parts of any type, the values contained within are merged. In case of conflicts
+(eg. duplicate config keys or duplicate collection properties), values appearing later in
+the ksecret file override values appearing earlier.
+
+
+Item hashes
+===========
+
+Each item's attributes are hashed using algo-hash and stored so the collection can be
+searched even without being decrypted. An attribute hash (hash-attrib) is derived by
+concatenating the property key with the property value and creating this string's hash using
+algo-hash.
+
+part-item-hashes   = num-items *item-hash
+
+   num-items       = UINT                             ;; number of items inside this part
+
+item-hash          = item-id num-attribs *hash-attrib
+
+   item-id         = STRING                           ;; unique item identifier
+
+   num-attribs     = UINT                             ;; number of attributes of this item hash
+
+   hash-attrib     = BYTEARRAY                        ;; attribute hash
+
+
+Symmetric Keys
+==============
+
+All of the encrypted parts are encrypted using a symmetric key (master key). However contrary
+to kwallet this key is not derived directly from a passphrase. Instead the master key
+is created from random data and encrypted itself using different methods, eg.
+using symmetric or assymmetric encryption (hash from passphrase, smartcard, possibly
+fingerprint). As several methods to encrypt the master key exist, it could get stored inside
+a ksecret file several times. The application is responsible for making sure only valid
+encrypted keys are contained withing the ksecret file.
+
+part-symkey        = key-type init-vector enc-symkey
+
+   key-type        = UINT                             ;; method for encrypting the key
+
+   init-vector     = BYTEARRAY                        ;; initialization vector used or empty
+                                                      ;; if unneeded
+
+   enc-symkey      = BYTEARRAY                        ;; the encrypted symmetric master key
+
+
+Encrypted parts
+===============
+
+part-items is an encrypted part. The structure described below applies to the structure of
+the data AFTER it has been decrypted using the key with the encryption algorithm (algo-encrypt).
+To verify if the master key used for decryption was the right one, each encrypted part also
+contains a hash of the decrypted data to validate with. The algorithm used to create the hash is
+algo-hash.
+
+Contrary to the other representation, ENCRYPT{} is meant to be the result of the encryption
+function stored as a BYTEARRAY.
+
+encrypted-part     = init-vector ENCRYPT{ part-to-encrypt }
+
+   init-vector     = BYTEARRAY                        ;; initialization-vector used for encryption
+
+   part-to-encrypt = part-items
+
+
+Authenticated parts
+===================
+
+Configuration values and ACLs get signed (authenticated) by creating a message authentication code
+using the master key. Like this any tampering can be detected once the master-key is decrypted.
+
+Contrary to the other representation, MAC{} is meant to be the message authentication code
+generated from the data enclosed using the master-key which is stored as a BYTEARRAY.
+
+mac-part           = auth-size part-to-auth MAC{ part-to-auth }
+
+   auth-size       = UINT                             ;; length of the data the mac is created for
+
+   part-to-auth    = part-config / part-acls / part-collprops
+
+
+Collection properties
+=====================
+
+Collection properties are stored in a signed part so tampering with them
+can be detected.
+
+part-collprops     = coll-id coll-label coll-created coll-modified
+
+   coll-id         = STRING                           ;; unique collection identifier
+
+   coll-label      = STRING                           ;; The name of this collection
+
+   coll-created    = DATETIME                         ;; The creation time of this collection
+
+   coll-modified   = DATETIME                         ;; The time this collection was last modified
+
+
+Configuration
+=============
+
+Collection-specific configuration values are stored directly inside the ksecret file. Like
+this security-related configuration changes can be protected from being changed without
+authentication.
+
+part-config        = num-cfg-values *config-item
+
+   num-cfg-values  = UINT                             ;; number of config-values stored
+
+   config-item     = config-key config-value
+
+   config-key      = STRING                           ;; the key of a configuration item
+
+   config-value    = BYTEARRAY                        ;; the value of a configuration item
+
+
+ACLs
+====
+
+TODO
+
+acls               = num-acls *acl-item               ;; acl part
+
+   num-acls        = UINT                             ;; number of entries in the acl
+
+   acl-item        = acl-path acl-value
+
+   acl-path        = STRING                           ;; path of the application
+
+   acl-value       = UINT                             ;; access of the application
+
+
+Items
+=====
+
+part-items         = num-items *item
+
+item               = item-id item-size item-label item-created item-modified attributes secret
+
+   item-size       = UINT                             ;; byte length of the remainder of the item
+
+   item-label      = STRING                           ;; human-readable label of this item
+
+   item-created    = DATETIME                         ;; time the item was created
+
+   item-modified   = DATETIME                         ;; time the item was last modified
+
+   secret          = STRING                           ;; the actual secret
+
+attributes         = num-attribs *attrib
+
+attrib             = attrib-key attrib-value
+
+   attrib-key      = STRING                           ;; attribute key
+
+   attrib-value    = STRING                           ;; attribute value
+
+
+Michael Leupold <lemma@confuego.org>

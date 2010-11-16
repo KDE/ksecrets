@@ -1,0 +1,88 @@
+/*
+ * Copyright 2010, Dario Freddi <dario.freddi@collabora.co.uk>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License or (at your option) version 3 or any later version
+ * accepted by the membership of KDE e.V. (or its successor approved
+ * by the membership of KDE e.V.), which shall act as a proxy
+ * defined in Section 14 of version 3 of the license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+#ifndef IMPORTSINGLEWALLETJOB_H
+#define IMPORTSINGLEWALLETJOB_H
+
+#include <KJob>
+
+#include <QtCore/QStringList>
+
+#include <QtDBus/QDBusObjectPath>
+
+namespace KWallet
+{
+class Backend;
+}
+
+class Service;
+class QDBusInterface;
+
+class ImportSingleWalletJob : public KJob
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(ImportSingleWalletJob)
+
+    enum Status {
+        Initializing,
+        ProcessingCurrentFolder,
+        ProcessingEntry,
+        ProcessingNextFolder
+    };
+
+public:
+    explicit ImportSingleWalletJob(Service *service, const QString &walletName, QObject* parent = 0);
+    virtual ~ImportSingleWalletJob();
+
+public Q_SLOTS:
+    virtual void start();
+
+protected Q_SLOTS:
+    virtual bool doKill();
+    virtual bool doResume();
+    virtual bool doSuspend();
+
+private Q_SLOTS:
+    void run();
+    void onWalletOpened(bool);
+    void processCurrentFolder();
+    void processNextEntry();
+    void processNextFolder();
+
+private:
+    bool canProceed();
+
+    QString m_walletName;
+    KWallet::Backend *m_wallet;
+    Service *m_service;
+    QDBusObjectPath m_collectionPath;
+    bool m_isSuspended;
+    bool m_hasKillRequest;
+
+    QStringList m_folderList;
+    QStringList m_currentEntryList;
+
+    QDBusInterface *m_collectionInterface;
+
+    Status m_status;
+};
+
+#endif // IMPORTSINGLEWALLETJOB_H

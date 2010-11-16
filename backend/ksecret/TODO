@@ -1,0 +1,3 @@
+- the new BackendJobs still lack the possibility to merge equivalent jobs
+  (eg. 2 unlock requests on the same target)
+  
