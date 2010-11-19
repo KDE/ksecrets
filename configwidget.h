@@ -18,27 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ksecretsync.h"
-#include "trayicon.h"
-#include "configwidget.h"
+#ifndef CONFIGWIDGET_H
+#define CONFIGWIDGET_H
 
-#include <kconfig.h>
-#include <klocalizedstring.h>
+#include <QWidget>
 
-KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f): 
-    KXmlGuiWindow(parent, f)
+#include <ui_configwidget.h>
+
+class ConfigWidget : public QWidget, public Ui_ConfigWidget
 {
+    Q_OBJECT
+public:
+    explicit ConfigWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    
+protected Q_SLOTS:
+    
+private:
+};
 
-    KConfig cfg( QLatin1String( "ksecretsyncrc" )); 
-    // TODO: read settings here
-    
-    _trayIcon = new TrayIcon( this );
-    _trayIcon->setupActions( actionCollection() );
-    
-    _configWidget = new ConfigWidget( this );
-    setCentralWidget( _configWidget );
-    
-    createGUI( QLatin1String( "ksecretsync.rc" ) );
-}
-
-#include "ksecretsync.moc"
+#endif // CONFIGWIDGET_H

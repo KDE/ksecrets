@@ -23,6 +23,7 @@
 
 #include <kxmlguiwindow.h>
 
+class ConfigWidget;
 class TrayIcon;
 
 class KSecretSync : public KXmlGuiWindow
@@ -32,7 +33,8 @@ public:
     explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
     
 private:
-    TrayIcon    *_trayIcon;
+    TrayIcon        *_trayIcon;
+    ConfigWidget    *_configWidget;
 };
 
 #endif // KSECRETSYNC_H

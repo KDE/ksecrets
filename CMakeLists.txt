@@ -25,6 +25,11 @@ SET( ksecretsync_SRCS
     ksecretsync.cpp 
     trayicon.cpp
     main.cpp
+    configwidget.cpp
+)
+
+KDE4_ADD_UI_FILES ( ksecretsync_SRCS
+    configwidget.ui
 )
 
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})

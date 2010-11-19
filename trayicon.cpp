@@ -42,3 +42,5 @@ void TrayIcon::setupActions(KActionCollection* actionCollection)
     action->setText( i18n("&Configure KSecretSync...") );
     action->setIcon( KIcon( QLatin1String( "configure" )) );
 }
+
+#include "trayicon.moc"
