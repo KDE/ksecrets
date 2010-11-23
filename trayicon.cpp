@@ -18,13 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "trayicon.h"
+
 #include <kstatusnotifieritem.h>
 #include <kaction.h>
 #include <kactioncollection.h>
 #include <kicon.h>
 #include <klocalizedstring.h>
-
-#include "trayicon.h"
+#include <kmenu.h>
 
 TrayIcon::TrayIcon(QObject* parent): QObject(parent)
 {
@@ -36,11 +37,10 @@ TrayIcon::TrayIcon(QObject* parent): QObject(parent)
     _trayIcon->setToolTip( QLatin1String( "ksecretsync idle" ), i18n("KDE Wallet"), i18n("Idle"));
 }
 
-void TrayIcon::setupActions(KActionCollection* actionCollection)
+void TrayIcon::addAction(KAction* action)
 {
-    KAction *action = actionCollection->addAction( QLatin1String("ksecretsync settings") );
-    action->setText( i18n("&Configure KSecretSync...") );
-    action->setIcon( KIcon( QLatin1String( "configure" )) );
+    if ( _trayIcon )
+        _trayIcon->contextMenu()->addAction( action );
 }
 
 #include "trayicon.moc"

@@ -19,10 +19,90 @@
  */
 
 #include "configwidget.h"
+#include "ksecretsync.h"
+#include "addcomputerdialog.h"
 
+#include <qevent.h>
+#include <kaction.h>
+#include <klocalizedstring.h>
+#include <kmessagebox.h>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QTimer>
 
-ConfigWidget::ConfigWidget(QWidget* parent, Qt::WindowFlags f): 
-    QWidget(parent, f)
+/**
+ * This is the save timer interval default value
+ * The save timer is started whenever a setting is changed and allow for it to be
+ * persisted into the configuration file
+ */
+#define SAVE_TIMER_INTERVAL 2000
+
+ConfigWidget::ConfigWidget(KSecretSync* parent, Qt::WindowFlags f): 
+    QWidget(parent, f),
+    _mainWindow( parent )
 {
     setupUi( this );
+    _findComputerBtn->setVisible( false );
+    _announceComputerBtn->setVisible( false );
+    
+    createActions();
 }
+
+void ConfigWidget::createActions()
+{
+    Q_ASSERT( _mainWindow != 0 );
+    KAction *action;
+    
+    action = _mainWindow->createAction( QLatin1String("ksecretsync synchronize now") );
+    action->setText( i18n("&Synchronize now") );
+    action->setIcon( KIcon( QLatin1String( "view-refresh" ) ) );
+    connect( action, SIGNAL(triggered(bool)), this, SLOT(onSynchronizeNow(bool)));
+    
+    connect( _addComputerBtn, SIGNAL(clicked()), this, SLOT(onAddComputer()));
+    connect( _deleteComputerBtn, SIGNAL(clicked()), this, SLOT(onDeleteComputer()));
+    connect( _synchronizeNowBtn, SIGNAL(clicked()), this, SLOT(onSynchronizeNow()));
+}
+
+void ConfigWidget::onSynchronizeNow(bool )
+{
+    // TODO: implement this
+    KMessageBox::information( this, i18n( "This function is not yet implemented" ) );
+}
+
+void ConfigWidget::onAddComputer()
+{
+    AddComputerDialog dlg( this );
+    if ( dlg.exec() == QDialog::Accepted ) {
+        _computerList->addItem( dlg._computerName );
+    }
+}
+
+void ConfigWidget::onDeleteComputer()
+{
+    if ( _computerList->currentItem() ) {
+        QString message = QString( i18n("Really delete '%1' computer from the list?", 
+                                        _computerList->currentItem()->text() ) );
+        if ( KMessageBox::questionYesNo( this, message ) == KMessageBox::Yes ) {
+            delete _computerList->takeItem( _computerList->currentRow() );
+        }
+    }
+}
+
+void ConfigWidget::saveSettingsLater()
+{
+    if ( _saveTimer == 0 ) {
+        _saveTimer = new QTimer(this);
+        _saveTimer->setSingleShot(true);
+        connect( _saveTimer, SIGNAL(timeout()), SLOT(onSaveTimer()) );
+        _saveTimer->setInterval( SAVE_TIMER_INTERVAL );
+    }
+    
+    _saveTimer->start();
+}
+
+void ConfigWidget::onSaveTimer()
+{
+    // TODO: implement save settings
+}
+
+#include "configwidget.moc"

@@ -22,6 +22,7 @@ INCLUDE_DIRECTORIES (
 add_subdirectory(icons)
 
 SET( ksecretsync_SRCS 
+    addcomputerdialog.cpp 
     ksecretsync.cpp 
     trayicon.cpp
     main.cpp
@@ -30,6 +31,7 @@ SET( ksecretsync_SRCS
 
 KDE4_ADD_UI_FILES ( ksecretsync_SRCS
     configwidget.ui
+    addcomputerwidget.ui
 )
 
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})

@@ -18,35 +18,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONFIGWIDGET_H
-#define CONFIGWIDGET_H
+#include "addcomputerdialog.h"
+#include <klocalizedstring.h>
 
-#include <QWidget>
 
-#include <ui_configwidget.h>
-
-class KSecretSync;
-class QTimer;
-
-class ConfigWidget : public QWidget, public Ui_ConfigWidget
+AddComputerDialog::AddComputerDialog(QWidget* parent, Qt::WFlags flags): 
+    KDialog(parent, flags)
 {
-    Q_OBJECT
-public:
-    explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
-    
-protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    void onAddComputer();
-    void onDeleteComputer();
-    void onSaveTimer();
-    
-private:
-    void createActions();
-    void saveSettingsLater();
-    
-private:
-    KSecretSync *_mainWindow;
-    QTimer      *_saveTimer;
-};
+    setCaption( i18n("Add computer") );
+    setButtons( KDialog::Ok | KDialog::Cancel );
+    AddComputerDialogWidget* widget = new AddComputerDialogWidget(this);
+    setMainWidget( widget );
+    connect( widget->_computerName, SIGNAL(textChanged(const QString&)), SLOT(computerNameChanged(const QString&)) );
+    enableButtonOk(false);
+}
 
-#endif // CONFIGWIDGET_H
+void AddComputerDialog::computerNameChanged(const QString& computerName )
+{
+    if ( computerName.length() >0 ) {
+        enableButtonOk(true);
+    }
+    else
+        enableButtonOk(false);
+    _computerName = computerName;
+}
+
+
+#include "addcomputerdialog.moc"

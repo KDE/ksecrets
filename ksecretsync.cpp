@@ -24,6 +24,8 @@
 
 #include <kconfig.h>
 #include <klocalizedstring.h>
+#include <kaction.h>
+#include <kactioncollection.h>
 
 KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f): 
     KXmlGuiWindow(parent, f)
@@ -33,12 +35,19 @@ KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f):
     // TODO: read settings here
     
     _trayIcon = new TrayIcon( this );
-    _trayIcon->setupActions( actionCollection() );
     
     _configWidget = new ConfigWidget( this );
     setCentralWidget( _configWidget );
     
     createGUI( QLatin1String( "ksecretsync.rc" ) );
+}
+
+KAction *KSecretSync::createAction( const QLatin1String &description )
+{
+    KAction* action = actionCollection()->addAction( description );
+    if ( _trayIcon )
+        _trayIcon->addAction( action );
+    return action;
 }
 
 #include "ksecretsync.moc"

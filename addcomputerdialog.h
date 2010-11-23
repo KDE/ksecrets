@@ -18,35 +18,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONFIGWIDGET_H
-#define CONFIGWIDGET_H
+#ifndef ADDCOMPUTERDIALOG_H
+#define ADDCOMPUTERDIALOG_H
 
-#include <QWidget>
+#include <ui_addcomputerwidget.h>
+#include <kdialog.h>
 
-#include <ui_configwidget.h>
-
-class KSecretSync;
-class QTimer;
-
-class ConfigWidget : public QWidget, public Ui_ConfigWidget
+class AddComputerDialog : public KDialog
 {
     Q_OBJECT
 public:
-    explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
+    explicit AddComputerDialog(QWidget* parent = 0, Qt::WFlags flags = 0);
     
-protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    void onAddComputer();
-    void onDeleteComputer();
-    void onSaveTimer();
+private Q_SLOTS:
+    void computerNameChanged( const QString& );
     
-private:
-    void createActions();
-    void saveSettingsLater();
-    
-private:
-    KSecretSync *_mainWindow;
-    QTimer      *_saveTimer;
+public:
+    QString _computerName;
 };
 
-#endif // CONFIGWIDGET_H
+class AddComputerDialogWidget : public QWidget, public Ui_AddComputerWidget
+{
+    Q_OBJECT
+public:
+    AddComputerDialogWidget( QWidget* parent ) : QWidget( parent ) {
+        setupUi(this);
+    }
+    friend class AddComputerDialog;
+};
+
+
+#endif // ADDCOMPUTERDIALOG_H

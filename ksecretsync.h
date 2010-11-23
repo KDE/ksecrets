@@ -25,12 +25,14 @@
 
 class ConfigWidget;
 class TrayIcon;
+class KAction;
 
 class KSecretSync : public KXmlGuiWindow
 {
     Q_OBJECT
 public:
     explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    KAction* createAction(const QLatin1String &description);
     
 private:
     TrayIcon        *_trayIcon;

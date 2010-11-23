@@ -23,6 +23,7 @@
 
 #include <QObject>
 
+class KAction;
 class KActionCollection;
 class KStatusNotifierItem;
 
@@ -33,7 +34,7 @@ class TrayIcon : public QObject
 public:
     explicit TrayIcon(QObject* parent = 0);
     
-    void setupActions( KActionCollection* actionCollection );
+    void addAction( KAction* action );
     
 protected Q_SLOTS:
     

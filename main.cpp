@@ -59,8 +59,13 @@ int main(int argc, char **argv)
     KGlobal::dirs()->addResourceType("kwallet", QLatin1String( "share/apps/kwallet" ));
 
     KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
-    if ( args && args->isSet("show")) {
-        mainWindow.show();
+    if ( args ) {
+        if (args->isSet("show")) {
+            mainWindow.show();
+        }
+        if (args->isSet("poll")) {
+        }
+  
     }
 
     return app.exec();
