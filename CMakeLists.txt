@@ -21,7 +21,8 @@ INCLUDE_DIRECTORIES (
 #
 add_subdirectory(icons)
 
-SET( ksecretsync_SRCS 
+SET( ksecretsync_SRCS syncjob.cpp 
+    computersyncjob.cpp 
     addcomputerdialog.cpp 
     ksecretsync.cpp 
     trayicon.cpp

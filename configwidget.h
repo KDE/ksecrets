@@ -24,29 +24,41 @@
 #include <QWidget>
 
 #include <ui_configwidget.h>
+#include <synclogger.h>
 
 class KSecretSync;
 class QTimer;
 
-class ConfigWidget : public QWidget, public Ui_ConfigWidget
+class ConfigWidget : public QWidget, public Ui_ConfigWidget, public SyncLogger
 {
     Q_OBJECT
 public:
     explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
+    virtual ~ConfigWidget();
+    
+    virtual void createLogEntry( const QString& );
     
 protected Q_SLOTS:
     void onSynchronizeNow( bool =false );
     void onAddComputer();
     void onDeleteComputer();
     void onSaveTimer();
+    void onSyncTimer();
+    void enableSyncToggled( bool );
+    void saveGeneralSettings();
+    void onSynchIntervalChanged( int );
+    void onSynchNow();
     
 private:
     void createActions();
     void saveSettingsLater();
+    void loadSettings();
+    void startSync();
     
 private:
     KSecretSync *_mainWindow;
     QTimer      *_saveTimer;
+    QTimer      *_synchTimer;
 };
 
 #endif // CONFIGWIDGET_H

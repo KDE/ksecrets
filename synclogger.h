@@ -18,26 +18,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
 
-#include <kxmlguiwindow.h>
+#ifndef SYNCLOGGER_H
+#define SYNCLOGGER_H
 
-class ConfigWidget;
-class TrayIcon;
-class KAction;
+#include <QString>
 
-class KSecretSync : public KXmlGuiWindow
-{
-    Q_OBJECT
+/**
+ * simple interface class used to create a log entry
+ */
+class SyncLogger {
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
-    
-private:
-    TrayIcon        *_trayIcon;
-    ConfigWidget    *_configWidget;
+    virtual ~SyncLogger() {}
+    virtual void createLogEntry( const QString& ) =0;
 };
 
-#endif // KSECRETSYNC_H
+
+#endif // SYNCLOGGER_H

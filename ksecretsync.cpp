@@ -42,6 +42,11 @@ KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f):
     createGUI( QLatin1String( "ksecretsync.rc" ) );
 }
 
+KSecretSync::~KSecretSync()
+{
+    delete _trayIcon;
+}
+
 KAction *KSecretSync::createAction( const QLatin1String &description )
 {
     KAction* action = actionCollection()->addAction( description );

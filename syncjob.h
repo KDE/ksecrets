@@ -17,27 +17,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef SYNCJOB_H
+#define SYNCJOB_H
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
+#include <KCompositeJob>
 
-#include <kxmlguiwindow.h>
 
-class ConfigWidget;
-class TrayIcon;
-class KAction;
-
-class KSecretSync : public KXmlGuiWindow
+class SyncJob : public KCompositeJob
 {
     Q_OBJECT
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
-    
-private:
-    TrayIcon        *_trayIcon;
-    ConfigWidget    *_configWidget;
+    virtual void start();
 };
 
-#endif // KSECRETSYNC_H
+#endif // SYNCJOB_H

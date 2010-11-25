@@ -18,26 +18,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
+#ifndef COMPUTERSYNCJOB_H
+#define COMPUTERSYNCJOB_H
 
-#include <kxmlguiwindow.h>
+#include </home/vrac2/kdesrc/4/include/kjob.h>
 
-class ConfigWidget;
-class TrayIcon;
-class KAction;
+class SyncLogger;
 
-class KSecretSync : public KXmlGuiWindow
+class ComputerSyncJob : public KJob
 {
     Q_OBJECT
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
+    ComputerSyncJob(QObject* parent, const QString& computerName, SyncLogger* logger );
+    virtual void start();
     
 private:
-    TrayIcon        *_trayIcon;
-    ConfigWidget    *_configWidget;
+    QString     _computerName;
+    SyncLogger* _logger;
 };
 
-#endif // KSECRETSYNC_H
+#endif // COMPUTERSYNCJOB_H

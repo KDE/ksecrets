@@ -21,6 +21,8 @@
 #include "configwidget.h"
 #include "ksecretsync.h"
 #include "addcomputerdialog.h"
+#include "computersyncjob.h"
+#include "syncjob.h"
 
 #include <qevent.h>
 #include <kaction.h>
@@ -29,6 +31,11 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QTimer>
+#include <QCheckBox>
+#include <KStandardDirs>
+#include <kconfig.h>
+#include <ksharedconfig.h>
+#include <kdebug.h>
 
 /**
  * This is the save timer interval default value
@@ -37,15 +44,29 @@
  */
 #define SAVE_TIMER_INTERVAL 2000
 
+#define MAIN_ENABLE_SYNC_ENTRY "enableSync"
+#define MAIN_SYNC_INTERVAL "syncInterval"
+
 ConfigWidget::ConfigWidget(KSecretSync* parent, Qt::WindowFlags f): 
     QWidget(parent, f),
-    _mainWindow( parent )
+    _mainWindow( parent ),
+    _saveTimer(0),
+    _synchTimer(0)
 {
     setupUi( this );
     _findComputerBtn->setVisible( false );
     _announceComputerBtn->setVisible( false );
     
     createActions();
+    
+    loadSettings();
+}
+
+ConfigWidget::~ConfigWidget()
+{
+    // FIXME: should we wait for pending timeout signals ?
+    delete _synchTimer;
+    delete _saveTimer;
 }
 
 void ConfigWidget::createActions()
@@ -88,6 +109,11 @@ void ConfigWidget::onDeleteComputer()
     }
 }
 
+void ConfigWidget::saveGeneralSettings()
+{
+    saveSettingsLater();
+}
+
 void ConfigWidget::saveSettingsLater()
 {
     if ( _saveTimer == 0 ) {
@@ -102,7 +128,78 @@ void ConfigWidget::saveSettingsLater()
 
 void ConfigWidget::onSaveTimer()
 {
-    // TODO: implement save settings
+    kDebug() << "onSaveTimer";
+    KSharedConfigPtr config = KGlobal::config();
+    KConfigGroup mainGroup( config, "main" );
+    
+    mainGroup.writeEntry(MAIN_ENABLE_SYNC_ENTRY, _enableSync->isChecked());
+    mainGroup.writeEntry(MAIN_SYNC_INTERVAL, _intervalSpinBox->value());
+    
+    mainGroup.sync();
+}
+
+void ConfigWidget::onSyncTimer()
+{
+    kDebug() << "onSyncTimer";
+    if ( _enableSync->isChecked() )
+        startSync();
+}
+
+void ConfigWidget::loadSettings()
+{
+    KSharedConfigPtr config = KGlobal::config();
+    KConfigGroup mainGroup( config, "main" );
+    
+    bool enableSync = mainGroup.readEntry<bool>(MAIN_ENABLE_SYNC_ENTRY, false);
+    _enableSync->setChecked( enableSync );
+    enableSyncToggled( enableSync );
+    
+    int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, 1 );
+    _intervalSpinBox->setValue( syncInterval );
+    if ( _synchTimer == 0 ) {
+        _synchTimer = new QTimer( this );
+        connect( _synchTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
+    }
+    _synchTimer->setInterval( syncInterval );
+    _synchTimer->start();
+}
+
+void ConfigWidget::enableSyncToggled(bool syncEnabled)
+{
+    _saveGeneralChangesBtn->setEnabled( true );
+    _intervalSpinBox->setEnabled( syncEnabled );
+    _intervalLabel->setEnabled( syncEnabled );
+    _intervalUnits->setEnabled( syncEnabled );
+}
+
+void ConfigWidget::onSynchIntervalChanged(int )
+{
+    _saveGeneralChangesBtn->setEnabled(true);
+}
+
+void ConfigWidget::onSynchNow()
+{
+    kDebug() << "onSynchNow";
+    startSync();
+}
+
+void ConfigWidget::startSync()
+{
+    kDebug() << "startSync";
+    if ( _computerList->count() == 0 ) {
+        return;
+    }
+    
+    SyncJob *syncJob = new SyncJob;
+    foreach ( QListWidgetItem* item, _computerList->findItems("*", Qt::MatchWildcard ) ) {
+        new ComputerSyncJob( syncJob, item->text(), this );
+    }
+    syncJob->start();
+}
+
+void ConfigWidget::createLogEntry(const QString& )
+{
+    // TODO: implement logging
 }
 
 #include "configwidget.moc"
