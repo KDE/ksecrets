@@ -52,6 +52,8 @@ int main(int argc, char **argv)
 
     // initialize QCA
     QCA::Initializer qcaInit;
+    
+    // TODO; initialize a DBus client here and expose the remoting interfaces
 
     KSecretSync mainWindow;
     mainWindow.setCaption(i18n("KSecretSync"));
