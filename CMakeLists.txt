@@ -1,9 +1,6 @@
 PROJECT (ksecretserviced)
 
 FIND_PACKAGE (QCA2 REQUIRED)
-FIND_PACKAGE (DBus REQUIRED)
-
-add_definitions(${DBUS_DEFINITIONS})
 
 include(MacroLibrary)
 include(KDE4Defaults)
