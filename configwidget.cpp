@@ -43,6 +43,10 @@
  * persisted into the configuration file
  */
 #define SAVE_TIMER_INTERVAL 2000
+/**
+ * Avoid too short sync interval 
+ */
+#define MIN_SYNC_INTERVAL   1
 
 #define MAIN_ENABLE_SYNC_ENTRY "enableSync"
 #define MAIN_SYNC_INTERVAL "syncInterval"
@@ -154,13 +158,17 @@ void ConfigWidget::loadSettings()
     _enableSync->setChecked( enableSync );
     enableSyncToggled( enableSync );
     
-    int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, 1 );
+    int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, MIN_SYNC_INTERVAL );
+    if ( syncInterval < MIN_SYNC_INTERVAL ) {
+        kDebug() << "Fixing too short syncInterval from " << syncInterval << " to " << MIN_SYNC_INTERVAL;
+        syncInterval = MIN_SYNC_INTERVAL;
+    }
     _intervalSpinBox->setValue( syncInterval );
     if ( _synchTimer == 0 ) {
         _synchTimer = new QTimer( this );
         connect( _synchTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
     }
-    _synchTimer->setInterval( syncInterval );
+    _synchTimer->setInterval( syncInterval * 60000 );
     _synchTimer->start();
 }
 

@@ -53,12 +53,15 @@ int main(int argc, char **argv)
     // initialize QCA
     QCA::Initializer qcaInit;
     
-    // TODO; initialize a DBus client here and expose the remoting interfaces
+    if(!QDBusConnection::sessionBus().registerService("org.freedesktop.Secret.Sync")) {
+        kDebug() << "Couldn't register org.freedesktop.Secret.Sync D-Bus service!";
+        return 1;
+    }
 
     KSecretSync mainWindow;
     mainWindow.setCaption(i18n("KSecretSync"));
     
-    KGlobal::dirs()->addResourceType("kwallet", QLatin1String( "share/apps/kwallet" ));
+    // KGlobal::dirs()->addResourceType("kwallet", QLatin1String( "share/apps/kwallet" ));
 
     KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
     if ( args ) {
