@@ -31,6 +31,21 @@
 
 #include "ksecretsync.h"
 
+/**
+ * This is the main entry of the ksecretsync tool
+ * It basically does the following things :
+ * - register dbus interface
+ * - start the main window 
+ *      * start the sync daemon ; it'll read it's settings and do (or do not) background sync
+ *      * it displays the tray icon
+ *      * it handles the tray actions
+ *      * when shown, it display sync status and log
+ * - start the main loop
+ * 
+ * The configuration is done using a KCModule, available under the Konfigurator folder
+ * This Konfigurator is launched via the "Settings" action on the tray icon or via the
+ * system settings utility.
+ */
 int main(int argc, char **argv)
 {
     KAboutData aboutdata("ksecretsync", 0, ki18n("KDE Secret Service Synchronization Daemon"),
@@ -65,12 +80,7 @@ int main(int argc, char **argv)
 
     KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
     if ( args ) {
-        if (args->isSet("show")) {
-            mainWindow.show();
-        }
-        if (args->isSet("poll")) {
-        }
-  
+        // TODO: do we need arguments ?
     }
 
     return app.exec();

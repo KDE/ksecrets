@@ -21,18 +21,18 @@ INCLUDE_DIRECTORIES (
 #
 add_subdirectory(icons)
 
-SET( ksecretsync_SRCS syncjob.cpp 
+SET( ksecretsync_SRCS 
+    statuswidget.cpp 
+    syncdaemon.cpp 
+    syncjob.cpp 
     computersyncjob.cpp 
-    addcomputerdialog.cpp 
     ksecretsync.cpp 
     trayicon.cpp
     main.cpp
-    configwidget.cpp
 )
 
 KDE4_ADD_UI_FILES ( ksecretsync_SRCS
-    configwidget.ui
-    addcomputerwidget.ui
+    statuswidget.ui
 )
 
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})
@@ -48,3 +48,5 @@ install( FILES ksecretsync.rc DESTINATION ${DATA_INSTALL_DIR}/ksecretsync)
 
 kde4_install_icons( ${ICON_INSTALL_DIR} )
 
+
+add_subdirectory(konfigurator)

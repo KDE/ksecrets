@@ -18,34 +18,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
+#ifndef CONFIGWIDGET_H
+#define CONFIGWIDGET_H
 
-#include <kxmlguiwindow.h>
+#include <QWidget>
 
-class StatusWidget;
-class TrayIcon;
-class KAction;
+#include <ui_configwidget.h>
+#include <synclogger.h>
 
-class KSecretSync : public KXmlGuiWindow
+class KSecretSync;
+class QTimer;
+
+class ConfigWidget : public QWidget, public Ui_ConfigWidget, public SyncLogger
 {
     Q_OBJECT
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
+    explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
+    virtual ~ConfigWidget();
     
-    void createLogEntry( const QString& );
-
+    virtual void createLogEntry( const QString& );
+    
 protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
+    void onAddComputer();
+    void onDeleteComputer();
+    void onSaveTimer();
+    void enableSyncToggled( bool );
+    void saveGeneralSettings();
+    void onSynchIntervalChanged( int );
+    void onTabChanged(int);
     
-protected:
-    virtual void closeEvent( QCloseEvent* );
-        
 private:
-    TrayIcon        *_trayIcon;
-    StatusWidget    *_statusWidget;
+    void createActions();
+    void saveSettingsLater();
+    void loadSettings();
+    
+private:
+    KSecretSync *_mainWindow;
+    QTimer      *_saveTimer;
 };
 
-#endif // KSECRETSYNC_H
+#endif // CONFIGWIDGET_H

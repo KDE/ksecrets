@@ -18,34 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
+#ifndef CONFIGCONSTANTS_H
+#define CONFIGCONSTANTS_H
 
-#include <kxmlguiwindow.h>
+/**
+ * This is the save timer interval default value
+ * The save timer is started whenever a setting is changed and allow for it to be
+ * persisted into the configuration file
+ */
+#define SAVE_TIMER_INTERVAL 2000
+/**
+ * Avoid too short sync interval 
+ */
+#define MIN_SYNC_INTERVAL   1
 
-class StatusWidget;
-class TrayIcon;
-class KAction;
+#define MAIN_ENABLE_SYNC_ENTRY "enableSync"
+#define MAIN_SYNC_INTERVAL "syncInterval"
+#define MAIN_CURRENT_TAB "currentTab"
 
-class KSecretSync : public KXmlGuiWindow
-{
-    Q_OBJECT
-public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
-    
-    void createLogEntry( const QString& );
-
-protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    
-protected:
-    virtual void closeEvent( QCloseEvent* );
-        
-private:
-    TrayIcon        *_trayIcon;
-    StatusWidget    *_statusWidget;
-};
-
-#endif // KSECRETSYNC_H
+#endif // CONFIGCONSTANTS_H

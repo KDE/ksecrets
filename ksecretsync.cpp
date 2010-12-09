@@ -20,12 +20,13 @@
 
 #include "ksecretsync.h"
 #include "trayicon.h"
-#include "configwidget.h"
+#include "statuswidget.h"
 
 #include <kconfig.h>
 #include <klocalizedstring.h>
 #include <kaction.h>
 #include <kactioncollection.h>
+#include <kmessagebox.h>
 
 KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f): 
     KXmlGuiWindow(parent, f)
@@ -36,15 +37,27 @@ KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f):
     
     _trayIcon = new TrayIcon( this );
     
-    _configWidget = new ConfigWidget( this );
-    setCentralWidget( _configWidget );
+    _statusWidget = new StatusWidget( this );
+    setCentralWidget( _statusWidget );
     
     createGUI( QLatin1String( "ksecretsync.rc" ) );
+    
+    KAction *action;
+    
+    action = createAction( QLatin1String("ksecretsync synchronize now") );
+    action->setText( i18n("&Synchronize now") );
+    action->setIcon( KIcon( QLatin1String( "view-refresh" ) ) );
+    connect( action, SIGNAL(triggered(bool)), this, SLOT(onSynchronizeNow(bool)));
 }
 
 KSecretSync::~KSecretSync()
 {
+}
+
+void KSecretSync::closeEvent(QCloseEvent* event)
+{
     delete _trayIcon;
+    KMainWindow::closeEvent( event );
 }
 
 KAction *KSecretSync::createAction( const QLatin1String &description )
@@ -54,5 +67,17 @@ KAction *KSecretSync::createAction( const QLatin1String &description )
         _trayIcon->addAction( action );
     return action;
 }
+
+void KSecretSync::createLogEntry(const QString& )
+{
+    // TODO: create log entry here
+}
+
+void KSecretSync::onSynchronizeNow(bool )
+{
+    // TODO: implement this
+    KMessageBox::information( this, i18n( "This function is not yet implemented" ) );
+}
+
 
 #include "ksecretsync.moc"

@@ -19,9 +19,10 @@
  */
 
 #include "computersyncjob.h"
+#include "computerdata.h"
 
-ComputerSyncJob::ComputerSyncJob(QObject* parent, const QString& computerName, SyncLogger* logger): 
-    KJob(parent), _computerName(computerName), _logger(logger)
+ComputerSyncJob::ComputerSyncJob(QObject* parent, ComputerData& computerData, SyncLogger* logger): 
+    KJob(parent), _logger(logger), _computerData(computerData)
 {
 
 }

@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="_tabs">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="_generalTab">
       <attribute name="title">
@@ -46,13 +46,6 @@
            </property>
           </spacer>
          </item>
-         <item>
-          <widget class="QPushButton" name="_synchronizeNowBtn">
-           <property name="text">
-            <string>Synchronize &amp;now...</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
@@ -78,6 +71,34 @@
           <widget class="QLabel" name="_intervalUnits">
            <property name="text">
             <string>minutes</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Maximum log size:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="KIntSpinBox" name="_logSize">
+           <property name="accelerated">
+            <bool>true</bool>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Mb</string>
            </property>
           </widget>
          </item>
@@ -209,47 +230,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string>Log</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <widget class="QPlainTextEdit" name="_logView">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="plainText">
-          <string notr="true"/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="KPushButton" name="_clearLogBtn">
-           <property name="text">
-            <string>&amp;Clear log...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
     </widget>
    </item>
   </layout>
@@ -269,14 +249,30 @@
  <resources/>
  <connections>
   <connection>
+   <sender>_saveGeneralChangesBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>ConfigWidget</receiver>
+   <slot>saveGeneralSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>53</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>368</x>
+     <y>32</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>_enableSync</sender>
    <signal>toggled(bool)</signal>
    <receiver>ConfigWidget</receiver>
    <slot>enableSyncToggled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>37</y>
+     <x>53</x>
+     <y>34</y>
     </hint>
     <hint type="destinationlabel">
      <x>220</x>
@@ -291,44 +287,12 @@
    <slot>onSynchIntervalChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>181</x>
-     <y>95</y>
+     <x>71</x>
+     <y>41</y>
     </hint>
     <hint type="destinationlabel">
      <x>368</x>
      <y>91</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>_synchronizeNowBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>ConfigWidget</receiver>
-   <slot>onSynchNow()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>259</x>
-     <y>122</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>386</x>
-     <y>108</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>_saveGeneralChangesBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>ConfigWidget</receiver>
-   <slot>saveGeneralSettings()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>282</x>
-     <y>262</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>368</x>
-     <y>32</y>
     </hint>
    </hints>
   </connection>
@@ -338,5 +302,6 @@
   <slot>saveGeneralSettings()</slot>
   <slot>onSynchIntervalChanged(int)</slot>
   <slot>onSynchNow()</slot>
+  <slot>onTabChanged(int)</slot>
  </slots>
 </ui>

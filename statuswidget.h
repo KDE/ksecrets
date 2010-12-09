@@ -17,35 +17,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef STATUSWIDGET_H
+#define STATUSWIDGET_H
 
-#ifndef KSECRETSYNC_H
-#define KSECRETSYNC_H
+#include <QWidget>
+#include <ui_statuswidget.h>
 
-#include <kxmlguiwindow.h>
-
-class StatusWidget;
-class TrayIcon;
-class KAction;
-
-class KSecretSync : public KXmlGuiWindow
+class StatusWidget : public QWidget, public Ui_StatusWidget
 {
     Q_OBJECT
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
-    KAction* createAction(const QLatin1String &description);
-    
-    void createLogEntry( const QString& );
-
-protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    
-protected:
-    virtual void closeEvent( QCloseEvent* );
-        
-private:
-    TrayIcon        *_trayIcon;
-    StatusWidget    *_statusWidget;
+    explicit StatusWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    virtual ~StatusWidget();
 };
 
-#endif // KSECRETSYNC_H
+#endif // STATUSWIDGET_H

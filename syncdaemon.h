@@ -18,47 +18,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONFIGWIDGET_H
-#define CONFIGWIDGET_H
+#ifndef SYNCDAEMON_H
+#define SYNCDAEMON_H
 
-#include <QWidget>
+#include "computerdata.h"
+#include "synclogger.h"
 
-#include <ui_configwidget.h>
-#include <synclogger.h>
+#include <QObject>
+#include <QMap>
 
-class KSecretSync;
 class QTimer;
+class QStandardItemModel;
 
-class ConfigWidget : public QWidget, public Ui_ConfigWidget, public SyncLogger
+
+class SyncDaemon : public QObject, public SyncLogger
 {
     Q_OBJECT
 public:
-    explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
-    virtual ~ConfigWidget();
-    
-    virtual void createLogEntry( const QString& );
+    explicit SyncDaemon(QObject* parent = 0);
+    virtual ~SyncDaemon();
+
+    QStandardItemModel* displayModel() const { return _computerList; }
     
 protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    void onAddComputer();
-    void onDeleteComputer();
-    void onSaveTimer();
     void onSyncTimer();
-    void enableSyncToggled( bool );
-    void saveGeneralSettings();
-    void onSynchIntervalChanged( int );
-    void onSynchNow();
+    void configChanged();
     
-private:
-    void createActions();
-    void saveSettingsLater();
-    void loadSettings();
+protected:
     void startSync();
+    virtual void createLogEntry( const QString& );
     
 private:
-    KSecretSync *_mainWindow;
-    QTimer      *_saveTimer;
-    QTimer      *_synchTimer;
+    bool                        _syncEnabled;
+    QTimer                      *_syncTimer;
+    QStandardItemModel          *_computerList;
+    QMap<QString, ComputerData> _computerData;
 };
 
-#endif // CONFIGWIDGET_H
+#endif // SYNCDAEMON_H

@@ -21,20 +21,21 @@
 #ifndef COMPUTERSYNCJOB_H
 #define COMPUTERSYNCJOB_H
 
-#include </home/vrac2/kdesrc/4/include/kjob.h>
+#include <kjob.h>
 
 class SyncLogger;
+class ComputerData;
 
 class ComputerSyncJob : public KJob
 {
     Q_OBJECT
 public:
-    ComputerSyncJob(QObject* parent, const QString& computerName, SyncLogger* logger );
+    ComputerSyncJob(QObject* parent, ComputerData& , SyncLogger* logger );
     virtual void start();
     
 private:
-    QString     _computerName;
-    SyncLogger* _logger;
+    SyncLogger      *_logger;
+    ComputerData    &_computerData;
 };
 
 #endif // COMPUTERSYNCJOB_H
