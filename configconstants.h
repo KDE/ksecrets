@@ -35,5 +35,6 @@
 #define MAIN_ENABLE_SYNC_ENTRY "enableSync"
 #define MAIN_SYNC_INTERVAL "syncInterval"
 #define MAIN_CURRENT_TAB "currentTab"
+#define MAIN_COMPUTER_COUNT "computerCount"
 
 #endif // CONFIGCONSTANTS_H

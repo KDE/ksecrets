@@ -21,33 +21,44 @@
 #include "ksecretsync.h"
 #include "trayicon.h"
 #include "statuswidget.h"
+#include "syncdaemon.h"
 
 #include <kconfig.h>
 #include <klocalizedstring.h>
 #include <kaction.h>
 #include <kactioncollection.h>
 #include <kmessagebox.h>
+#include <ktoolinvocation.h>
+#include <QStandardItemModel>
 
 KSecretSync::KSecretSync(QWidget* parent, Qt::WindowFlags f): 
     KXmlGuiWindow(parent, f)
 {
+    createGUI( QLatin1String( "ksecretsync.rc" ) );
 
-    KConfig cfg( QLatin1String( "ksecretsyncrc" )); 
-    // TODO: read settings here
-    
     _trayIcon = new TrayIcon( this );
+    
+    _syncDaemon = new SyncDaemon( this );
     
     _statusWidget = new StatusWidget( this );
     setCentralWidget( _statusWidget );
+    _statusWidget->_computersView->setModel( _syncDaemon->computerList() );
+    connect( _statusWidget->_configureBtn, SIGNAL(clicked()), this, SLOT(onConfigure()));
+    connect( _statusWidget->_computersView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(onComputerDoubleClicked(QModelIndex)));
     
-    createGUI( QLatin1String( "ksecretsync.rc" ) );
     
     KAction *action;
-    
     action = createAction( QLatin1String("ksecretsync synchronize now") );
     action->setText( i18n("&Synchronize now") );
     action->setIcon( KIcon( QLatin1String( "view-refresh" ) ) );
     connect( action, SIGNAL(triggered(bool)), this, SLOT(onSynchronizeNow(bool)));
+    _trayIcon->addAction( action );
+    
+    action = createAction( QLatin1String("ksecretsync configure") );
+    action->setText( i18n("&Configure...") );
+    action->setIcon( KIcon( QLatin1String( "run-build-configure") ) );
+    connect( action, SIGNAL(triggered(bool)), this, SLOT(onConfigure(bool)));
+    _trayIcon->addAction( action );
 }
 
 KSecretSync::~KSecretSync()
@@ -56,6 +67,7 @@ KSecretSync::~KSecretSync()
 
 void KSecretSync::closeEvent(QCloseEvent* event)
 {
+    delete _syncDaemon;
     delete _trayIcon;
     KMainWindow::closeEvent( event );
 }
@@ -79,5 +91,19 @@ void KSecretSync::onSynchronizeNow(bool )
     KMessageBox::information( this, i18n( "This function is not yet implemented" ) );
 }
 
+void KSecretSync::onConfigure(bool )
+{
+    KToolInvocation::startServiceByDesktopName( QLatin1String( "ksecretsync" ));    
+}
+
+void KSecretSync::onComputerDoubleClicked(QModelIndex )
+{
+    if ( _syncDaemon->hasComputers() ) {
+        // TODO: what should we do when a computer is double clicked ?
+    }
+    else {
+        onConfigure();
+    }
+}
 
 #include "ksecretsync.moc"

@@ -28,6 +28,8 @@
 #include <kdebug.h>
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
+#include <klocalizedstring.h>
+#include <kicon.h>
 #include <QTimer>
 #include <QStandardItemModel>
 
@@ -35,15 +37,17 @@ SyncDaemon::SyncDaemon(QObject* parent) :
     QObject(parent),
     _syncTimer(0)
 {
+    _computerList = new QStandardItemModel(0, 3, this);
     
     _syncTimer = new QTimer( this );
     connect( _syncTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
 
+    configChanged();
 }
 
 SyncDaemon::~SyncDaemon()
 {
-
+    delete _computerList;
 }
 
 void SyncDaemon::configChanged()
@@ -56,6 +60,20 @@ void SyncDaemon::configChanged()
     int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, MIN_SYNC_INTERVAL );
     _syncTimer->setInterval( syncInterval * 60000 );
     _syncTimer->start();
+    
+    int computerCount = mainGroup.readEntry<int>(MAIN_COMPUTER_COUNT, 0);
+    if ( computerCount ) {
+        _hasComputers = true;
+        // TODO: load computers here
+    }
+    else {
+        _hasComputers = false;
+        QStandardItem *noComputersItem = new QStandardItem( KIcon( QLatin1String("dialog-cancel") ), 
+                                                            i18n("no computers defined") );
+        noComputersItem->setWhatsThis( i18n("This item is present because no computers are defined. Click this item to open the settings module and to add a computer") );
+        noComputersItem->setToolTip( i18n("Double click this item to open the configuration module") );
+        _computerList->appendRow( noComputersItem );
+    }
 }
 
 void SyncDaemon::onSyncTimer()
@@ -66,9 +84,8 @@ void SyncDaemon::onSyncTimer()
 void SyncDaemon::startSync()
 {
     kDebug() << "startSync";
-    if ( _computerList->rowCount() == 0 ) {
+    if (!_hasComputers)
         return;
-    }
     
     SyncJob *syncJob = new SyncJob;
     for (int r =0; r < _computerList->rowCount(); ++r ) {

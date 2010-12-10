@@ -38,7 +38,8 @@ public:
     explicit SyncDaemon(QObject* parent = 0);
     virtual ~SyncDaemon();
 
-    QStandardItemModel* displayModel() const { return _computerList; }
+    QStandardItemModel* computerList() const { return _computerList; }
+    bool hasComputers() const { return _hasComputers; }
     
 protected Q_SLOTS:
     void onSyncTimer();
@@ -53,6 +54,7 @@ private:
     QTimer                      *_syncTimer;
     QStandardItemModel          *_computerList;
     QMap<QString, ComputerData> _computerData;
+    bool                        _hasComputers;
 };
 
 #endif // SYNCDAEMON_H

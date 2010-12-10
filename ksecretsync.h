@@ -23,9 +23,11 @@
 
 #include <kxmlguiwindow.h>
 
+class SyncDaemon;
 class StatusWidget;
 class TrayIcon;
 class KAction;
+class QModelIndex;
 
 class KSecretSync : public KXmlGuiWindow
 {
@@ -39,11 +41,14 @@ public:
 
 protected Q_SLOTS:
     void onSynchronizeNow( bool =false );
+    void onConfigure( bool =false );
+    void onComputerDoubleClicked(QModelIndex);
     
 protected:
     virtual void closeEvent( QCloseEvent* );
         
 private:
+    SyncDaemon      *_syncDaemon;
     TrayIcon        *_trayIcon;
     StatusWidget    *_statusWidget;
 };
