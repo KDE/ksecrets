@@ -11,6 +11,10 @@ kde4_add_ui_files(kcm_ksecretsync_PART_SRCS
     addcomputerwidget.ui
 )
 
+kde4_add_kcfg_files(kcm_ksecretsync_PART_SRCS
+    ksecretsynccfg.kcfgc
+)
+
 kde4_add_plugin(kcm_ksecretsync ${kcm_ksecretsync_PART_SRCS})
 
 
@@ -24,5 +28,6 @@ install(TARGETS kcm_ksecretsync  DESTINATION ${PLUGIN_INSTALL_DIR})
 
 ########### install files ###############
 
-install( FILES ksecretsync.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+install( FILES kcm_ksecretsync.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+install( FILES kcm_ksecretsync.kcfg DESTINATION ${KCFG_INSTALL_DIR})
 

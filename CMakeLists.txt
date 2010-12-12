@@ -20,6 +20,7 @@ INCLUDE_DIRECTORIES (
 # ksecret-sync
 #
 add_subdirectory(icons)
+add_subdirectory(kcm)
 
 SET( ksecretsync_SRCS 
     statuswidget.cpp 
@@ -48,5 +49,3 @@ install( FILES ksecretsync.rc DESTINATION ${DATA_INSTALL_DIR}/ksecretsync)
 
 kde4_install_icons( ${ICON_INSTALL_DIR} )
 
-
-add_subdirectory(konfigurator)
