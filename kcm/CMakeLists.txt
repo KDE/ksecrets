@@ -2,6 +2,7 @@
 ########### next target ###############
 
 set(kcm_ksecretsync_PART_SRCS 
+    kcsecretsyncmodule.cpp 
     configwidget.cpp 
     addcomputerdialog.cpp
 )
