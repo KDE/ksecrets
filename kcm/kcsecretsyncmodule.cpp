@@ -19,8 +19,10 @@
  */
 
 #include "kcsecretsyncmodule.h"
+#include "configwidget.h"
 
 #include <kgenericfactory.h>
+#include <kaboutdata.h>
 
 K_PLUGIN_FACTORY(KSecretSyncFactory, registerPlugin<KCSecretSyncModule>();)
 K_EXPORT_PLUGIN(KSecretSyncFactory("kcm_ksecretsync"))
@@ -47,7 +49,25 @@ extern "C"
 KCSecretSyncModule::KCSecretSyncModule(QWidget* parent, const QVariantList& args) :
     KCModule( KSecretSyncFactory::componentData(), parent, args)
 {
+    KAboutData  *aboutdata = new KAboutData(
+                        "kcm_ksecretsync", 0, ki18n("KDE Secret Service Synchronization Daemon configuration module"),
+                        KDE_VERSION_STRING, ki18n("KDE Secret Service"),
+                        KAboutData::License_GPL, ki18n("(C) 2010 Valentin Rusu"));
+    aboutdata->addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
+    setAboutData( aboutdata );
+    setButtons( KCModule::Apply | KCModule::Help);
+    
+    _configWidget = new ConfigWidget( this );
+    connect( _configWidget->_enableSync, SIGNAL(toggled(bool)), this, SLOT(configChanged()) );
+    connect( _configWidget->_intervalSpinBox, SIGNAL(valueChanged(int)), this, SLOT(configChanged()) );
+    connect( _configWidget, SIGNAL(computerListChanged()), this, SLOT(configChanged()) );
+    
+    // TODO: use D-Bus to check if the daemon is running and to hide the 'run' button here
+}
 
+void KCSecretSyncModule::configChanged()
+{
+    emit changed(true);
 }
 
 void KCSecretSyncModule::load()
@@ -65,3 +85,4 @@ void KCSecretSyncModule::defaults()
     KCModule::defaults();
 }
 
+#include "kcsecretsyncmodule.moc"

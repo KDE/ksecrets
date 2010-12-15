@@ -26,14 +26,13 @@
 #include <ui_configwidget.h>
 #include <synclogger.h>
 
-class KSecretSync;
 class QTimer;
 
 class ConfigWidget : public QWidget, public Ui_ConfigWidget, public SyncLogger
 {
     Q_OBJECT
 public:
-    explicit ConfigWidget(KSecretSync* parent, Qt::WindowFlags f = 0);
+    explicit ConfigWidget(QWidget* parent, Qt::WindowFlags f = 0);
     virtual ~ConfigWidget();
     
     virtual void createLogEntry( const QString& );
@@ -47,13 +46,16 @@ protected Q_SLOTS:
     void onSynchIntervalChanged( int );
     void onTabChanged(int);
     
+Q_SIGNALS:
+    void computerListChanged();
+    
 private:
     void createActions();
     void saveSettingsLater();
     void loadSettings();
     
 private:
-    KSecretSync *_mainWindow;
+    QWidget *_mainWindow;
     QTimer      *_saveTimer;
 };
 

@@ -37,9 +37,10 @@
 #include <kconfig.h>
 #include <ksharedconfig.h>
 #include <kdebug.h>
+#include <QStandardItemModel>
 
 
-ConfigWidget::ConfigWidget(KSecretSync* parent, Qt::WindowFlags f): 
+ConfigWidget::ConfigWidget(QWidget* parent, Qt::WindowFlags f): 
     QWidget(parent, f),
     _mainWindow( parent ),
     _saveTimer(0)
@@ -71,6 +72,7 @@ void ConfigWidget::onAddComputer()
 {
     AddComputerDialog dlg( this );
     if ( dlg.exec() == QDialog::Accepted ) {
+        // TODO: check if entered computer name was not already configured
         _computerList->addItem( dlg._computerName );
     }
 }

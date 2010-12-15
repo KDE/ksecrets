@@ -23,15 +23,23 @@
 
 #include <kcmodule.h>
 
+class ConfigWidget;
 
 class KCSecretSyncModule : public KCModule
 {
-
+    Q_OBJECT
 public:
     KCSecretSyncModule( QWidget* parent =0L, const QVariantList &args = QVariantList());
     virtual void load();
     virtual void save();
     virtual void defaults();
+    
+private Q_SLOTS:
+    void configChanged();
+    
+private:
+    ConfigWidget* _configWidget;
+
 };
 
 #endif // KCSECRETSYNCMODULE_H
