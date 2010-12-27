@@ -29,7 +29,7 @@
 #include <kstandarddirs.h>
 #include <QtCrypto/QtCrypto>
 
-#include "ksecretsync.h"
+#include "ksecretsyncwindow.h"
 
 /**
  * This is the main entry of the ksecretsync tool
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    KSecretSync mainWindow;
+    KSecretSyncWindow mainWindow;
     mainWindow.setCaption(i18n("KSecretSync"));
     
     // KGlobal::dirs()->addResourceType("kwallet", QLatin1String( "share/apps/kwallet" ));

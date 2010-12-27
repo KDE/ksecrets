@@ -19,9 +19,9 @@
  */
 
 #include "computersyncjob.h"
-#include "computerdata.h"
+#include "syncmodel.h"
 
-ComputerSyncJob::ComputerSyncJob(QObject* parent, ComputerData& computerData, SyncLogger* logger): 
+ComputerSyncJob::ComputerSyncJob(QObject* parent, ComputerData* computerData, SyncLogger* logger): 
     KJob(parent), _logger(logger), _computerData(computerData)
 {
 

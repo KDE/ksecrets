@@ -18,24 +18,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMPUTERSYNCJOB_H
-#define COMPUTERSYNCJOB_H
+#ifndef SYNCSERVERJOB_H
+#define SYNCSERVERJOB_H
 
 #include <kjob.h>
+#include <QtNetwork/QSslError>
+#include <QtNetwork/QAbstractSocket>
 
-class SyncLogger;
-class ComputerData;
+class QSslSocket;
+class SyncDaemon;
 
-class ComputerSyncJob : public KJob
+class SyncServerJob : public KJob
 {
     Q_OBJECT
 public:
-    ComputerSyncJob(QObject* parent, ComputerData* , SyncLogger* logger );
+    SyncServerJob( SyncDaemon* daemon, QSslSocket* socket);
+    virtual ~SyncServerJob();
+    
     virtual void start();
+    virtual QString errorString() const;
+    
+protected Q_SLOTS:
+    void onSocketStateChanged(QAbstractSocket::SocketState);
+    void onSocketEncrypted();
+    void onSslErrors(QList<QSslError>);
     
 private:
-    SyncLogger      *_logger;
-    ComputerData    *_computerData;
+    QSslSocket  *_socket;
+    SyncDaemon  *_daemon;
 };
 
-#endif // COMPUTERSYNCJOB_H
+#endif // SYNCSERVERJOB_H

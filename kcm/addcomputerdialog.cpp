@@ -27,10 +27,12 @@ AddComputerDialog::AddComputerDialog(QWidget* parent, Qt::WFlags flags):
 {
     setCaption( i18n("Add computer") );
     setButtons( KDialog::Ok | KDialog::Cancel );
-    AddComputerDialogWidget* widget = new AddComputerDialogWidget(this);
-    setMainWidget( widget );
-    connect( widget->_computerName, SIGNAL(textChanged(const QString&)), SLOT(computerNameChanged(const QString&)) );
+    _widget = new AddComputerDialogWidget(this);
+    setMainWidget( _widget );
+    connect( _widget->_computerName, SIGNAL(textChanged(const QString&)), SLOT(computerNameChanged(const QString&)) );
     enableButtonOk(false);
+    _widget->setFocus();
+    // TODO: add more port validation to this dialog to complete the existing input mask validation
 }
 
 void AddComputerDialog::computerNameChanged(const QString& computerName )
@@ -40,7 +42,11 @@ void AddComputerDialog::computerNameChanged(const QString& computerName )
     }
     else
         enableButtonOk(false);
-    _computerName = computerName;
+}
+
+QString AddComputerDialog::computerName() const
+{
+    return QString("%1:%2").arg( _widget->_computerName->text() ).arg( _widget->_port->text() );
 }
 
 

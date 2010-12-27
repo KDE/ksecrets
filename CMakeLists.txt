@@ -1,9 +1,6 @@
 PROJECT (ksecretsync)
 
 FIND_PACKAGE (QCA2 REQUIRED)
-FIND_PACKAGE (DBus REQUIRED)
-
-add_definitions(${DBUS_DEFINITIONS})
 
 include(MacroLibrary)
 include(KDE4Defaults)
@@ -21,15 +18,22 @@ INCLUDE_DIRECTORIES (
 #
 add_subdirectory(icons)
 add_subdirectory(kcm)
+add_subdirectory(tests)
 
 SET( ksecretsync_SRCS 
     statuswidget.cpp 
     syncdaemon.cpp 
     syncjob.cpp 
     computersyncjob.cpp 
-    ksecretsync.cpp 
+    ksecretsyncwindow.cpp 
     trayicon.cpp
     main.cpp
+    syncmodel.cpp
+    syncserverjob.cpp
+)
+
+kde4_add_kcfg_files(ksecretsync_SRCS
+     kcm/ksecretsynccfg.kcfgc
 )
 
 KDE4_ADD_UI_FILES ( ksecretsync_SRCS

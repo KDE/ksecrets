@@ -20,9 +20,11 @@
 
 #include "kcsecretsyncmodule.h"
 #include "configwidget.h"
+#include "ksecretsynccfg.h"
 
 #include <kgenericfactory.h>
 #include <kaboutdata.h>
+#include <kconfigdialog.h>
 
 K_PLUGIN_FACTORY(KSecretSyncFactory, registerPlugin<KCSecretSyncModule>();)
 K_EXPORT_PLUGIN(KSecretSyncFactory("kcm_ksecretsync"))
@@ -57,12 +59,46 @@ KCSecretSyncModule::KCSecretSyncModule(QWidget* parent, const QVariantList& args
     setAboutData( aboutdata );
     setButtons( KCModule::Apply | KCModule::Help);
     
-    _configWidget = new ConfigWidget( this );
-    connect( _configWidget->_enableSync, SIGNAL(toggled(bool)), this, SLOT(configChanged()) );
-    connect( _configWidget->_intervalSpinBox, SIGNAL(valueChanged(int)), this, SLOT(configChanged()) );
+    QVBoxLayout *topLayout = new QVBoxLayout(this);
+    topLayout->setSpacing(KDialog::spacingHint());
+    topLayout->setMargin(0);   
+    
+    _configWidget = new ConfigWidget(0);
+    topLayout->addWidget( _configWidget );
+    
+    
+    connect( _configWidget->kcfg_enableSync, SIGNAL(toggled(bool)), this, SLOT(configChanged()) );
+    connect( _configWidget->kcfg_syncInterval, SIGNAL(valueChanged(int)), this, SLOT(configChanged()) );
     connect( _configWidget, SIGNAL(computerListChanged()), this, SLOT(configChanged()) );
     
     // TODO: use D-Bus to check if the daemon is running and to hide the 'run' button here
+    
+    
+    addConfig( KSecretSyncCfg::self(), this );
+}
+
+void KCSecretSyncModule::load()
+{
+    kDebug() << "KCSecretSyncModule::load";
+    _configWidget->load( KSecretSyncCfg::self() );
+    KCModule::load();
+}
+
+void KCSecretSyncModule::save()
+{
+    kDebug() << "KCSecretSyncModule::save";
+    _configWidget->save( KSecretSyncCfg::self() );
+    KCModule::save();
+    // changes will be saved automatically by KConfigXT
+    // TODO: figure out how to notify main application about configuration changes
+}
+
+void KCSecretSyncModule::defaults()
+{
+    kDebug() << "KCSecretSyncModule::defaults";
+    KCModule::defaults();
+    _configWidget->defaults();
+    // defaults will be automatically loaded here by KConfigXT
 }
 
 void KCSecretSyncModule::configChanged()
@@ -70,19 +106,5 @@ void KCSecretSyncModule::configChanged()
     emit changed(true);
 }
 
-void KCSecretSyncModule::load()
-{
-    KCModule::load();
-}
-
-void KCSecretSyncModule::save()
-{
-    KCModule::save();
-}
-
-void KCSecretSyncModule::defaults()
-{
-    KCModule::defaults();
-}
 
 #include "kcsecretsyncmodule.moc"

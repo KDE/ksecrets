@@ -18,11 +18,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMPUTERDATA_H
-#define COMPUTERDATA_H
+#ifndef SYNCMODEL_H
+#define SYNCMODEL_H
 
 #include <QDateTime>
 #include <QStringList>
+#include <QStandardItemModel>
 
 /**
  * Information structure used to manage synchronization with a given computer
@@ -39,12 +40,30 @@ struct ComputerData
         SYNC_STATUS_ERROR           /// an error occurred during last sync operation
     };
     
+    explicit ComputerData( const QString& computerName );
+    
     QString     _computerName;
     QString     _computerAddress;
     QTime       _lastSyncTime;
     SyncStatus  _lastSyncStatus;
     QString     _lastSyncError;
     QStringList _conflictingItems;
+    QString     _remoteIP;
+    QString     _remotPort;
 };
 
-#endif // COMPUTERDATA_H
+Q_DECLARE_METATYPE( ComputerData* )
+
+
+class SyncModel : public QStandardItemModel {
+    Q_OBJECT
+public:
+    SyncModel();
+    virtual ~SyncModel();
+    bool hasComputers() const;
+    
+    ComputerData* computerData( int index );
+    
+};
+
+#endif // SYNCMODEL_H

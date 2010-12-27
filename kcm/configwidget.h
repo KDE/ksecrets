@@ -21,42 +21,37 @@
 #ifndef CONFIGWIDGET_H
 #define CONFIGWIDGET_H
 
+#include <ui_configwidget.h>
+
 #include <QWidget>
 
-#include <ui_configwidget.h>
-#include <synclogger.h>
-
 class QTimer;
+class KSecretSyncCfg;
 
-class ConfigWidget : public QWidget, public Ui_ConfigWidget, public SyncLogger
+class ConfigWidget : public QWidget, public Ui_ConfigWidget
 {
     Q_OBJECT
 public:
     explicit ConfigWidget(QWidget* parent, Qt::WindowFlags f = 0);
     virtual ~ConfigWidget();
-    
-    virtual void createLogEntry( const QString& );
-    
+    void load(KSecretSyncCfg*);
+    void save(KSecretSyncCfg*);
+    void defaults();
+
 protected Q_SLOTS:
     void onAddComputer();
     void onDeleteComputer();
-    void onSaveTimer();
     void enableSyncToggled( bool );
-    void saveGeneralSettings();
     void onSynchIntervalChanged( int );
-    void onTabChanged(int);
     
 Q_SIGNALS:
     void computerListChanged();
     
 private:
     void createActions();
-    void saveSettingsLater();
-    void loadSettings();
     
 private:
     QWidget *_mainWindow;
-    QTimer      *_saveTimer;
 };
 
 #endif // CONFIGWIDGET_H

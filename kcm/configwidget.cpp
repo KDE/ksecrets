@@ -19,50 +19,43 @@
  */
 
 #include "configwidget.h"
-#include "ksecretsync.h"
 #include "addcomputerdialog.h"
-#include "computersyncjob.h"
-#include "syncjob.h"
-#include "configconstants.h"
+#include "ksecretsynccfg.h"
 
-#include <qevent.h>
 #include <kaction.h>
 #include <klocalizedstring.h>
 #include <kmessagebox.h>
-#include <QListWidget>
-#include <QListWidgetItem>
+#include <QTableView>
 #include <QTimer>
 #include <QCheckBox>
-#include <KStandardDirs>
+#include <kstandarddirs.h>
 #include <kconfig.h>
 #include <ksharedconfig.h>
 #include <kdebug.h>
 #include <QStandardItemModel>
-
+#include <QListWidgetItem>
+#include <QListWidget>
+#include <kconfigdialogmanager.h>
+#include <kdebug.h>
 
 ConfigWidget::ConfigWidget(QWidget* parent, Qt::WindowFlags f): 
     QWidget(parent, f),
-    _mainWindow( parent ),
-    _saveTimer(0)
+    _mainWindow( parent )
 {
     setupUi( this );
     _findComputerBtn->setVisible( false );
     _announceComputerBtn->setVisible( false );
     
     createActions();
-    
-    loadSettings();
 }
 
 ConfigWidget::~ConfigWidget()
 {
-    // FIXME: should we wait for pending timeout signals ?
-    delete _saveTimer;
 }
 
 void ConfigWidget::createActions()
 {
-    Q_ASSERT( _mainWindow != 0 );
+//     Q_ASSERT( _mainWindow != 0 );
     
     connect( _addComputerBtn, SIGNAL(clicked()), this, SLOT(onAddComputer()));
     connect( _deleteComputerBtn, SIGNAL(clicked()), this, SLOT(onDeleteComputer()));
@@ -72,8 +65,14 @@ void ConfigWidget::onAddComputer()
 {
     AddComputerDialog dlg( this );
     if ( dlg.exec() == QDialog::Accepted ) {
-        // TODO: check if entered computer name was not already configured
-        _computerList->addItem( dlg._computerName );
+        QString computerName = dlg.computerName();
+        if ( _computerList->findItems( computerName, Qt::MatchExactly ).count() >0 ) {
+            KMessageBox::error( this, i18n("The computer '%1' is already present into the computer list", computerName ) );
+        }
+        else {
+            _computerList->addItem( computerName );
+            emit computerListChanged();
+        }
     }
 }
 
@@ -84,81 +83,52 @@ void ConfigWidget::onDeleteComputer()
                                         _computerList->currentItem()->text() ) );
         if ( KMessageBox::questionYesNo( this, message ) == KMessageBox::Yes ) {
             delete _computerList->takeItem( _computerList->currentRow() );
+            emit computerListChanged();
         }
     }
 }
 
-void ConfigWidget::saveGeneralSettings()
+void ConfigWidget::load(KSecretSyncCfg* settings)
 {
-    saveSettingsLater();
-}
-
-void ConfigWidget::saveSettingsLater()
-{
-    if ( _saveTimer == 0 ) {
-        _saveTimer = new QTimer(this);
-        _saveTimer->setSingleShot(true);
-        connect( _saveTimer, SIGNAL(timeout()), SLOT(onSaveTimer()) );
-        _saveTimer->setInterval( SAVE_TIMER_INTERVAL );
+    kDebug() << "ConfigWidget::load";
+    _computerList->clear();
+    foreach ( QString computerName, settings->computerList() ) {
+        _computerList->addItem( computerName );
     }
-    
-    _saveTimer->start();
 }
 
-void ConfigWidget::onSaveTimer()
+void ConfigWidget::save(KSecretSyncCfg* settings)
 {
-    kDebug() << "onSaveTimer";
-    KSharedConfigPtr config = KGlobal::config();
-    KConfigGroup mainGroup( config, "main" );
-    
-    mainGroup.writeEntry(MAIN_ENABLE_SYNC_ENTRY, _enableSync->isChecked());
-    mainGroup.writeEntry(MAIN_SYNC_INTERVAL, _intervalSpinBox->value());
-    mainGroup.writeEntry(MAIN_CURRENT_TAB, _tabs->currentIndex());
-    
-    mainGroup.sync();
-}
+    kDebug() << "ConfigWidget::save";
 
-void ConfigWidget::loadSettings()
-{
-    KSharedConfigPtr config = KGlobal::config();
-    KConfigGroup mainGroup( config, "main" );
-
-    int currentTab = mainGroup.readEntry<int>(MAIN_CURRENT_TAB, 0);
-    _tabs->setCurrentIndex( currentTab );
-    
-    bool enableSync = mainGroup.readEntry<bool>(MAIN_ENABLE_SYNC_ENTRY, false);
-    _enableSync->setChecked( enableSync );
-    enableSyncToggled( enableSync );
-    
-    int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, MIN_SYNC_INTERVAL );
-    if ( syncInterval < MIN_SYNC_INTERVAL ) {
-        kDebug() << "Fixing too short syncInterval from " << syncInterval << " to " << MIN_SYNC_INTERVAL;
-        syncInterval = MIN_SYNC_INTERVAL;
+    QStringList computerList;
+    if ( _computerList->count() >0 ) {
+        for ( int r = 0; r < _computerList->count(); r++ ) {
+            QListWidgetItem* item = _computerList->item( r );
+            computerList.append( item->text() );
+        }
     }
-    _intervalSpinBox->setValue( syncInterval );
+    KCoreConfigSkeleton::ItemStringList *computerListItem = 
+            dynamic_cast< KCoreConfigSkeleton::ItemStringList*>( settings->findItem( QLatin1String("computerList") ) );
+    Q_ASSERT( computerListItem != 0);
+    computerListItem->setValue( computerList );
+    settings->writeConfig();
+}
+
+void ConfigWidget::defaults()
+{
+    _computerList->clear();
 }
 
 void ConfigWidget::enableSyncToggled(bool syncEnabled)
 {
-    _saveGeneralChangesBtn->setEnabled( true );
-    _intervalSpinBox->setEnabled( syncEnabled );
+    kcfg_syncInterval->setEnabled( syncEnabled );
     _intervalLabel->setEnabled( syncEnabled );
     _intervalUnits->setEnabled( syncEnabled );
 }
 
 void ConfigWidget::onSynchIntervalChanged(int )
 {
-    _saveGeneralChangesBtn->setEnabled(true);
-}
-
-void ConfigWidget::createLogEntry(const QString& )
-{
-    // TODO: implement logging
-}
-
-void ConfigWidget::onTabChanged(int tabIndex)
-{
-    // TODO: react to tab changes
 }
 
 #include "configwidget.moc"

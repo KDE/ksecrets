@@ -10,6 +10,12 @@
     <height>300</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -27,7 +33,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QCheckBox" name="_enableSync">
+          <widget class="QCheckBox" name="kcfg_enableSync">
            <property name="text">
             <string>&amp;Enable auto synchronization</string>
            </property>
@@ -58,7 +64,7 @@
           </widget>
          </item>
          <item>
-          <widget class="KIntSpinBox" name="_intervalSpinBox">
+          <widget class="KIntSpinBox" name="kcfg_syncInterval">
            <property name="minimum">
             <number>1</number>
            </property>
@@ -86,7 +92,7 @@
           </widget>
          </item>
          <item>
-          <widget class="KIntSpinBox" name="_logSize">
+          <widget class="KIntSpinBox" name="kcfg_logSize">
            <property name="accelerated">
             <bool>true</bool>
            </property>
@@ -105,20 +111,17 @@
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>166</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Listening port:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="kcfg_listeningPort"/>
+         </item>
          <item>
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
@@ -132,17 +135,20 @@
            </property>
           </spacer>
          </item>
-         <item>
-          <widget class="KPushButton" name="_saveGeneralChangesBtn">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>&amp;Save changes</string>
-           </property>
-          </widget>
-         </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>166</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -240,32 +246,11 @@
    <extends>QSpinBox</extends>
    <header>knuminput.h</header>
   </customwidget>
-  <customwidget>
-   <class>KPushButton</class>
-   <extends>QPushButton</extends>
-   <header>kpushbutton.h</header>
-  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
   <connection>
-   <sender>_saveGeneralChangesBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>ConfigWidget</receiver>
-   <slot>saveGeneralSettings()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>102</x>
-     <y>53</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>368</x>
-     <y>32</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>_enableSync</sender>
+   <sender>kcfg_enableSync</sender>
    <signal>toggled(bool)</signal>
    <receiver>ConfigWidget</receiver>
    <slot>enableSyncToggled(bool)</slot>
@@ -281,7 +266,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>_intervalSpinBox</sender>
+   <sender>kcfg_syncInterval</sender>
    <signal>valueChanged(int)</signal>
    <receiver>ConfigWidget</receiver>
    <slot>onSynchIntervalChanged(int)</slot>

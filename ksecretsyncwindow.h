@@ -23,18 +23,19 @@
 
 #include <kxmlguiwindow.h>
 
+class SyncModel;
 class SyncDaemon;
 class StatusWidget;
 class TrayIcon;
 class KAction;
 class QModelIndex;
 
-class KSecretSync : public KXmlGuiWindow
+class KSecretSyncWindow : public KXmlGuiWindow
 {
     Q_OBJECT
 public:
-    explicit KSecretSync(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSync();
+    explicit KSecretSyncWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    virtual ~KSecretSyncWindow();
     KAction* createAction(const QLatin1String &description);
     
     void createLogEntry( const QString& );
@@ -48,6 +49,7 @@ protected:
     virtual void closeEvent( QCloseEvent* );
         
 private:
+    SyncModel       *_syncModel;
     SyncDaemon      *_syncDaemon;
     TrayIcon        *_trayIcon;
     StatusWidget    *_statusWidget;

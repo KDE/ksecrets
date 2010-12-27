@@ -59,16 +59,16 @@
         </widget>
        </item>
        <item>
-        <widget class="QTreeView" name="_computersView">
+        <widget class="QTableView" name="_computersView">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
          <property name="showDropIndicator" stdset="0">
           <bool>false</bool>
          </property>
-         <property name="rootIsDecorated">
+         <attribute name="verticalHeaderVisible">
           <bool>false</bool>
-         </property>
+         </attribute>
         </widget>
        </item>
        <item>

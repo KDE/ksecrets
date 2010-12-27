@@ -22,7 +22,8 @@
 #include "syncjob.h"
 #include "computersyncjob.h"
 #include "configconstants.h"
-#include "computerdata.h"
+#include "ksecretsynccfg.h"
+#include "syncserverjob.h"
 
 #include <kglobal.h>
 #include <kdebug.h>
@@ -32,49 +33,46 @@
 #include <kicon.h>
 #include <QTimer>
 #include <QStandardItemModel>
+#include <kdebug.h>
+#include <QtNetwork/QSslSocket>
+#include <stdio.h>
+#include <stdlib.h>
 
-SyncDaemon::SyncDaemon(QObject* parent) : 
-    QObject(parent),
-    _syncTimer(0)
+SyncDaemon* SyncDaemon::_instance = 0;
+
+SyncDaemon::SyncDaemon(QObject* parent, SyncModel* model) : 
+    QTcpServer(parent),
+    _syncTimer(0),
+    _model( model )
 {
-    _computerList = new QStandardItemModel(0, 3, this);
+    Q_ASSERT( model != 0 );
+    Q_ASSERT( _instance == 0);
+    _instance = this;
+    
+    qInstallMsgHandler( qMsgHandler );
     
     _syncTimer = new QTimer( this );
     connect( _syncTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
 
-    configChanged();
+    if ( KSecretSyncCfg::enableSync() ){
+        int syncInterval = KSecretSyncCfg::syncInterval() * 60000; // the sync interval is configured in minutes
+        kDebug() << "SyncDaemon started sync; syncInterval = " << syncInterval;
+        _syncTimer->setInterval( syncInterval );
+        _syncTimer->start();
+    }
+    else {
+        kDebug() << "SyncDaemon sync is currently disabled";
+    }
+    
+    startListening();
 }
 
 SyncDaemon::~SyncDaemon()
 {
-    delete _computerList;
+    // FIXME: should we wait for sync interval expire here ?
+    delete _syncTimer;
 }
 
-void SyncDaemon::configChanged()
-{
-    KSharedConfigPtr config = KGlobal::config();
-    KConfigGroup mainGroup( config, "main" );
-
-    Q_ASSERT(_syncTimer!=0);
-    _syncTimer->stop();
-    int syncInterval = mainGroup.readEntry<int>(MAIN_SYNC_INTERVAL, MIN_SYNC_INTERVAL );
-    _syncTimer->setInterval( syncInterval * 60000 );
-    _syncTimer->start();
-    
-    int computerCount = mainGroup.readEntry<int>(MAIN_COMPUTER_COUNT, 0);
-    if ( computerCount ) {
-        _hasComputers = true;
-        // TODO: load computers here
-    }
-    else {
-        _hasComputers = false;
-        QStandardItem *noComputersItem = new QStandardItem( KIcon( QLatin1String("dialog-cancel") ), 
-                                                            i18n("no computers defined") );
-        noComputersItem->setWhatsThis( i18n("This item is present because no computers are defined. Click this item to open the settings module and to add a computer") );
-        noComputersItem->setToolTip( i18n("Double click this item to open the configuration module") );
-        _computerList->appendRow( noComputersItem );
-    }
-}
 
 void SyncDaemon::onSyncTimer()
 {
@@ -83,20 +81,78 @@ void SyncDaemon::onSyncTimer()
 
 void SyncDaemon::startSync()
 {
+    // FIXME: should we create a log entry instead? pitfall: create too many log entries
     kDebug() << "startSync";
-    if (!_hasComputers)
+    if (!_model->hasComputers())
         return;
     
     SyncJob *syncJob = new SyncJob;
-    for (int r =0; r < _computerList->rowCount(); ++r ) {
-        QStandardItem *computerItem = _computerList->item(r);
-        Q_ASSERT(computerItem != 0);
-        new ComputerSyncJob( syncJob, _computerData[ computerItem->text() ], this );
+    for (int r =0; r < _model->rowCount(); ++r ) {
+        new ComputerSyncJob( syncJob, _model->computerData( r ), this );
     }
+    
     syncJob->start();
 }
 
-void SyncDaemon::createLogEntry(const QString& )
+void SyncDaemon::startListening()
 {
+    // TODO: implemente listening host address specifying here, e.g. allow user specify which card to bind to
+    if ( listen( QHostAddress::Any, KSecretSyncCfg::listeningPort() ) ) {
+        createLogEntry( i18n("started listening on the network") );
+    }
+    else {
+        createLogEntry( i18n("start listening failed : %1", errorString() ) );
+    }
+}
+
+void SyncDaemon::incomingConnection( int incomingSocket )
+{
+    createLogEntry( i18n("incoming connection") );
+    QSslSocket *listeningSocket = new QSslSocket;
+    if ( listeningSocket->setSocketDescriptor( incomingSocket ) ) {
+        createLogEntry( i18n("launching server job with new socket descriptor %1", incomingSocket) );
+        addPendingConnection( listeningSocket );
+        // NOTE: SSL encryption is setup by the SyncServerJob
+        SyncServerJob *serverJob = new SyncServerJob( this, listeningSocket );
+        serverJob->start();
+    }
+    else {
+        createLogEntry( i18n("cannot set SSL socket descriptor. Aborting connection") );
+        delete listeningSocket;
+    }
+}
+
+void SyncDaemon::qMsgHandler(QtMsgType type, const char* msg)
+{
+    if ( _instance ) {
+        QString message;
+        switch ( type ) {
+            case QtDebugMsg:
+                message = "QtDebug";
+                break;
+            case QtWarningMsg:
+                message = "QtWarning";
+                break;
+            case QtCriticalMsg:
+                message = "QtCritical";
+                break;
+            case QtFatalMsg:
+                message = "QtFatal";
+                break;
+            default:
+                message = "QtMsg UNKNOWN";
+        }
+        message += ": ";
+        message += msg;
+//        _instance->createLogEntry( message );
+        fprintf( stderr, "%s\n", qPrintable( message ) );
+    }
+}
+
+void SyncDaemon::createLogEntry(const QString& message )
+{
+    kDebug() << message;
     // TODO: implement this by forwarding message to the logger
 }
+
+#include "syncdaemon.moc"

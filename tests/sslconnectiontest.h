@@ -18,24 +18,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMPUTERSYNCJOB_H
-#define COMPUTERSYNCJOB_H
+#ifndef SSLCONNECTIONTEST_H
+#define SSLCONNECTIONTEST_H
 
-#include <kjob.h>
+#include <QObject>
 
-class SyncLogger;
-class ComputerData;
+class QProcess;
 
-class ComputerSyncJob : public KJob
+class SslConnectionTest : public QObject
 {
     Q_OBJECT
 public:
-    ComputerSyncJob(QObject* parent, ComputerData* , SyncLogger* logger );
-    virtual void start();
+    SslConnectionTest();
+    
+private Q_SLOTS:
+    void initTestCase();
+
+    void testSslConnection();
+    
+    // cleanup
+    void cleanupTestCase();
     
 private:
-    SyncLogger      *_logger;
-    ComputerData    *_computerData;
+    QProcess*   _daemonProcess;
 };
 
-#endif // COMPUTERSYNCJOB_H
+#endif // SSLCONNECTIONTEST_H

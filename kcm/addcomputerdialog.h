@@ -24,19 +24,6 @@
 #include <ui_addcomputerwidget.h>
 #include <kdialog.h>
 
-class AddComputerDialog : public KDialog
-{
-    Q_OBJECT
-public:
-    explicit AddComputerDialog(QWidget* parent = 0, Qt::WFlags flags = 0);
-    
-private Q_SLOTS:
-    void computerNameChanged( const QString& );
-    
-public:
-    QString _computerName;
-};
-
 class AddComputerDialogWidget : public QWidget, public Ui_AddComputerWidget
 {
     Q_OBJECT
@@ -45,6 +32,21 @@ public:
         setupUi(this);
     }
     friend class AddComputerDialog;
+};
+
+class AddComputerDialog : public KDialog
+{
+    Q_OBJECT
+public:
+    explicit AddComputerDialog(QWidget* parent = 0, Qt::WFlags flags = 0);
+
+    QString computerName() const;
+    
+private Q_SLOTS:
+    void computerNameChanged( const QString& );
+    
+private:
+    AddComputerDialogWidget *_widget;
 };
 
 

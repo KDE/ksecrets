@@ -21,40 +21,38 @@
 #ifndef SYNCDAEMON_H
 #define SYNCDAEMON_H
 
-#include "computerdata.h"
+#include "syncmodel.h"
 #include "synclogger.h"
 
-#include <QObject>
+#include <QtNetwork/QTcpServer>
 #include <QMap>
 
 class QTimer;
-class QStandardItemModel;
+class QSslSocket;
 
-
-class SyncDaemon : public QObject, public SyncLogger
+class SyncDaemon : public QTcpServer, public SyncLogger
 {
     Q_OBJECT
 public:
-    explicit SyncDaemon(QObject* parent = 0);
+    SyncDaemon(QObject* parent, SyncModel* model);
     virtual ~SyncDaemon();
 
-    QStandardItemModel* computerList() const { return _computerList; }
-    bool hasComputers() const { return _hasComputers; }
-    
+    virtual void createLogEntry( const QString& );
+   
 protected Q_SLOTS:
     void onSyncTimer();
-    void configChanged();
     
 protected:
     void startSync();
-    virtual void createLogEntry( const QString& );
+    void startListening();
+    virtual void incomingConnection( int );
+    static void qMsgHandler( QtMsgType type, const char* msg );
     
 private:
-    bool                        _syncEnabled;
-    QTimer                      *_syncTimer;
-    QStandardItemModel          *_computerList;
-    QMap<QString, ComputerData> _computerData;
-    bool                        _hasComputers;
+    static SyncDaemon  *_instance;
+    bool        _syncEnabled;
+    QTimer      *_syncTimer;
+    SyncModel   *_model;
 };
 
 #endif // SYNCDAEMON_H
