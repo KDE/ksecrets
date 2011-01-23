@@ -38,6 +38,7 @@
 #include <QtCrypto/QtCrypto>
 
 #include <QtCore/QDebug>
+#include "../secret/adaptors/dbustypes.h"
 
 void ServiceTest::initTestCase()
 {
@@ -158,7 +159,7 @@ void ServiceTest::nonBlockingCollection()
 
     // create a collection
     QDBusObjectPath collectionPath;
-    QMap<QString, QVariant> createProperties;
+    StringVariantMap createProperties;
     QList<QVariant> createInput;
     createProperties["Label"] = "test";
     createProperties["Locked"] = false; // create collection unlocked
