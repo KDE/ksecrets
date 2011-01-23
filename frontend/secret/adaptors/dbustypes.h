@@ -34,8 +34,10 @@ void registerDBusTypes();
 
 typedef QMap<QString, QString> StringStringMap;
 typedef QMap<QDBusObjectPath, Secret> ObjectPathSecretMap;
+typedef QMap<QString, QVariant> StringVariantMap;
 
 Q_DECLARE_METATYPE(StringStringMap);
 Q_DECLARE_METATYPE(ObjectPathSecretMap);
+Q_DECLARE_METATYPE(StringVariantMap);
 
 #endif

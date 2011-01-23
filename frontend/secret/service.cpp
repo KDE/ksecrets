@@ -134,7 +134,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
     }
 }
 
-QList<QDBusObjectPath> Service::searchItems(const QMap<QString, QString> &attributes,
+QList<QDBusObjectPath> Service::searchItems(const StringStringMap &attributes,
         QList<QDBusObjectPath> &locked)
 {
     // TODO: check if session exists
