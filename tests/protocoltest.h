@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, Valentin Rusu <kde@rusu.info>
+ * Copyright 2011, Valentin Rusu <kde@rusu.info>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -18,34 +18,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SYNCSERVERJOB_H
-#define SYNCSERVERJOB_H
+#ifndef SOCKETCONNECTIONTEST_H
+#define SOCKETCONNECTIONTEST_H
 
-#include <kjob.h>
-#include <QtNetwork/QSslError>
-#include <QtNetwork/QAbstractSocket>
+#include "../synclogger.h"
 
-class SyncProtocolServer;
-class QTcpSocket;
-class SyncDaemon;
+#include <QObject>
 
-class SyncServerJob : public KJob
+class QProcess;
+
+class ProtocolTest : public QObject, public SyncLogger
 {
     Q_OBJECT
 public:
-    SyncServerJob( SyncDaemon* daemon, QTcpSocket* sshSocket);
-    virtual ~SyncServerJob();
+    ProtocolTest();
     
-    virtual void start();
-    virtual QString errorString() const;
+private Q_SLOTS:
+    void initTestCase();
+
+    void testProtocol();
     
-protected Q_SLOTS:
-    void onSocketStateChanged(QAbstractSocket::SocketState);
+    // cleanup
+    void cleanupTestCase();
+
+    void createLogEntry( const QString& );
     
 private:
-    QTcpSocket              *_syncSocket;
-    SyncDaemon              *_daemon;
-    SyncProtocolServer      *_syncProtocol;
 };
 
-#endif // SYNCSERVERJOB_H
+#endif // SOCKETCONNECTIONTEST_H

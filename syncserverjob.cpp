@@ -20,28 +20,70 @@
 
 #include "syncserverjob.h"
 #include "syncdaemon.h"
+#include "syncprotocol.h"
 
-#include <QtNetwork/QSslSocket>
+#include <QtNetwork/QTcpSocket>
 #include <kdebug.h>
+#include <libssh2.h>
+#include <klocalizedstring.h>
 
-SyncServerJob::SyncServerJob(SyncDaemon* daemon, QSslSocket* socket) :
-    _socket( socket ), _daemon( daemon )
+#define SERVER_READ_TIMEOUT 60000
+
+SyncServerJob::SyncServerJob(SyncDaemon* daemon, QTcpSocket* sshSocket) :
+    _syncSocket( sshSocket ), _daemon( daemon ), _syncProtocol(0)
 {
-    Q_ASSERT( socket != NULL );
-    connect( socket, SIGNAL( stateChanged(QAbstractSocket::SocketState)) , SLOT( onSocketStateChanged(QAbstractSocket::SocketState) ) );
-    connect( socket, SIGNAL( encrypted() ), SLOT( onSocketEncrypted() ) );
-    connect( socket, SIGNAL( sslErrors(QList<QSslError>) ), SLOT( onSslErrors(QList<QSslError>) ) );
+    Q_ASSERT( _daemon != NULL );
+    Q_ASSERT( _syncSocket != NULL );
+    connect( _syncSocket, SIGNAL( stateChanged(QAbstractSocket::SocketState)) , SLOT( onSocketStateChanged(QAbstractSocket::SocketState) ) );
+/*    connect( _syncSocket, SIGNAL( readyRead() ), SLOT( onSocketReadyRead() ) );
+    connect( _syncSocket, SIGNAL( bytesWritten(qint64) ), SLOT( onSocketBytesWritten(qint64) ) );
+    connect( _syncSocket, SIGNAL( error(QAbstractSocket::SocketError)), SLOT( onSocketError(QAbstractSocket::SocketError) ) );*/
 }
 
 SyncServerJob::~SyncServerJob()
 {
-    delete _socket;
+    delete _syncSocket;
 }
 
 void SyncServerJob::start()
 {
     kDebug() << "starting server sync job";
-    _socket->startServerEncryption();
+    _syncProtocol = new SyncProtocolServer( _daemon );
+
+    forever {
+        // FIXME: read server timeouts from the global configuration
+        if ( !_syncSocket->waitForReadyRead( SERVER_READ_TIMEOUT ) ) {
+            setErrorText( i18n("Timeout while waiting for client request") );
+            break;
+        }
+        
+        // FIXME: adjust the size of this buffer
+        char reqBuffer[1024];
+        size_t reqLength = sizeof( reqBuffer );
+        qint64 lineLength = _syncSocket->readLine( reqBuffer, reqLength );
+        if ( -1 == lineLength ) {
+            setErrorText( i18n("Error reading client request") );
+            break;
+        }
+        
+        QString reply;
+        if ( !_syncProtocol->handleRequest( QString( reqBuffer ), reply ) ) {
+            setErrorText( i18n("Protocol error : %1", _syncProtocol->errorString() ) );
+            break;
+        }
+        
+        if ( -1 == _syncSocket->write( qPrintable( reply ) ) ) {
+            setErrorText( i18n("Error writing reply") );
+            break;
+        }
+        
+        if ( _syncProtocol->isDone() ) {
+            setErrorText( i18n("Done synchronizing") );
+            break;
+        }
+    }
+    
+    emitResult();
 }
 
 QString SyncServerJob::errorString() const
@@ -52,21 +94,6 @@ QString SyncServerJob::errorString() const
 void SyncServerJob::onSocketStateChanged( QAbstractSocket::SocketState state )
 {
     kDebug() << "onSocketStateChanged " << state;
-}
-
-void SyncServerJob::onSslErrors( QList< QSslError > errorList )
-{
-    foreach( QSslError error, errorList ) {
-        _daemon->createLogEntry( error.errorString() );
-    }
-}
-
-void SyncServerJob::onSocketEncrypted()
-{
-    kDebug() << "onSocketEncrypted";
-    if ( _socket->waitForReadyRead(-1) ) {
-        
-    }
 }
 
 #include "syncserverjob.moc"

@@ -30,6 +30,7 @@ SET( ksecretsync_SRCS
     main.cpp
     syncmodel.cpp
     syncserverjob.cpp
+    syncprotocol.cpp
 )
 
 kde4_add_kcfg_files(ksecretsync_SRCS

@@ -18,51 +18,56 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sslconnectiontest.h"
+#include "protocoltest.h"
+#include "../syncprotocol.h"
 
 #include <QtTest/QTest>
 #include <qprocess.h>
-#include <QtNetwork/QSslSocket>
+#include <QtNetwork/QTcpSocket>
 #include <QtTest/QSignalSpy>
 #include <QTimer>
+#include <QDir>
+#include <QFile>
 #include <kdebug.h>
 #include <qtest_kde.h>
+#include <kprocess.h>
+#include <unistd.h>
 
-QTEST_KDEMAIN( SslConnectionTest, NoGUI )
+QTEST_KDEMAIN( ProtocolTest, NoGUI )
 
-SslConnectionTest::SslConnectionTest()
+
+ProtocolTest::ProtocolTest() 
 {
 
 }
 
-void SslConnectionTest::initTestCase()
+void ProtocolTest::createLogEntry(const QString& logEntry)
 {
-/*    QString program = "../ksecretsync";
-    QStringList arguments;
-    arguments << "--nofork";
-    _daemonProcess = new QProcess(this);
-    _daemonProcess->start( program, arguments );
-    QVERIFY( _daemonProcess->waitForStarted() );*/
+    kDebug() << logEntry;
 }
 
-void SslConnectionTest::testSslConnection()
+void ProtocolTest::initTestCase()
 {
-    QSslSocket* socket = new QSslSocket(this);
-    QSignalSpy encryptedSpy( socket, SIGNAL( encrypted() ) );
-    QVERIFY( encryptedSpy.isValid() );
+}
+
+void ProtocolTest::testProtocol()
+{
+    SyncProtocolClient *client = new SyncProtocolClient( this );
+    SyncProtocolServer *server = new SyncProtocolServer( this );
     
-    socket->connectToHostEncrypted( "zamox.rusu.info", 8383 );
-    if ( !socket->waitForEncrypted( 6000 ) ) {
-        kDebug() << socket->errorString();
-        QVERIFY( false );
+    forever {
+        QString request = client->nextRequest();
+        QString response;
+        QVERIFY(server->handleRequest( request, response ) );
+        QVERIFY(client->handleReply(response));
+        
+        if ( client->isDone() )
+            break;
     }
-    
-    socket->close();
-    delete socket;
 }
 
-void SslConnectionTest::cleanupTestCase()
+void ProtocolTest::cleanupTestCase()
 {
-/*    if ( _daemonProcess )
-        _daemonProcess->close();*/
 }
+
+#include "protocoltest.moc"

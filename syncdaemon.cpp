@@ -37,11 +37,13 @@
 #include <QtNetwork/QSslSocket>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libssh2.h>
 
 SyncDaemon* SyncDaemon::_instance = 0;
 
 SyncDaemon::SyncDaemon(QObject* parent, SyncModel* model) : 
     QTcpServer(parent),
+    _listeningState( LISTENING_NOT_INITIALIZED ),
     _syncTimer(0),
     _model( model )
 {
@@ -51,19 +53,7 @@ SyncDaemon::SyncDaemon(QObject* parent, SyncModel* model) :
     
     qInstallMsgHandler( qMsgHandler );
     
-    _syncTimer = new QTimer( this );
-    connect( _syncTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
-
-    if ( KSecretSyncCfg::enableSync() ){
-        int syncInterval = KSecretSyncCfg::syncInterval() * 60000; // the sync interval is configured in minutes
-        kDebug() << "SyncDaemon started sync; syncInterval = " << syncInterval;
-        _syncTimer->setInterval( syncInterval );
-        _syncTimer->start();
-    }
-    else {
-        kDebug() << "SyncDaemon sync is currently disabled";
-    }
-    
+    startSyncing();
     startListening();
 }
 
@@ -73,13 +63,28 @@ SyncDaemon::~SyncDaemon()
     delete _syncTimer;
 }
 
+void SyncDaemon::startSyncing()
+{
+    _syncTimer = new QTimer( this );
+    connect( _syncTimer, SIGNAL(timeout()), SLOT(onSyncTimer()) );
+
+    if ( KSecretSyncCfg::enableSync() ){
+        int syncInterval = KSecretSyncCfg::syncInterval() * 60000; // the sync interval is configured in minutes
+        createLogEntry( i18n("SyncDaemon started sync; syncInterval = ", syncInterval) );
+        _syncTimer->setInterval( syncInterval );
+        _syncTimer->start();
+    }
+    else {
+        createLogEntry( i18n("SyncDaemon sync is currently disabled") );
+    }
+}
 
 void SyncDaemon::onSyncTimer()
 {
-    startSync();
+    doSync();
 }
 
-void SyncDaemon::startSync()
+void SyncDaemon::doSync()
 {
     // FIXME: should we create a log entry instead? pitfall: create too many log entries
     kDebug() << "startSync";
@@ -96,30 +101,26 @@ void SyncDaemon::startSync()
 
 void SyncDaemon::startListening()
 {
-    // TODO: implemente listening host address specifying here, e.g. allow user specify which card to bind to
+    connect(this, SIGNAL( newConnection() ), SLOT( onNewConnection() ) );
+    
+    // TODO: implement listening host address specifying here, e.g. allow user specify which card to bind to
     if ( listen( QHostAddress::Any, KSecretSyncCfg::listeningPort() ) ) {
         createLogEntry( i18n("started listening on the network") );
+        _listeningState = LISTENING_READY;
     }
     else {
         createLogEntry( i18n("start listening failed : %1", errorString() ) );
+        _listeningState = LISTENING_ERROR;
     }
 }
 
-void SyncDaemon::incomingConnection( int incomingSocket )
+void SyncDaemon::onNewConnection()
 {
-    createLogEntry( i18n("incoming connection") );
-    QSslSocket *listeningSocket = new QSslSocket;
-    if ( listeningSocket->setSocketDescriptor( incomingSocket ) ) {
-        createLogEntry( i18n("launching server job with new socket descriptor %1", incomingSocket) );
-        addPendingConnection( listeningSocket );
-        // NOTE: SSL encryption is setup by the SyncServerJob
-        SyncServerJob *serverJob = new SyncServerJob( this, listeningSocket );
-        serverJob->start();
-    }
-    else {
-        createLogEntry( i18n("cannot set SSL socket descriptor. Aborting connection") );
-        delete listeningSocket;
-    }
+    QTcpSocket *connection = nextPendingConnection();
+    QString logEntry( i18n("Incoming connection from %1", connection->peerAddress().toString() ) );
+    createLogEntry( logEntry );
+    SyncServerJob* serverJob = new SyncServerJob( this, connection );
+    serverJob->start();
 }
 
 void SyncDaemon::qMsgHandler(QtMsgType type, const char* msg)

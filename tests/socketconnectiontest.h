@@ -18,29 +18,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSLCONNECTIONTEST_H
-#define SSLCONNECTIONTEST_H
+#ifndef SOCKETCONNECTIONTEST_H
+#define SOCKETCONNECTIONTEST_H
+
+#include "../synclogger.h"
 
 #include <QObject>
 
 class QProcess;
 
-class SslConnectionTest : public QObject
+class SocketConnectionTest : public QObject, public SyncLogger
 {
     Q_OBJECT
 public:
-    SslConnectionTest();
+    SocketConnectionTest();
     
 private Q_SLOTS:
     void initTestCase();
 
-    void testSslConnection();
+    void testProtocol();
     
     // cleanup
     void cleanupTestCase();
+
+    void createLogEntry( const QString& );
     
 private:
     QProcess*   _daemonProcess;
 };
 
-#endif // SSLCONNECTIONTEST_H
+#endif // SOCKETCONNECTIONTEST_H

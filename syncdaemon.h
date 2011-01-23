@@ -34,6 +34,12 @@ class SyncDaemon : public QTcpServer, public SyncLogger
 {
     Q_OBJECT
 public:
+    enum ListeningState {
+        LISTENING_NOT_INITIALIZED,
+        LISTENING_READY,
+        LISTENING_ERROR
+    };
+    
     SyncDaemon(QObject* parent, SyncModel* model);
     virtual ~SyncDaemon();
 
@@ -41,15 +47,17 @@ public:
    
 protected Q_SLOTS:
     void onSyncTimer();
+    void onNewConnection();
     
 protected:
-    void startSync();
+    void startSyncing();
+    void doSync();
     void startListening();
-    virtual void incomingConnection( int );
     static void qMsgHandler( QtMsgType type, const char* msg );
     
 private:
     static SyncDaemon  *_instance;
+    ListeningState      _listeningState;
     bool        _syncEnabled;
     QTimer      *_syncTimer;
     SyncModel   *_model;
