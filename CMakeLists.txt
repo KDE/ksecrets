@@ -41,11 +41,14 @@ KDE4_ADD_UI_FILES ( ksecretsync_SRCS
     statuswidget.ui
 )
 
+qt4_add_dbus_interface(ksecretsync_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Session.xml session_interface )
+
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})
 
 TARGET_LINK_LIBRARIES (ksecretsync
     ${KDE4_KDEUI_LIBS}
     ${QCA2_LIBRARIES}
+    ksecretserviceclient
 )
 
 

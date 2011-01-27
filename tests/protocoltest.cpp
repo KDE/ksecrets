@@ -26,12 +26,8 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtTest/QSignalSpy>
 #include <QTimer>
-#include <QDir>
-#include <QFile>
 #include <kdebug.h>
 #include <qtest_kde.h>
-#include <kprocess.h>
-#include <unistd.h>
 
 QTEST_KDEMAIN( ProtocolTest, NoGUI )
 

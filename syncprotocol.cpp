@@ -21,6 +21,9 @@
 #include "syncprotocol.h"
 #include "ksecretsynccfg.h"
 #include "synclogger.h"
+#include "../daemon/frontend/secret/adaptors/dbustypes.h"
+#include "../client/ksecretservice.h"
+#include "session_interface.h"
 
 #include <kdebug.h>
 #include <klocalizedstring.h>
@@ -91,6 +94,12 @@ void SyncProtocol::createLogEntry(const QString& entry)
 
 bool SyncProtocol::connectToSecretService()
 {
+   _secretSessionInterface = KSecretService::instance()->session();
+   return _secretSessionInterface && _secretSessionInterface->isValid();
+
+//     bool result = false;
+    
+/*    
     bool result = false;
     kDebug() << "trying to connect to ksecretserviced";
     _dbusInterface = QDBusConnection::sessionBus().interface();
@@ -127,8 +136,8 @@ bool SyncProtocol::connectToSecretService()
     }
     else {
         kDebug() << "cannot connect to dbus";
-    }
     return result;
+    }*/
 }
 
 const char* SyncProtocol::Phase::name() const
@@ -229,7 +238,7 @@ SyncProtocol::State SyncProtocol::PhaseListItems::handleRequest(const QString& r
         
         // list = Service::searchItems
         QList<QVariant> searchArgs;
-        QMapStringToString searchEmptyAttrs; // this wille stay empty to get all items
+        StringStringMap searchEmptyAttrs; // this wille stay empty to get all items
         searchArgs << qVariantFromValue( searchEmptyAttrs ); 
         QDBusMessage searchReply = _protocol->_secretSessionInterface->callWithArgumentList( QDBus::Block, 
                                                                   "searchItems", searchArgs);

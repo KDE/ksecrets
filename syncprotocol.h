@@ -25,10 +25,7 @@
 
 class SyncLogger;
 class QDBusConnectionInterface;
-class QDBusInterface;
-
-typedef QMap<QString, QString> QMapStringToString;  // workaround typedef
-Q_DECLARE_METATYPE( QMapStringToString )            // to get this macro work
+class OrgFreedesktopSecretSessionInterface;
 
 /**
  * @class SyncProtocol
@@ -112,9 +109,9 @@ private:
     Phase                       *_phase;
     QString                     _errorString;
     SyncLogger                  *_logger;
-    QDBusConnectionInterface    *_dbusInterface;
-    QDBusInterface              *_secretServiceInterface;
-    QDBusInterface              *_secretSessionInterface;
+//    QDBusConnectionInterface    *_dbusInterface;
+//    QDBusInterface              *_secretServiceInterface;
+    OrgFreedesktopSecretSessionInterface    *_secretSessionInterface;
     friend class PhaseListItems;
 };
 
