@@ -22,7 +22,7 @@
 #include "collection.h"
 #include "adaptors/itemadaptor.h"
 #include "session.h"
-#include "secret.h"
+#include "adaptors/secret.h"
 #include "prompt.h"
 
 #include <backend/backenditem.h>

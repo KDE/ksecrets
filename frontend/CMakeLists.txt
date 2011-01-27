@@ -9,11 +9,11 @@ SET (ksecretservice_frontend_SRCS
    secret/item.cpp
    secret/collection.cpp
    secret/prompt.cpp
-   secret/secret.cpp
    secret/service.cpp
    secret/session.cpp
    secret/ksecretdbuscontext.cpp
    # Daemon DBus adaptors
+   secret/adaptors/secret.cpp
    secret/adaptors/dbustypes.cpp
    secret/adaptors/collectionadaptor.cpp
    secret/adaptors/itemadaptor.cpp
@@ -24,3 +24,9 @@ SET (ksecretservice_frontend_SRCS
 
 KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})
 TARGET_LINK_LIBRARIES (ksecretservicefrontend ${KDE4_KDECORE_LIBS} ${QCA2_LIBRARIES})
+
+INSTALL(FILES 
+    secret/adaptors/secret.h
+    secret/adaptors/dbustypes.h
+    DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretservice COMPONENT Devel 
+)

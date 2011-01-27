@@ -21,7 +21,7 @@
 #ifndef DAEMON_ITEM_H
 #define DAEMON_ITEM_H
 
-#include "secret.h"
+#include "adaptors/secret.h"
 
 #include <QtCore/QObject>
 

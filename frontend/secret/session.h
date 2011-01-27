@@ -21,7 +21,7 @@
 #ifndef DAEMON_SESSION_H
 #define DAEMON_SESSION_H
 
-#include "secret.h"
+#include "adaptors/secret.h"
 
 #include <peer.h>
 
