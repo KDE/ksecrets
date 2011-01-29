@@ -25,11 +25,14 @@
 
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusPendingReply>
+#include <QtGui/QTextDocument> // Qt::escape
 
 #include <frontend/secret/service.h>
 #include <frontend/secret/adaptors/dbustypes.h>
 #include <kwalletbackend.h>
 #include <KDebug>
+#include <kpassworddialog.h>
+#include "kwalletbackend/kwalletbackend.h"
 
 ImportSingleWalletJob::ImportSingleWalletJob(Service *service, const QString& walletName, QObject* parent)
     : KJob(parent)
@@ -56,15 +59,62 @@ void ImportSingleWalletJob::start()
 void ImportSingleWalletJob::run()
 {
     m_wallet = new KWallet::Backend(m_walletName);
-    // TODO prompt for password here
-    if(m_wallet->open(QByteArray()) != 0) {
-        kError() << "Could not open wallet " << m_walletName;
-        // Be async
-        QMetaObject::invokeMethod(this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, false));
-    } else {
-        // Be async
-        QMetaObject::invokeMethod(this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, true));
-    }
+
+    int rc = 1;
+    KPasswordDialog *passDdlg = 0;
+    do {
+        rc = m_wallet->open(QByteArray());
+        if ( rc != 0 ) {
+            passDdlg = new KPasswordDialog();
+            passDdlg->setPrompt( i18n("<qt>The KSecretService daemon requests access to the wallet '<b>%1</b>'. Please enter the password for this wallet below.</qt>",
+                Qt::escape( m_walletName ) ) );
+            // don't use KStdGuiItem::open() here which has trailing ellipsis!
+            passDdlg->setButtonGuiItem(KDialog::Ok,KGuiItem( i18n( "&Open" ), "wallet-open"));
+            passDdlg->setCaption(i18n("KDE Wallet Service"));
+            passDdlg->setPixmap(KIcon("kwalletmanager").pixmap(KIconLoader::SizeHuge));
+
+            // FIXME: activate notification if no window is visible like the commented code below
+/*            if (w != KWindowSystem::activeWindow() && w != 0L) {
+                // If the dialog is modal to a minimized window it might not be visible
+                // (but still blocking the calling application). Notify the user about
+                // the request to open the wallet.
+                KNotification *notification = new KNotification("needsPassword", kpd,
+                                                                KNotification::Persistent |
+                                                                KNotification::CloseWhenWidgetActivated);
+                QStringList actions(i18nc("Text of a button to ignore the open-wallet notification", "Ignore"));
+                if (appid.isEmpty()) {
+                    notification->setText(i18n("<b>KDE</b> has requested to open a wallet (%1).",
+                                                Qt::escape(wallet)));
+                    actions.append(i18nc("Text of a button for switching to the (unnamed) application "
+                                            "requesting a password", "Switch there"));
+                } else {
+                    notification->setText(i18n("<b>%1</b> has requested to open a wallet (%2).",
+                                                Qt::escape(appid), Qt::escape(wallet)));
+                    actions.append(i18nc("Text of a button for switching to the application requesting "
+                                            "a password", "Switch to %1", Qt::escape(appid)));
+                }
+                notification->setActions(actions);
+                connect(notification, SIGNAL(action1Activated()),
+                        notification, SLOT(close()));
+                connect(notification, SIGNAL(action2Activated()),
+                        this, SLOT(activatePasswordDialog()));
+                notification->sendEvent();
+            }*/
+            
+            if ( passDdlg->exec() == KDialog::Accepted ) {
+                rc = m_wallet->open( passDdlg->password().toUtf8() );
+            }
+            else {
+                break;
+            }
+        }
+    } while ( ! m_wallet->isOpen() );
+
+    delete passDdlg;
+    
+    kDebug() << "KWallet::open returned " << rc;
+    // Be async
+    QMetaObject::invokeMethod(this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
 }
 
 void ImportSingleWalletJob::onWalletOpened(bool success)

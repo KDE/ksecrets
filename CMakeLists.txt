@@ -26,11 +26,12 @@ ADD_SUBDIRECTORY (kwlimporter)
 KDE4_ADD_EXECUTABLE (ksecretserviced main.cpp)
 
 TARGET_LINK_LIBRARIES (ksecretserviced
-   ksecretservicebackend
-   ksecretservicefrontend
-   ksecretservicelib
-   ksecretserviceui
-   ${KDE4_KDEUI_LIBS}
+    ksecretservicebackend
+    ksecretservicefrontend
+    ksecretservicelib
+    ksecretserviceui
+    kwl_importer
+    ${KDE4_KDEUI_LIBS}
 )
 
 

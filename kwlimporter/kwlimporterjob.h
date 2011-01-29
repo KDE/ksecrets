@@ -24,6 +24,7 @@
 
 #include <KCompositeJob>
 
+class Service;
 class KUiServerJobTracker;
 
 class KwlImporterJob : public KCompositeJob
@@ -31,8 +32,16 @@ class KwlImporterJob : public KCompositeJob
     Q_OBJECT
     Q_DISABLE_COPY(KwlImporterJob)
 
-    explicit KwlImporterJob(QObject* parent = 0);
+public:
+    KwlImporterJob( Service*, QObject* parent = 0);
     virtual ~KwlImporterJob();
+
+    /*
+     * This methide scans the users personal settings directory and 
+     * return true if it founds *.kwl any files inside
+     * @return true if the user has *.kwl files
+     */
+    static bool userHasWallets();
 
 public Q_SLOTS:
     virtual void start();
@@ -47,7 +56,8 @@ private Q_SLOTS:
     void run();
 
 private:
-    KUiServerJobTracker *m_jobTracker;
+    KUiServerJobTracker *_jobTracker;
+    Service             *_service;
 };
 
 #endif // KWLIMPORTERJOB_H

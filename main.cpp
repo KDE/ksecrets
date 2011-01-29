@@ -24,11 +24,13 @@
 #include <kdebug.h>
 #include <QtDBus/QDBusConnection>
 #include <QtCrypto/QtCrypto>
+#include <iostream>
 
 #include "backend/backendmaster.h"
 #include "backend/temporary/temporarycollectionmanager.h"
 #include "frontend/secret/service.h"
 #include "ui/dialoguimanager.h"
+#include "kwlimporter/kwlimporterjob.h"
 
 int main(int argc, char **argv)
 {
@@ -40,7 +42,11 @@ int main(int argc, char **argv)
     aboutdata.setProgramIconName("ksecretservice");
 
     KCmdLineArgs::init(argc, argv, &aboutdata);
-    KUniqueApplication::addCmdLineOptions();
+    
+    KCmdLineOptions options;
+    options.add( "kwl", ki18n("Import KWallet .kwl files if any") );
+    KCmdLineArgs::addCmdLineOptions( options );
+
     KUniqueApplication app;
 
     app.setQuitOnLastWindowClosed(false);
@@ -62,6 +68,17 @@ int main(int argc, char **argv)
     master->setUiManager(new DialogUiManager);
     master->addManager(new TemporaryCollectionManager(master));
     Service service(BackendMaster::instance());
+    
+    if ( KwlImporterJob::userHasWallets() ) {
+        KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
+        if ( args->isSet("kwl") ) {
+            KwlImporterJob *importJob = new KwlImporterJob( &service );
+            importJob->start();
+        }
+        else {
+            std::cout << qPrintable( ki18n( "WARNING: found KWallet files but the -kwl option was not given, so ignoring them").toString() ) << std::endl;
+        }
+    }
 
     return app.exec();
 }

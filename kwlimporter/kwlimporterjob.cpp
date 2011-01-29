@@ -43,15 +43,17 @@
 #include <QDir>
 
 
-KwlImporterJob::KwlImporterJob(QObject* parent)
-    : KCompositeJob(parent)
+KwlImporterJob::KwlImporterJob(Service *service, QObject* parent)
+    : KCompositeJob(parent),
+    _service( service )
 {
+    Q_ASSERT( _service != 0 );
     kDebug();
 
     setCapabilities(KJob::Killable | KJob::Suspendable);
 
-    m_jobTracker = new KUiServerJobTracker(this);
-    m_jobTracker->registerJob(this);
+    _jobTracker = new KUiServerJobTracker(this);
+    _jobTracker->registerJob(this);
 }
 
 KwlImporterJob::~KwlImporterJob()
@@ -73,21 +75,14 @@ void KwlImporterJob::start()
 
 void KwlImporterJob::run()
 {
-    // Initialize KSecretService. Replace this code with client library when ready
-    QDBusConnection::sessionBus().registerService("org.freedesktop.Secret");
-
-    QCA::init();
-
-    BackendMaster *master = BackendMaster::instance();
-    master->setUiManager(new NoUiManager);
-    // TODO Well, this part remains obscure to me
-    BackendCollectionManager *manager = new KSecretCollectionManager(QString(), this);
-    master->addManager(manager);
-    Service *service = new Service(master);
+    if ( !userHasWallets() ) {
+        kDebug() << "No wallets are found into the user directory";
+        return;
+    }
 
     // Obtain the collections labels
     QStringList collectionLabels;
-    foreach(const QDBusObjectPath & path, service->collections()) {
+    foreach(const QDBusObjectPath & path, _service->collections()) {
         QDBusInterface ifaceCollection("org.freedesktop.Secret", path.path(),
                                        "org.freedesktop.Secret.Collection");
         if(ifaceCollection.isValid()) {
@@ -101,7 +96,7 @@ void KwlImporterJob::run()
     }
 
     // Now look for existing wallets, check if there is not a collection with the same label, and start the conversion job(s)
-    QDir dir(KGlobal::dirs()->saveLocation("kwallet"), "*.kwl");
+    QDir dir(KGlobal::dirs()->saveLocation("data", "kwallet", false), "*.kwl");
     QStringList wallets;
 
     dir.setFilter(QDir::Files | QDir::Hidden);
@@ -116,11 +111,21 @@ void KwlImporterJob::run()
 
     foreach(const QString & walletName, wallets) {
         if(!collectionLabels.contains(walletName)) {
-            KJob *job = new ImportSingleWalletJob(service, walletName, this);
+            KJob *job = new ImportSingleWalletJob(_service, walletName, this);
             addSubjob(job);
             job->start();
         }
     }
+}
+
+bool KwlImporterJob::userHasWallets() 
+{
+    QDir dir(KGlobal::dirs()->saveLocation("data", "kwallet", false), "*.kwl");
+    QStringList wallets;
+
+    dir.setFilter(QDir::Files | QDir::Hidden);
+
+    return dir.entryInfoList().count() >0;
 }
 
 void KwlImporterJob::slotResult(KJob* job)
