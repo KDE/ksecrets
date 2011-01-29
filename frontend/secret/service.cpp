@@ -23,7 +23,7 @@
 #include "collection.h"
 #include "prompt.h"
 #include "session.h"
-#include "secret.h"
+#include "adaptors/secret.h"
 #include "item.h"
 #include "peer.h"
 

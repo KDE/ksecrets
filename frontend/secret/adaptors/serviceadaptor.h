@@ -22,7 +22,7 @@
 #define ORG_FREEDESKTOP_SECRET_SERVICEADAPTOR_H
 
 #include "dbustypes.h"
-#include "../secret.h"
+#include "secret.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtDBus/QDBusObjectPath>

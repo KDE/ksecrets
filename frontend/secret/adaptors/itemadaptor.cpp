@@ -20,7 +20,7 @@
 
 #include "itemadaptor.h"
 #include "../item.h"
-#include "../secret.h"
+#include "secret.h"
 
 namespace orgFreedesktopSecret
 {

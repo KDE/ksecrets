@@ -21,7 +21,7 @@
 #ifndef DAEMON_COLLECTION_H
 #define DAEMON_COLLECTION_H
 
-#include "secret.h"
+#include "adaptors/secret.h"
 
 #include <QtCore/QObject>
 #include <QtDBus/QDBusObjectPath>

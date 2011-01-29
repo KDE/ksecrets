@@ -21,7 +21,7 @@
 #ifndef ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
 #define ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
 
-#include "../secret.h"
+#include "secret.h"
 
 #include <QtDBus/QDBusObjectPath>
 #include <QtCore/QMap>

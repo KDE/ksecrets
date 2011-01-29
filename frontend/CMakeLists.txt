@@ -9,7 +9,6 @@ SET (ksecretservice_frontend_SRCS
    secret/item.cpp
    secret/collection.cpp
    secret/prompt.cpp
-   secret/secret.cpp
    secret/service.cpp
    secret/session.cpp
    secret/ksecretdbuscontext.cpp
@@ -20,6 +19,7 @@ SET (ksecretservice_frontend_SRCS
    secret/adaptors/promptadaptor.cpp
    secret/adaptors/serviceadaptor.cpp
    secret/adaptors/sessionadaptor.cpp
+   secret/adaptors/secret.cpp
 )
 
 KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})
