@@ -35,4 +35,4 @@ TARGET_LINK_LIBRARIES (ksecretserviced
 
 
 install( TARGETS ksecretserviced ${INSTALL_TARGETS_DEFAULT_ARGS})
-
+install( FILES ksecretserviced.desktop  DESTINATION  ${SERVICES_INSTALL_DIR} )
