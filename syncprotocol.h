@@ -23,6 +23,7 @@
 #include <QString>
 #include <QMetaType>
 
+class OrgFreedesktopSecretServiceInterface;
 class SyncLogger;
 class QDBusConnectionInterface;
 class OrgFreedesktopSecretSessionInterface;
@@ -79,12 +80,20 @@ public:
     
     class PhaseListItems : public Phase {
         static const char* REQUEST;
+        static const char* NO_MORE_ITEMS;
     public:
         PhaseListItems(SyncProtocol *protocol) : Phase( protocol, STATE_LIST_ITEMS ) {}
         virtual QString request();
         virtual State handleRequest( const QString& request, QString& response );
         virtual State handleOkReply( int statusCode, const QString& message );
         
+    };
+    
+    class PhaseDone : public Phase {
+    public:
+        PhaseDone(SyncProtocol *protocol) : Phase( protocol, STATE_DONE ) {}
+        virtual QString request();
+        virtual State handleRequest( const QString& request, QString& response );
     };
     
 protected:
@@ -98,6 +107,7 @@ protected:
     
     void createLogEntry( const QString& );
     bool connectToSecretService();
+    void disconnectFromSecretService();
     
 public:
     bool isDone() const { return _state == STATE_DONE; }
@@ -111,6 +121,7 @@ private:
     SyncLogger                  *_logger;
 //    QDBusConnectionInterface    *_dbusInterface;
 //    QDBusInterface              *_secretServiceInterface;
+    OrgFreedesktopSecretServiceInterface    *_secretServiceInterface;
     OrgFreedesktopSecretSessionInterface    *_secretSessionInterface;
     friend class PhaseListItems;
 };

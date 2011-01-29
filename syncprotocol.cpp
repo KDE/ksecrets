@@ -23,6 +23,7 @@
 #include "synclogger.h"
 #include "../daemon/frontend/secret/adaptors/dbustypes.h"
 #include "../client/ksecretservice.h"
+#include "service_interface.h"
 #include "session_interface.h"
 
 #include <kdebug.h>
@@ -36,7 +37,9 @@ const int SyncProtocol::VERSION = 1;
 SyncProtocol::SyncProtocol( SyncLogger *logger ) :
     _state( STATE_INIT ),
     _phase(0),
-    _logger( logger )
+    _logger( logger ),
+    _secretServiceInterface(0),
+    _secretSessionInterface(0)
 {
 
 }
@@ -56,6 +59,10 @@ void SyncProtocol::changeState(SyncProtocol::State state)
                 break;
             case STATE_LIST_ITEMS:
                 newPhase = new PhaseListItems(this);
+                break;
+            case STATE_DONE:
+                newPhase = 0;
+                disconnectFromSecretService();
                 break;
             default:
                 Q_ASSERT(0);
@@ -79,6 +86,8 @@ bool SyncProtocol::tryHandlingReply(const QString& reply)
 
 bool SyncProtocol::tryHandlingRequest(const QString& request, QString &reply)
 {
+    Q_ASSERT( _state != STATE_DONE ); // if this was asserted, then this instance of the protocol is no longer valid
+    
     State newState = phase()->handleRequest( request, reply );
     Q_ASSERT( !reply.isEmpty() ); // forgot to set reply in Phase ?
     changeState( newState );
@@ -94,50 +103,17 @@ void SyncProtocol::createLogEntry(const QString& entry)
 
 bool SyncProtocol::connectToSecretService()
 {
+    _secretServiceInterface = KSecretService::instance()->service();
    _secretSessionInterface = KSecretService::instance()->session();
    return _secretSessionInterface && _secretSessionInterface->isValid();
+}
 
-//     bool result = false;
-    
-/*    
-    bool result = false;
-    kDebug() << "trying to connect to ksecretserviced";
-    _dbusInterface = QDBusConnection::sessionBus().interface();
-    if ( _dbusInterface && _dbusInterface->isValid() ) {
-        QDBusReply<bool> registered = _dbusInterface->isServiceRegistered("org.freedesktop.Secret");
-        if ( registered.isValid() && registered.value() ) {
-            _secretServiceInterface = new QDBusInterface("org.freedesktop.Secret", "/org/freedesktop/secrets");
-            if (_secretServiceInterface && _secretServiceInterface->isValid() ) {
-                QDBusObjectPath plainPath;
-                QList<QVariant> plainInput;
-                plainInput << QString("plain") << QVariant::fromValue(QDBusVariant(""));
-                QDBusMessage plainReply = _secretServiceInterface->callWithArgumentList(QDBus::Block, "OpenSession",
-                                        plainInput);
-                QList<QVariant> plainArgs = plainReply.arguments();
-                plainPath = plainArgs.at(1).value<QDBusObjectPath>();
-                if( plainPath.path().startsWith(QLatin1String("/org/freedesktop/secrets/session/")) ) {
-                    _secretSessionInterface = new QDBusInterface("org.freedesktop.Secret", plainPath.path(),
-                                            "org.freedesktop.Secret.Session");
-                    if (_secretSessionInterface && _secretSessionInterface->isValid() ) {
-                        result = true;
-                    }
-                }
-                else {
-                    kDebug() << "cannot open ksecretservice session";
-                }
-            }
-            else {
-                kDebug() << "cannot connect to ksecretserviced";
-            }
-        }
-        else {
-            kDebug() << "ksecretserviced is not running";
-        }
-    }
-    else {
-        kDebug() << "cannot connect to dbus";
-    return result;
-    }*/
+void SyncProtocol::disconnectFromSecretService()
+{
+    if ( _secretSessionInterface )
+        _secretSessionInterface->Close();
+    _secretSessionInterface = 0;
+    _secretServiceInterface = 0;
 }
 
 const char* SyncProtocol::Phase::name() const
@@ -172,7 +148,7 @@ SyncProtocol::State SyncProtocol::Phase::handleReply(const QString& reply)
             onInvalidReply();
         }
         else {
-            if ( _replyStatusCode == 200 ) {
+            if ( ( _replyStatusCode >= 200 ) && ( _replyStatusCode < 300 ) ) {
                 result = handleOkReply( _replyStatusCode, _replyMessage );
             }
             else {
@@ -214,6 +190,7 @@ SyncProtocol::State SyncProtocol::PhaseHello::handleOkReply(int code, const QStr
 }
 
 const char* SyncProtocol::PhaseListItems::REQUEST = "LIST ITEMS";
+const char* SyncProtocol::PhaseListItems::NO_MORE_ITEMS = "201 NO MORE ITEMS";
 
 /**
  * The first time the service is run, lastSyncTime will be 0 so all items wille be synchronized
@@ -237,17 +214,13 @@ SyncProtocol::State SyncProtocol::PhaseListItems::handleRequest(const QString& r
         }
         
         // list = Service::searchItems
-        QList<QVariant> searchArgs;
-        StringStringMap searchEmptyAttrs; // this wille stay empty to get all items
-        searchArgs << qVariantFromValue( searchEmptyAttrs ); 
-        QDBusMessage searchReply = _protocol->_secretSessionInterface->callWithArgumentList( QDBus::Block, 
-                                                                  "searchItems", searchArgs);
-        QList<QVariant> searchOutArgs = searchReply.arguments();
-        QList<QDBusObjectPath> lockedItems = searchOutArgs.at(1).value< QList<QDBusObjectPath> >();
-        QList<QDBusObjectPath> unlockedItems = searchOutArgs.at(0).value< QList<QDBusObjectPath> >();
+        QList<QDBusObjectPath> lockedItems;
+        QList<QDBusObjectPath> unlockedItems;
+        StringStringMap searchEmptyAttrs; // this will stay empty to get all items
+        unlockedItems = _protocol->_secretServiceInterface->SearchItems( searchEmptyAttrs, lockedItems );
         
         if ( unlockedItems.length() == 0 ) {
-            response = "201 NO MORE ITEMS";
+            response = NO_MORE_ITEMS;
             return STATE_DONE;
         }
         
@@ -259,9 +232,14 @@ SyncProtocol::State SyncProtocol::PhaseListItems::handleRequest(const QString& r
 
 SyncProtocol::State SyncProtocol::PhaseListItems::handleOkReply(int statusCode, const QString& message)
 {
-    Q_ASSERT(0);
-    // TODO implement this
-    return STATE_ERROR;
+    SyncProtocol::State result = STATE_ERROR;
+    switch ( statusCode ) {
+        case 201: 
+            // NO_MORE_ITEMS
+            result = STATE_DONE;
+            break;
+    }
+    return result;
 }
 
 
