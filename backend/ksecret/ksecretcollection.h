@@ -147,7 +147,8 @@ public:
     /**
      * Return all items whose attributes match the search terms.
      *
-     * @param attributes attributes against which the items should be matched
+     * @param attributes attributes against which the items should be matched. 
+     *      If no attributes are given, all items are returned
      * @return a list of items matching the attributes. An empty list either means that
      *         no items were found or that an error occurred (eg. collection needs
      *         unlocking before listing the items).
