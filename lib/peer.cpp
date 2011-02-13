@@ -24,6 +24,7 @@
 #include <QtCore/QSharedData>
 
 #include <kdebug.h>
+#include <QCoreApplication>
 
 class PeerData : public QSharedData
 {
@@ -112,4 +113,10 @@ QString Peer::exePath() const
         // TODO: add a watch an trigger signal when the peer process ends
         return QFile::symLinkTarget(QString("%1/exe").arg(procFileName()));
     }
+}
+
+const Peer& Peer::currentProcess()
+{
+    static Peer currentProcess( QCoreApplication::applicationPid() );
+    return currentProcess;
 }

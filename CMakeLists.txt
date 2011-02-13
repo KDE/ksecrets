@@ -30,6 +30,7 @@ TARGET_LINK_LIBRARIES (ksecretserviced
     ksecretservicefrontend
     ksecretservicelib
     ksecretserviceui
+    ksecretserviceclient
     kwl_importer
     ${KDE4_KDEUI_LIBS}
 )

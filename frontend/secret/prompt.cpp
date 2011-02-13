@@ -28,6 +28,7 @@
 
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusObjectPath>
+#include <kmessagebox.h>
 
 PromptBase::PromptBase(Service *service, QObject *parent)
     : QObject(parent), m_serviceObjectPath(service->objectPath())
@@ -99,6 +100,8 @@ void SingleJobPrompt::jobResult(QueuedJob *job)
         emit completed(true, QVariant(""));
     } else if(m_job->error() != NoError) {
         // TODO: figure out how to handle errors gracefully.
+        // FIXME; should we use KMessage here instead of KMessageBox ?
+        KMessageBox::error( 0, m_job->errorMessage() );
         emit completed(false, QVariant(""));
     } else {
         switch(m_job->type()) {

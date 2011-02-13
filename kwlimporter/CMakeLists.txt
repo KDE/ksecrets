@@ -25,8 +25,18 @@ set (kwl_importer_SRCS
     kwalletbackend/kwalletbackend.cc
 )
 
+kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Collection.xml collection_interface)
+kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Item.xml item_interface )
+kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Prompt.xml prompt_interface )
+kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Service.xml service_interface )
+kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Session.xml session_interface )
+
 kde4_add_library(kwl_importer ${kwl_importer_SRCS})
-target_link_libraries(kwl_importer ${KDE4_KDECORE_LIBRARY} ${QT_QTDBUS_LIBRARY} ksecretservicefrontend ksecretservicebackend)
+target_link_libraries(kwl_importer ${KDE4_KDECORE_LIBRARY} ${QT_QTDBUS_LIBRARY} 
+    ksecretservicefrontend 
+    ksecretservicebackend
+    ksecretserviceclient
+)
 
 # link with advapi32 on windows
 if(WIN32 AND NOT WINCE)

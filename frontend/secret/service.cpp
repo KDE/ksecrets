@@ -26,6 +26,7 @@
 #include "adaptors/secret.h"
 #include "item.h"
 #include "peer.h"
+#include "jobinfostructs.h"
 
 #include <backend/backendcollection.h>
 #include <backend/backenditem.h>
@@ -35,6 +36,7 @@
 #include <QtDBus/QDBusMetaType>
 #include <QtDBus/QDBusMessage>
 #include <kdebug.h>
+#include <klocalizedstring.h>
 
 //#include <dbus/dbus.h>
 
@@ -105,8 +107,9 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
         QDBusObjectPath &prompt)
 {
     // TODO: default label
-    QString label;
+    QString label = i18n("Default Collection");
 
+    // TODO: find a way to get properties lookup case insensitive
     if(properties.contains("Label")) {
         label = properties["Label"].toString();
     }

@@ -34,6 +34,6 @@ Peer KSecretDBusContext::getCallingPeer() const
         return Peer(pid);
         // TODO: add syslog entry ?
     } else {
-        return Peer();
+        return Peer::currentProcess();
     }
 }

@@ -27,7 +27,8 @@
 #include <iostream>
 
 #include "backend/backendmaster.h"
-#include "backend/temporary/temporarycollectionmanager.h"
+//#include "backend/temporary/temporarycollectionmanager.h"
+#include "backend/ksecret/ksecretcollectionmanager.h"
 #include "frontend/secret/service.h"
 #include "ui/dialoguimanager.h"
 #include "kwlimporter/kwlimporterjob.h"
@@ -65,9 +66,9 @@ int main(int argc, char **argv)
     QCA::Initializer qcaInit;
 
     BackendMaster *master = BackendMaster::instance();
-    master->setUiManager(new DialogUiManager);
-    master->addManager(new TemporaryCollectionManager(master));
-    Service service(BackendMaster::instance());
+    master->setUiManager( new DialogUiManager );
+    master->addManager( new KSecretCollectionManager( "share/apps/ksecretservice", master ) );
+    Service service( BackendMaster::instance() );
     
     if ( KwlImporterJob::userHasWallets() ) {
         KCmdLineArgs *args = KCmdLineArgs::parsedArgs();

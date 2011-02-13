@@ -28,6 +28,7 @@
 
 #include <QtDBus/QDBusObjectPath>
 
+class OrgFreedesktopSecretCollectionInterface;
 namespace KWallet
 {
 class Backend;
@@ -35,6 +36,7 @@ class Backend;
 
 class Service;
 class QDBusInterface;
+class KSecretServiceCollection;
 
 class ImportSingleWalletJob : public KJob
 {
@@ -80,7 +82,7 @@ private:
     QStringList m_folderList;
     QStringList m_currentEntryList;
 
-    QDBusInterface *m_collectionInterface;
+    KSecretServiceCollection *m_collection;
 
     Status m_status;
 };

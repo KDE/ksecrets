@@ -86,7 +86,7 @@ public:
      */
     QDBusObjectPath createCollection(const QMap<QString, QVariant> &properties,
                                      QDBusObjectPath &prompt);
-
+    
     /**
      * Find items in any collection.
      *
@@ -126,6 +126,8 @@ public:
     QMap<QDBusObjectPath, Secret> getSecrets(const QList<QDBusObjectPath> &items,
             const QDBusObjectPath &session);
 
+    BackendMaster *master() const { return m_master; }
+    
 Q_SIGNALS:
     /**
      * Emitted when a new collection is discovered or created.

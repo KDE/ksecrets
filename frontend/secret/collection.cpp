@@ -28,9 +28,8 @@
 #include <backend/backendcollection.h>
 #include <backend/backenditem.h>
 #include <lib/peer.h>
-
+#include <kdebug.h>
 #include <QtDBus/QDBusConnection>
-
 #include <QtCore/QDebug>
 
 Collection::Collection(BackendCollection *collection, Service *service)
@@ -151,6 +150,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     QCA::SecureArray secretValue = session->decrypt(secret, ok);
     if(!ok) {
         // TODO: invalid session
+        kDebug() << "ERROR Attempting to create an item without a valid session";
     }
     ItemCreateInfo createInfo(label, attributes, secretValue, replace, locked, getCallingPeer());
     CreateItemJob *cij = m_collection->createCreateItemJob(createInfo);
@@ -158,6 +158,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         cij->exec();
         if(cij->error() != NoError || !cij->item()) {
             // TODO: error creating the item
+            kDebug() << "ERROR creating the item";
         }
 
         // the Item is already created inside slotItemCreated()

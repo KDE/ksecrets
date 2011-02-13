@@ -80,6 +80,13 @@ public:
      */
     bool isValid() const;
 
+    /**
+     * This method is used to get information about the current process and is intended
+     * to be internally used by the ksecretserviced daemon
+     * @return reference to an internal Peer instance reflecting the current process
+     */
+    static const Peer& currentProcess();
+    
 private:
     /**
      * Helper method witch returns the /proc/pid path for the

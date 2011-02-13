@@ -20,19 +20,25 @@
 
 
 #include "importsinglewalletjob.h"
+#include "../frontend/secret/adaptors/dbustypes.h"
+#include "kwalletbackend/kwalletbackend.h"
+#include "../frontend/secret/service.h"
+#include "../backend/backendmaster.h"
+#include "../lib/peer.h"
+#include "../lib/jobinfostructs.h"
+#include "../../client/ksecretservice.h"
+#include "../../client/ksecretservicecollection.h"
+#include "service_interface.h"
+#include "collection_interface.h"
 
+#include <kpassworddialog.h>
 #include <KLocalizedString>
 
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusPendingReply>
+#include <QtDBus/QDBusReply>
 #include <QtGui/QTextDocument> // Qt::escape
-
-#include <frontend/secret/service.h>
-#include <frontend/secret/adaptors/dbustypes.h>
-#include <kwalletbackend.h>
 #include <KDebug>
-#include <kpassworddialog.h>
-#include "kwalletbackend/kwalletbackend.h"
 
 ImportSingleWalletJob::ImportSingleWalletJob(Service *service, const QString& walletName, QObject* parent)
     : KJob(parent)
@@ -125,26 +131,11 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
         return;
     }
 
-    // Start the conversion by creating a collection
-    // TODO: How to handle prompt?
-    QMap<QString, QVariant> createProperties;
-    createProperties["Label"] = m_walletName;
-    createProperties["Locked"] = false; // create collection unlocked
-    QDBusObjectPath prompt;
-    m_collectionPath = m_service->createCollection(createProperties, prompt);
-
-    if(m_collectionPath.path() == "/") {
-        setErrorText(i18n("The collection %1 could not be created", m_walletName));
-        emitResult();
-        return;
-    }
-
-    // Create the interface
-    m_collectionInterface = new QDBusInterface("org.freedesktop.Secret", m_collectionPath.path(), QString(),
-            QDBusConnection::sessionBus(), this);
-
+    m_collection = KSecretService::instance()->createCollection( m_walletName );
+    
     // Gather the folder list
     m_folderList = m_wallet->folderList();
+    m_folderList.takeFirst(); // the first folder is the wallet's current folder and it'll be imported right away
 
     // Check in the root folder first, one never knows
     QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);
@@ -179,20 +170,21 @@ void ImportSingleWalletJob::processNextEntry()
     // FIXME: I assume the secret is empty, and the attributes constitute the map. Wonder if that makes sense, though.
     //        Another possible way I am thinking of is serialization.
 
-    // Create an item
-    QDBusObjectPath itemPath;
-    QMap<QString, QVariant> itemProperties;
-
     // Read the entry
     KWallet::Entry *walletEntry = m_wallet->readEntry(entry);
 
     if(!walletEntry) {
         // We abort the job here - but maybe we should just spit a warning?
+        kDebug() << "Could not read the entry " << entry;
         setErrorText(i18n("Could not read the entry %1", entry));
         emitResult();
         return;
     }
 
+    // Create an item
+    KSecretServiceCollection::Entry newItem;
+    QMap< QString, QVariant > itemProperties;
+    
     // If it's a map, populate attributes
     if(walletEntry->type() == KWallet::Entry::Map) {
         StringStringMap itemAttributes;
@@ -213,7 +205,7 @@ void ImportSingleWalletJob::processNextEntry()
     QList<QVariant> itemInput;
 
     Secret secret;
-
+    
     if(walletEntry->type() != KWallet::Entry::Map) {
         // Read the entry
         secret.setValue(walletEntry->value());
@@ -221,25 +213,23 @@ void ImportSingleWalletJob::processNextEntry()
         secret.setValue(QByteArray());
     }
 
+    KSecretServiceCollection::Entry item;
     itemInput << QVariant::fromValue(itemProperties);
     itemInput << QVariant::fromValue(secret);
     itemInput << false;
 
-    QDBusPendingReply<QDBusObjectPath, QDBusObjectPath> itemReply =
-        m_collectionInterface->asyncCallWithArgumentList("CreateItem", itemInput);
+    KJob* itemJob = m_collection->writeEntry( entry, secret.value(), itemProperties );
 
-    itemReply.waitForFinished();
-
-    if(itemReply.isError()) {
+    if( itemJob->error() ) {
         // We abort the job here - but maybe we should just spit a warning?
+        kDebug() << i18n("Calling CreateItem on the secret service daemon for the entry %1 failed", entry);
         setErrorText(i18n("Calling CreateItem on the secret service daemon for the entry %1 failed", entry));
         emitResult();
         return;
     }
+    
+    // TODO: launch the itemJob and if everything OK, then process next entry
 
-    // TODO We ignore the second argument here
-    // TODO How to check for errors?
-    QDBusObjectPath item = itemReply.argumentAt(0).value<QDBusObjectPath>();
 
     // Recurse asynchronously
     QMetaObject::invokeMethod(this, "processNextEntry", Qt::QueuedConnection);

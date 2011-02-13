@@ -72,7 +72,7 @@ void JobQueuePrivate::process()
 void JobQueuePrivate::jobFinished(QueuedJob *job)
 {
     Q_UNUSED(job);
-    Q_ASSERT(job == m_currentJob);
+    Q_ASSERT((job == m_currentJob) || (m_currentJob == 0));
     m_currentJob = 0;
     // keep processing if there's more jobs
     if(!m_jobs.isEmpty()) {
