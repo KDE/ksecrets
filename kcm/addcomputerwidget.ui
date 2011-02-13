@@ -50,7 +50,7 @@
         <string>Enter remote port number here</string>
        </property>
        <property name="whatsThis">
-        <string>The remote KSecretSync daemon uses a port to listen for sync requests. Please entre that port number here.</string>
+        <string>The remote KSecretSync daemon uses a port to listen for sync requests. Please enter that port number here.</string>
        </property>
        <property name="inputMask">
         <string>dDDD; </string>
