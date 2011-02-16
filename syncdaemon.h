@@ -28,7 +28,6 @@
 #include <QMap>
 
 class QTimer;
-class QSslSocket;
 
 class SyncDaemon : public QTcpServer, public SyncLogger
 {

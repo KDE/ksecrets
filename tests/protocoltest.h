@@ -25,7 +25,6 @@
 
 #include <QObject>
 
-class QProcess;
 
 class ProtocolTest : public QObject, public SyncLogger
 {

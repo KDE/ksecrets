@@ -24,7 +24,6 @@
 #include <QObject>
 
 class KAction;
-class KActionCollection;
 class KStatusNotifierItem;
 
 class TrayIcon : public QObject

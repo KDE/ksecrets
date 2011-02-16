@@ -25,7 +25,6 @@
 
 #include <QWidget>
 
-class QTimer;
 class KSecretSyncCfg;
 
 class ConfigWidget : public QWidget, public Ui_ConfigWidget
