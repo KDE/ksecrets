@@ -50,6 +50,7 @@ KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})
 TARGET_LINK_LIBRARIES (ksecretsync
     ${KDE4_KDEUI_LIBS}
     ${QCA2_LIBRARIES}
+    ${QT_QTNETWORK_LIBRARY}
     ksecretserviceclient
 )
 
