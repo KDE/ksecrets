@@ -48,6 +48,7 @@ class Secret
         QDBusObjectPath m_session;
         QByteArray m_parameters;
         QByteArray m_value;
+        QString m_contentType;
     };
 
 public:
@@ -95,6 +96,16 @@ public:
      * Get the secret's encrypted value
      */
     const QByteArray &value() const;
+    
+    /**
+     * Set the secret's content type
+     */
+    void setContentType(const QString& contentType);
+    
+    /**
+     * Get the secret's content type
+     */
+    const QString& contentType() const;
 
 private:
     class SecretData;

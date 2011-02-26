@@ -66,6 +66,16 @@ const QByteArray &Secret::value() const
     return d->m_value;
 }
 
+void Secret::setContentType(const QString& contentType)
+{
+    d->m_contentType = contentType;
+}
+
+const QString& Secret::contentType() const
+{
+    return d->m_contentType;
+}
+
 QDBusArgument &operator<<(QDBusArgument &argument, const Secret &secret)
 {
     argument.beginStructure();
