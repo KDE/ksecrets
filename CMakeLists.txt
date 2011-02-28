@@ -1,7 +1,5 @@
 PROJECT (ksecretserviced)
 
-FIND_PACKAGE (QCA2 REQUIRED)
-
 include(MacroLibrary)
 include(KDE4Defaults)
 
