@@ -20,7 +20,7 @@
 
 
 #include "syncmodel.h"
-#include "kcm/ksecretsynccfg.h"
+#include "ksecretsynccfg.h"
 
 #include <QVariant>
 #include <QMap>
