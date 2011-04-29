@@ -218,7 +218,7 @@ void ImportSingleWalletJob::processNextEntry()
     itemInput << QVariant::fromValue(secret);
     itemInput << false;
 
-    KJob* itemJob = m_collection->writeEntry( entry, secret.value(), itemProperties );
+    KJob* itemJob = m_collection->writeEntryAsync( secret.value(), itemProperties );
 
     if( itemJob->error() ) {
         // We abort the job here - but maybe we should just spit a warning?

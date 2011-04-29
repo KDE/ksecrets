@@ -39,7 +39,7 @@ int main(int argc, char **argv)
                          "0.0", ki18n("KDE Secret Service"),
                          KAboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
-    aboutdata.addCredit(ki18n("Valentin Rusu"), ki18n("ACL Handling"), "vrusu@fsfe.org");
+    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
     aboutdata.setProgramIconName("ksecretservice");
 
     KCmdLineArgs::init(argc, argv, &aboutdata);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    if(!QDBusConnection::sessionBus().registerService("org.freedesktop.Secret")) {
+    if(!QDBusConnection::sessionBus().registerService("org.freedesktop.secrets")) {
         kDebug() << "Couldn't register org.freedesktop.Secret D-Bus service!";
         return 1;
     }
