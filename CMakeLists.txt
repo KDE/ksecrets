@@ -10,6 +10,8 @@ INCLUDE_DIRECTORIES (
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+KSS_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Service.xml service_interface )
+KSS_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Session.xml session_interface )
 
 #
 # ksecret-sync
@@ -38,10 +40,6 @@ kde4_add_kcfg_files(ksecretsync_SRCS
 KDE4_ADD_UI_FILES ( ksecretsync_SRCS
     statuswidget.ui
 )
-
-
-KSS_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Service.xml service_interface )
-KSS_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Session.xml session_interface )
 
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})
 
