@@ -7,7 +7,6 @@ INCLUDE_DIRECTORIES (
     ${QCA2_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/client
 )
 
 # SET( ksecretsync_conn_test_SRCS
