@@ -72,7 +72,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(QueuedJob *job)
     if(npj->cancelled()) {
         setCollection(0);
         setError(ErrorOther, i18n("Creating the collection was cancelled by the user."));
-        emitResult();
+        dismiss(); // this will also emitResult()
         return;
     }
 
@@ -83,7 +83,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(QueuedJob *job)
     if(!coll) {
         setCollection(0);
         setError(ErrorOther, errorMessage);
-        emitResult();
+        dismiss(); // this will also emitResult()
         return;
     }
     coll->setLabel(label());

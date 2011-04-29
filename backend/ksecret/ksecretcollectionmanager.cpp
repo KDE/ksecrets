@@ -84,12 +84,17 @@ void KSecretCollectionManager::createCollectionJobResult(QueuedJob *job)
 {
     KSecretCreateCollectionJob *ccj = qobject_cast<KSecretCreateCollectionJob*>(job);
     Q_ASSERT(ccj);
+    if ( !ccj->isDismissed() ) {
 
-    connect(ccj->collection(), SIGNAL(collectionDeleted(BackendCollection*)),
-            SIGNAL(collectionDeleted(BackendCollection*)));
-    connect(ccj->collection(), SIGNAL(collectionChanged(BackendCollection*)),
-            SIGNAL(collectionChanged(BackendCollection*)));
-    emit collectionCreated(ccj->collection());
+        connect(ccj->collection(), SIGNAL(collectionDeleted(BackendCollection*)),
+                SIGNAL(collectionDeleted(BackendCollection*)));
+        connect(ccj->collection(), SIGNAL(collectionChanged(BackendCollection*)),
+                SIGNAL(collectionChanged(BackendCollection*)));
+        emit collectionCreated(ccj->collection());
+    }
+    else {
+        // FIXME: what should we do here, when job is dismissed by the user via the cancel button ?
+    }
 }
 
 #include "ksecretcollectionmanager.moc"

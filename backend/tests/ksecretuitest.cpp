@@ -66,8 +66,8 @@ void KSecretUiTest::testCreateCollectionAsync()
     }
 
     QVERIFY(createColl->isFinished());
-    QCOMPARE(createColl->error(), NoError);
     QVERIFY(!createColl->isDismissed());
+    QCOMPARE(createColl->error(), NoError);
     QVERIFY(createColl->collection() != 0);
 
     // Verify signals
