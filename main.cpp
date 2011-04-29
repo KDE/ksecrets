@@ -62,13 +62,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // initialize QCA
-    QCA::Initializer qcaInit;
-
     BackendMaster *master = BackendMaster::instance();
     master->setUiManager( new DialogUiManager );
     master->addManager( new KSecretCollectionManager( "share/apps/ksecretservice", master ) );
-    Service service( BackendMaster::instance() );
+    Service service( BackendMaster::instance() ); // NOTE: this will also initialize QCA
     
     if ( KwlImporterJob::userHasWallets() ) {
         KCmdLineArgs *args = KCmdLineArgs::parsedArgs();

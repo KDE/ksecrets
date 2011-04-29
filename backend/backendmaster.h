@@ -158,6 +158,14 @@ private:
     QList<BackendCollection*> m_collections;
     QList<BackendCollectionManager*> m_collectionManagers;
 
+    /**
+     * @note QtCrypto doc states that QCA::Initializer should not go out
+     * of scope all the time QCA objects are used. As the backend master
+     * is destroyed by a qAddPostRoutine, then it'll get destroyed after
+     * a main() local variable and that will make the daemon crash on exit.
+     * So keep this initializer here, to get it destroyed along with the manager
+     */
+    QCA::Initializer qcaInit;
     AbstractUiManager *m_uiManager;
     static bool s_initialized;
 };
