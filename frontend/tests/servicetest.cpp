@@ -42,7 +42,7 @@
 
 void ServiceTest::initTestCase()
 {
-    QVERIFY(QDBusConnection::sessionBus().registerService("org.freedesktop.Secret"));
+    QVERIFY(QDBusConnection::sessionBus().registerService("org.freedesktop.secrets"));
 
     QCA::init();
 
@@ -59,7 +59,7 @@ void ServiceTest::dbusService()
     QDBusConnectionInterface *ifaceConn = QDBusConnection::sessionBus().interface();
     QVERIFY(ifaceConn && ifaceConn->isValid());
 
-    QDBusReply<bool> registered = ifaceConn->isServiceRegistered("org.freedesktop.Secret");
+    QDBusReply<bool> registered = ifaceConn->isServiceRegistered("org.freedesktop.secrets");
     QVERIFY(registered.isValid());
     QVERIFY(registered.value());
 }
