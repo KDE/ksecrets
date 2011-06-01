@@ -39,10 +39,13 @@
 
 #include <QtCore/QDebug>
 #include "../secret/adaptors/dbustypes.h"
+#include <kdebug.h>
+
+#define DBUS_SERVICE "org.freedesktop.secrets"
 
 void ServiceTest::initTestCase()
 {
-    QVERIFY(QDBusConnection::sessionBus().registerService("org.freedesktop.secrets"));
+    QVERIFY(QDBusConnection::sessionBus().registerService( DBUS_SERVICE ));
 
     QCA::init();
 
@@ -59,14 +62,14 @@ void ServiceTest::dbusService()
     QDBusConnectionInterface *ifaceConn = QDBusConnection::sessionBus().interface();
     QVERIFY(ifaceConn && ifaceConn->isValid());
 
-    QDBusReply<bool> registered = ifaceConn->isServiceRegistered("org.freedesktop.secrets");
+    QDBusReply<bool> registered = ifaceConn->isServiceRegistered( DBUS_SERVICE );
     QVERIFY(registered.isValid());
     QVERIFY(registered.value());
 }
 
 void ServiceTest::session()
 {
-    QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+    QDBusInterface ifaceService( DBUS_SERVICE, "/org/freedesktop/secrets");
     QVERIFY(ifaceService.isValid());
     QCA::KeyGenerator keygen;
 
@@ -94,7 +97,7 @@ void ServiceTest::session()
     QCOMPARE(plainArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
     plainPath = plainArgs.at(1).value<QDBusObjectPath>();
     QVERIFY(plainPath.path().startsWith(QLatin1String("/org/freedesktop/secrets/session/")));
-    QDBusInterface plainIface("org.freedesktop.Secret", plainPath.path(),
+    QDBusInterface plainIface( DBUS_SERVICE, plainPath.path(),
                               "org.freedesktop.Secret.Session");
     QVERIFY(plainIface.isValid());
     QDBusMessage plainReply2 = plainIface.call("Close");
@@ -128,7 +131,7 @@ void ServiceTest::session()
     QCOMPARE(plainArgs.at(1).userType(), qMetaTypeId<QDBusObjectPath>());
     dhPath = dhArgs.at(1).value<QDBusObjectPath>();
     QVERIFY(dhPath.path().startsWith(QLatin1String("/org/freedesktop/secrets/session/")));
-    QDBusInterface dhIface("org.freedesktop.Secret", dhPath.path(),
+    QDBusInterface dhIface( DBUS_SERVICE, dhPath.path(),
                            "org.freedesktop.Secret.Session");
     QVERIFY(dhIface.isValid());
     QDBusMessage dhReply2 = dhIface.call("Close");
@@ -138,7 +141,7 @@ void ServiceTest::session()
 
 void ServiceTest::nonBlockingCollection()
 {
-    QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+    QDBusInterface ifaceService(DBUS_SERVICE, "/org/freedesktop/secrets");
     QVERIFY(ifaceService.isValid());
 
     // create a session
@@ -164,6 +167,7 @@ void ServiceTest::nonBlockingCollection()
     createProperties["Label"] = "test";
     createProperties["Locked"] = false; // create collection unlocked
     createInput << QVariant::fromValue(createProperties);
+    createInput << QString("test alias");
     QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
                                createInput);
 
@@ -187,7 +191,7 @@ void ServiceTest::nonBlockingCollection()
     collectionPath = prompt->result().value<QDBusObjectPath>();
     QVERIFY(collectionPath.path().startsWith(
                 QLatin1String("/org/freedesktop/secrets/collection/")));
-    QDBusInterface ifaceCollection("org.freedesktop.Secret", collectionPath.path(),
+    QDBusInterface ifaceCollection(DBUS_SERVICE, collectionPath.path(),
                                    "org.freedesktop.Secret.Collection");
     QVERIFY(ifaceCollection.isValid());
     delete prompt;
@@ -208,7 +212,7 @@ void ServiceTest::nonBlockingCollection()
     QVariant propLabel = ifaceCollection.property("Label");
     QVERIFY(propLabel.isValid());
     QCOMPARE(propLabel.type(), QVariant::String);
-    QCOMPARE(propLabel.value<QString>(), QString("test"));
+    QCOMPARE(propLabel.value<QString>(), QString("test alias"));
     QVariant propLocked = ifaceCollection.property("Locked");
     QVERIFY(propLocked.isValid());
     QCOMPARE(propLocked.value<bool>(), false);
@@ -255,12 +259,12 @@ void ServiceTest::nonBlockingCollection()
     QCOMPARE(deletedSpy.takeFirst(), collectionPath);
 
     // close the session
-    QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
+    QDBusInterface(DBUS_SERVICE, sessionPath.path()).call("Close");
 }
 
 void ServiceTest::nonBlockingItem()
 {
-    QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+    QDBusInterface ifaceService(DBUS_SERVICE, "/org/freedesktop/secrets");
 
     // create a session
     QDBusObjectPath sessionPath;
@@ -277,6 +281,7 @@ void ServiceTest::nonBlockingItem()
     collProperties["Label"] = "test3";
     collProperties["Locked"] = false;
     collInput << QVariant::fromValue(collProperties);
+    collInput << "test alias";
     QDBusMessage collReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
                              collInput);
     QDBusObjectPath promptPath = collReply.arguments().at(1).value<QDBusObjectPath>();
@@ -285,7 +290,7 @@ void ServiceTest::nonBlockingItem()
     QVERIFY(prompt->completed());
     collectionPath = prompt->result().value<QDBusObjectPath>();
     delete prompt;
-    QDBusInterface ifaceColl("org.freedesktop.Secret", collectionPath.path());
+    QDBusInterface ifaceColl(DBUS_SERVICE, collectionPath.path());
 
     ObjectPathSignalSpy createdSpy(&ifaceColl, SIGNAL(ItemCreated(QDBusObjectPath)));
     QVERIFY(createdSpy.isValid());
@@ -321,7 +326,7 @@ void ServiceTest::nonBlockingItem()
     QCOMPARE(itemArgs.at(1).value<QDBusObjectPath>().path(), QLatin1String("/"));
     itemPath = itemArgs.at(0).value<QDBusObjectPath>();
     QVERIFY(itemPath.path().startsWith(collectionPath.path() + '/'));
-    QDBusInterface ifaceItem("org.freedesktop.Secret", itemPath.path(),
+    QDBusInterface ifaceItem(DBUS_SERVICE, itemPath.path(),
                              "org.freedesktop.Secret.Item");
     QVERIFY(ifaceItem.isValid());
 
@@ -438,7 +443,7 @@ void ServiceTest::nonBlockingItem()
     // delete the collection
     ifaceColl.call(QDBus::Block, "Delete");
     // close the session
-    QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
+    QDBusInterface(DBUS_SERVICE, sessionPath.path()).call("Close");
 }
 
 void ServiceTest::reInitTestCase()
@@ -454,7 +459,7 @@ void ServiceTest::blockingCollection()
 {
     ClientPrompt *prompt = 0;
 
-    QDBusInterface ifaceService("org.freedesktop.Secret", "/org/freedesktop/secrets");
+    QDBusInterface ifaceService(DBUS_SERVICE, "/org/freedesktop/secrets");
     QVERIFY(ifaceService.isValid());
 
     // create a session
@@ -481,6 +486,7 @@ void ServiceTest::blockingCollection()
     createProperties["Label"] = "test";
     createProperties["Locked"] = false; // create collection unlocked
     createInput << QVariant::fromValue(createProperties);
+    createInput << QString("test alias");
     QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
                                createInput);
     QCOMPARE(createReply.type(), QDBusMessage::ReplyMessage);
@@ -523,7 +529,7 @@ void ServiceTest::blockingCollection()
     QDBusObjectPath collectionPath = prompt->result().value<QDBusObjectPath>();
     QVERIFY(collectionPath.path().startsWith(
                 QLatin1String("/org/freedesktop/secrets/collection/")));
-    QDBusInterface ifaceCollection("org.freedesktop.Secret", collectionPath.path(),
+    QDBusInterface ifaceCollection(DBUS_SERVICE, collectionPath.path(),
                                    "org.freedesktop.Secret.Collection");
     QVERIFY(ifaceCollection.isValid());
     delete prompt;
@@ -544,7 +550,7 @@ void ServiceTest::blockingCollection()
     QVariant propLabel = ifaceCollection.property("Label");
     QVERIFY(propLabel.isValid());
     QCOMPARE(propLabel.type(), QVariant::String);
-    QCOMPARE(propLabel.value<QString>(), QString("test"));
+    QCOMPARE(propLabel.value<QString>(), QString("test alias"));
     QVariant propLocked = ifaceCollection.property("Locked");
     QVERIFY(propLocked.isValid());
     QCOMPARE(propLocked.value<bool>(), false);
@@ -615,7 +621,7 @@ void ServiceTest::blockingCollection()
     QCOMPARE(deletedSpy.takeFirst(), collectionPath);
 
     // close the session
-    QDBusInterface("org.freedesktop.Secret", sessionPath.path()).call("Close");
+    QDBusInterface(DBUS_SERVICE, sessionPath.path()).call("Close");
 }
 
 void ServiceTest::blockingItem()
@@ -669,7 +675,7 @@ void ObjectPathSignalSpy::slotReceived(const QDBusObjectPath &objectPath)
 
 ClientPrompt::ClientPrompt(QDBusObjectPath promptPath)
     : m_completed(false), m_dismissed(false),
-      m_interface("org.freedesktop.Secret", promptPath.path())
+      m_interface(DBUS_SERVICE, promptPath.path())
 {
     Q_ASSERT(m_interface.isValid());
     connect(&m_interface, SIGNAL(Completed(bool, QDBusVariant)),

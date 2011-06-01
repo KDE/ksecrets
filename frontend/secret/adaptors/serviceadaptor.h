@@ -56,6 +56,7 @@ public Q_SLOTS:
                              QDBusObjectPath &result);
 
     QDBusObjectPath CreateCollection(const QMap<QString, QVariant> &properties,
+				     const QString& alias,
                                      QDBusObjectPath &prompt);
 
     QList<QDBusObjectPath> SearchItems(const StringStringMap &attributes,

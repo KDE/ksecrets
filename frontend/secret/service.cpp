@@ -104,15 +104,26 @@ void Service::onDbusDisconnected(QString path)
 }
 
 QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &properties,
-        QDBusObjectPath &prompt)
+                                          const QString& alias,
+                                          QDBusObjectPath &prompt)
 {
-    // TODO: default label
-    QString label = i18n("Default Collection");
-
-    // TODO: find a way to get properties lookup case insensitive
-    if(properties.contains("Label")) {
-        label = properties["Label"].toString();
+    QString label;
+    if ( alias.isEmpty() ) {
+        // TODO: find a way to get properties lookup case insensitive
+        if(properties.contains("Label")) {
+            label = properties["Label"].toString();
+        }
+        else {
+            // FIXME: shouldn't we throw an error if the collection has no name specified ?
+            kDebug() << "No collection name give, giving default alias";
+            // TODO: default label
+            label = i18n("Default Collection");
+        }
     }
+    else {
+        label = alias;
+    }
+
     CollectionCreateInfo createCollectionInfo(label, getCallingPeer());
     if(properties.contains("Locked")) {
         createCollectionInfo.m_locked = properties["Locked"].toBool();

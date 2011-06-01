@@ -53,9 +53,10 @@ QDBusVariant ServiceAdaptor::OpenSession(const QString &algorithm, const QDBusVa
 }
 
 QDBusObjectPath ServiceAdaptor::CreateCollection(const QMap<QString, QVariant> &properties,
-        QDBusObjectPath &prompt)
+						 const QString& alias,
+						 QDBusObjectPath &prompt)
 {
-    return m_service->createCollection(properties, prompt);
+    return m_service->createCollection(properties, alias, prompt);
 }
 
 QList<QDBusObjectPath> ServiceAdaptor::SearchItems(const StringStringMap &attributes,

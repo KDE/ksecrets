@@ -85,6 +85,7 @@ public:
      * @return the new collection object or "/" if prompting is necessary
      */
     QDBusObjectPath createCollection(const QMap<QString, QVariant> &properties,
+				     const QString& alias,
                                      QDBusObjectPath &prompt);
     
     /**
