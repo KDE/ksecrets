@@ -22,7 +22,7 @@
 #include "ksecretsynccfg.h"
 #include "synclogger.h"
 #include "../daemon/frontend/secret/adaptors/dbustypes.h"
-#include "../client/ksecretservice.h"
+#include "../client/ksecretsservicecollection.h"
 #include "service_interface.h"
 #include "session_interface.h"
 
@@ -37,9 +37,7 @@ const int SyncProtocol::VERSION = 1;
 SyncProtocol::SyncProtocol( SyncLogger *logger ) :
     _state( STATE_INIT ),
     _phase(0),
-    _logger( logger ),
-    _secretServiceInterface(0),
-    _secretSessionInterface(0)
+    _logger( logger )
 {
 
 }
@@ -103,17 +101,13 @@ void SyncProtocol::createLogEntry(const QString& entry)
 
 bool SyncProtocol::connectToSecretService()
 {
-    _secretServiceInterface = KSecretService::instance()->service();
-   _secretSessionInterface = KSecretService::instance()->session();
-   return _secretSessionInterface && _secretSessionInterface->isValid();
+    // TODO: implement this
+    return false;
 }
 
 void SyncProtocol::disconnectFromSecretService()
 {
-    if ( _secretSessionInterface )
-        _secretSessionInterface->Close();
-    _secretSessionInterface = 0;
-    _secretServiceInterface = 0;
+    // TODO: implement this
 }
 
 const char* SyncProtocol::Phase::name() const
@@ -216,8 +210,9 @@ SyncProtocol::State SyncProtocol::PhaseListItems::handleRequest(const QString& r
         // list = Service::searchItems
         QList<QDBusObjectPath> lockedItems;
         QList<QDBusObjectPath> unlockedItems;
-        StringStringMap searchEmptyAttrs; // this will stay empty to get all items
-        unlockedItems = _protocol->_secretServiceInterface->SearchItems( searchEmptyAttrs, lockedItems );
+        QMap< QString, QString > searchEmptyAttrs; // this will stay empty to get all items
+        // FIXME: the prototype of this method was changed
+        //unlockedItems = _protocol->_secretsService->searchItems( searchEmptyAttrs, lockedItems );
         
         if ( unlockedItems.length() == 0 ) {
             response = NO_MORE_ITEMS;

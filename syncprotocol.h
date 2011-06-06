@@ -119,10 +119,6 @@ private:
     Phase                       *_phase;
     QString                     _errorString;
     SyncLogger                  *_logger;
-//    QDBusConnectionInterface    *_dbusInterface;
-//    QDBusInterface              *_secretServiceInterface;
-    OrgFreedesktopSecretServiceInterface    *_secretServiceInterface;
-    OrgFreedesktopSecretSessionInterface    *_secretSessionInterface;
     friend class PhaseListItems;
 };
 
