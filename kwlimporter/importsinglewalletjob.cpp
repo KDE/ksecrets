@@ -26,8 +26,7 @@
 #include "../backend/backendmaster.h"
 #include "../lib/peer.h"
 #include "../lib/jobinfostructs.h"
-#include "../../client/ksecretservice.h"
-#include "../../client/ksecretservicecollection.h"
+#include "../../client/ksecretsservicecollection.h"
 #include "service_interface.h"
 #include "collection_interface.h"
 
@@ -131,7 +130,8 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
         return;
     }
 
-    m_collection = KSecretService::instance()->createCollection( m_walletName );
+// FIXME: prototype changed
+//    m_collection = KSecretService::instance()->createCollection( m_walletName );
     
     // Gather the folder list
     m_folderList = m_wallet->folderList();
@@ -182,7 +182,7 @@ void ImportSingleWalletJob::processNextEntry()
     }
 
     // Create an item
-    KSecretServiceCollection::Entry newItem;
+//     KSecretServiceCollection::Entry newItem;
     QMap< QString, QVariant > itemProperties;
     
     // If it's a map, populate attributes
@@ -213,20 +213,21 @@ void ImportSingleWalletJob::processNextEntry()
         secret.setValue(QByteArray());
     }
 
-    KSecretServiceCollection::Entry item;
-    itemInput << QVariant::fromValue(itemProperties);
-    itemInput << QVariant::fromValue(secret);
-    itemInput << false;
-
-    KJob* itemJob = m_collection->writeEntryAsync( secret.value(), itemProperties );
-
+// FIXME
+//     KSecretServiceCollection::Entry item;
+//     itemInput << QVariant::fromValue(itemProperties);
+//     itemInput << QVariant::fromValue(secret);
+//     itemInput << false;
+//
+//    KJob* itemJob = m_collection->writeEntryAsync( secret.value(), itemProperties );
+/*
     if( itemJob->error() ) {
         // We abort the job here - but maybe we should just spit a warning?
         kDebug() << i18n("Calling CreateItem on the secret service daemon for the entry %1 failed", entry);
         setErrorText(i18n("Calling CreateItem on the secret service daemon for the entry %1 failed", entry));
         emitResult();
         return;
-    }
+    }*/
     
     // TODO: launch the itemJob and if everything OK, then process next entry
 
