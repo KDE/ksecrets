@@ -13,6 +13,7 @@ SET (ksecretservice_ui_SRCS
     nouimanager.cpp
     dialogaskcreateaclprefs.cpp
     dialogaskunlockaclprefs.cpp
+    ../peer.cpp
 )
 
 KDE4_ADD_UI_FILES( ksecretservice_ui_SRCS

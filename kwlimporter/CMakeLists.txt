@@ -23,6 +23,7 @@ set (kwl_importer_SRCS
     kwalletbackend/sha1.cc
     kwalletbackend/kwalletentry.cc
     kwalletbackend/kwalletbackend.cc
+    ../peer.cpp
 )
 
 kss_add_dbus_interface(kwl_importer_SRCS ../../client/org.freedesktop.Secret.Collection.xml collection_interface)
@@ -35,7 +36,7 @@ kde4_add_library(kwl_importer ${kwl_importer_SRCS})
 target_link_libraries(kwl_importer ${KDE4_KDECORE_LIBRARY} ${QT_QTDBUS_LIBRARY} 
     ksecretservicefrontend 
     ksecretservicebackend
-    ksecretserviceclient
+    ksecretsserviceclient
 )
 
 # link with advapi32 on windows

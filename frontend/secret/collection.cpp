@@ -27,7 +27,7 @@
 
 #include <backend/backendcollection.h>
 #include <backend/backenditem.h>
-#include <lib/peer.h>
+#include <peer.h>
 #include <kdebug.h>
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QDebug>
