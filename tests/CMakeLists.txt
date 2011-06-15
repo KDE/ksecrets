@@ -45,7 +45,7 @@ TARGET_LINK_LIBRARIES (ksecretsync_protocol_test
     ${QT_QTTEST_LIBRARIES}
     ${QT_QTNETWORK_LIBRARIES}
     ${KDE4_KDEUI_LIBS}
-    ksecretserviceclient
+    ksecretsserviceclient
 )
 
 ADD_TEST (KSecretSyncProtocolTest ksecretsync_protocol_test)

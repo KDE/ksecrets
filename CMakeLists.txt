@@ -49,7 +49,7 @@ TARGET_LINK_LIBRARIES (ksecretsync
     ${KDE4_KDEUI_LIBS}
     ${QCA2_LIBRARIES}
     ${QT_QTNETWORK_LIBRARY}
-    ksecretserviceclient
+    ksecretsserviceclient
 )
 
 
