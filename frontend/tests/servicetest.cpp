@@ -309,7 +309,7 @@ void ServiceTest::nonBlockingItem()
     itemProperties["Label"] = "item1";
     itemProperties["Locked"] = false;
     QList<QVariant> itemInput;
-    Secret secret;
+    DaemonSecret secret;
     secret.setSession(sessionPath);
     secret.setValue(QByteArray("mysecret"));
     itemInput << QVariant::fromValue(itemProperties);
@@ -377,7 +377,7 @@ void ServiceTest::nonBlockingItem()
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     QList<QVariant> secretOutput = secretReply.arguments();
     QCOMPARE(secretOutput.count(), 1);
-    Secret outsecret = qdbus_cast<Secret>(secretOutput.at(0));
+    DaemonSecret outsecret = qdbus_cast<DaemonSecret>(secretOutput.at(0));
     QCOMPARE(outsecret.session(), sessionPath);
     QCOMPARE(outsecret.value(), QByteArray("mysecret"));
 
@@ -401,14 +401,14 @@ void ServiceTest::nonBlockingItem()
 
     // set and re-read the secret
     secret.setValue("mysecret2");
-    secretReply = ifaceItem.call(QDBus::Block, "SetSecret", QVariant::fromValue<Secret>(secret));
+    secretReply = ifaceItem.call(QDBus::Block, "SetSecret", QVariant::fromValue<DaemonSecret>(secret));
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     secretReply = ifaceItem.call(QDBus::Block, "GetSecret",
                                  QVariant::fromValue<QDBusObjectPath>(sessionPath));
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     secretOutput = secretReply.arguments();
     QCOMPARE(secretOutput.count(), 1);
-    outsecret = qdbus_cast<Secret>(secretOutput.at(0));
+    outsecret = qdbus_cast<DaemonSecret>(secretOutput.at(0));
     QCOMPARE(outsecret.session(), sessionPath);
     QCOMPARE(outsecret.value(), QByteArray("mysecret2"));
 

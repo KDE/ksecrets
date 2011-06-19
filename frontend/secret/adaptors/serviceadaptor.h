@@ -22,7 +22,7 @@
 #define ORG_FREEDESKTOP_SECRET_SERVICEADAPTOR_H
 
 #include "dbustypes.h"
-#include "secret.h"
+#include "daemonsecret.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtDBus/QDBusObjectPath>
@@ -38,7 +38,7 @@ namespace orgFreedesktopSecret
 class ServiceAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Service")
+    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.\bDaemonSecret\b.Service")
     Q_PROPERTY(QList<QDBusObjectPath> Collections READ collections)
 
 public:

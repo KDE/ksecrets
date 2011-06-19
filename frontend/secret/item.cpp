@@ -22,7 +22,7 @@
 #include "collection.h"
 #include "adaptors/itemadaptor.h"
 #include "session.h"
-#include "adaptors/secret.h"
+#include "adaptors/daemonsecret.h"
 #include "prompt.h"
 
 #include <backend/backenditem.h>
@@ -107,11 +107,11 @@ QDBusObjectPath Item::deleteItem()
     }
 }
 
-Secret Item::getSecret(const QDBusObjectPath &session)
+DaemonSecret Item::getSecret(const QDBusObjectPath &session)
 {
     if(m_item->isLocked()) {
         // TODO: error, requires unlocking
-        return Secret();
+        return DaemonSecret();
     }
 
     QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
@@ -120,22 +120,22 @@ Secret Item::getSecret(const QDBusObjectPath &session)
         BackendReturn<QCA::SecureArray> br = m_item->secret();
         if(br.isError()) {
             // TODO: handle error
-            return Secret();
+            return DaemonSecret();
         }
         bool ok;
-        Secret secret = sessionObj->encrypt(br.value(), ok);
+        DaemonSecret secret = sessionObj->encrypt(br.value(), ok);
         if(br.isError()) {
             // TODO: error, invalid session
-            return Secret();
+            return DaemonSecret();
         }
         return secret;
     } else {
         // TODO: error, requires session
-        return Secret();
+        return DaemonSecret();
     }
 }
 
-void Item::setSecret(const Secret &secret)
+void Item::setSecret(const DaemonSecret &secret)
 {
     if(m_item->isLocked()) {
         // TODO: error, requires unlocking

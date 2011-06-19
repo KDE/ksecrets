@@ -21,7 +21,7 @@
 #ifndef DAEMON_ITEM_H
 #define DAEMON_ITEM_H
 
-#include "adaptors/secret.h"
+#include "adaptors/daemonsecret.h"
 
 #include <QtCore/QObject>
 
@@ -31,7 +31,7 @@ class BackendItem;
 class Collection;
 
 /**
- * Represents an item on the D-Bus implementing the org.freedesktop.Secret.Item
+ * Represents an item on the D-Bus implementing the org.freedesktop.DaemonSecret.Item
  * interface.
  */
 class Item : public QObject, protected KSecretDBusContext
@@ -117,16 +117,16 @@ public: // called by D-Bus adaptors
      * Get the secret stored withing the item.
      *
      * @param session Session to use for securing the D-Bus transport
-     * @return the (possibly encrypted) Secret structure
+     * @return the (possibly encrypted) DaemonSecret structure
      */
-    Secret getSecret(const QDBusObjectPath &session);
+    DaemonSecret getSecret(const QDBusObjectPath &session);
 
     /**
      * Set the secret stored within the item.
      *
-     * @param secret Secret to store inside the item
+     * @param secret DaemonSecret to store inside the item
      */
-    void setSecret(const Secret &secret);
+    void setSecret(const DaemonSecret &secret);
 
 public:
     /**

@@ -34,7 +34,7 @@ namespace orgFreedesktopSecret
 class SessionAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Session")
+    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.\bDaemonSecret\b.Session")
 
 public:
     /**

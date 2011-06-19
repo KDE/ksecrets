@@ -13,14 +13,14 @@ SET (ksecretservice_frontend_SRCS
    secret/session.cpp
    secret/ksecretdbuscontext.cpp
    # Daemon DBus adaptors
-   secret/adaptors/secret.cpp
+   secret/adaptors/daemonsecret.cpp
    secret/adaptors/dbustypes.cpp
    secret/adaptors/collectionadaptor.cpp
    secret/adaptors/itemadaptor.cpp
    secret/adaptors/promptadaptor.cpp
    secret/adaptors/serviceadaptor.cpp
    secret/adaptors/sessionadaptor.cpp
-   secret/adaptors/secret.cpp
+   secret/adaptors/daemonsecret.cpp
 )
 
 KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})

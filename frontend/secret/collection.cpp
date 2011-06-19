@@ -120,7 +120,7 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
 }
 
 QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties,
-                                       const Secret &secret, bool replace,
+                                       const DaemonSecret &secret, bool replace,
                                        QDBusObjectPath &prompt)
 {
     // default label?

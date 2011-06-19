@@ -161,11 +161,11 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
     return session;
 }
 
-Secret Session::encrypt(const QCA::SecureArray &value, bool &ok)
+DaemonSecret Session::encrypt(const QCA::SecureArray &value, bool &ok)
 {
     ok = false;
 
-    Secret s;
+    DaemonSecret s;
     s.setSession(m_objectPath);
     if(m_encrypted) {
         Q_ASSERT(m_cipher);
@@ -190,7 +190,7 @@ Secret Session::encrypt(const QCA::SecureArray &value, bool &ok)
     return s;
 }
 
-QCA::SecureArray Session::decrypt(const Secret &secret, bool &ok)
+QCA::SecureArray Session::decrypt(const DaemonSecret &secret, bool &ok)
 {
     // make sure this is really meant for us
     Q_ASSERT(secret.session() == m_objectPath);

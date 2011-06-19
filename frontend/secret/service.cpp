@@ -23,7 +23,7 @@
 #include "collection.h"
 #include "prompt.h"
 #include "session.h"
-#include "adaptors/secret.h"
+#include "adaptors/daemonsecret.h"
 #include "item.h"
 #include "peer.h"
 #include "jobinfostructs.h"
@@ -324,20 +324,20 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
     return rc;
 }
 
-QMap<QDBusObjectPath, Secret> Service::getSecrets(const QList<QDBusObjectPath> &items,
+QMap<QDBusObjectPath, DaemonSecret> Service::getSecrets(const QList<QDBusObjectPath> &items,
         const QDBusObjectPath &session)
 {
-    QMap<QDBusObjectPath, Secret> rc;
+    QMap<QDBusObjectPath, DaemonSecret> rc;
     QObject *object;
     Session *sessionObj;
     Item *item;
     bool ok;
-    Secret secret;
+    DaemonSecret secret;
 
     object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
     if(!object || !(sessionObj = qobject_cast<Session*>(object))) {
         if(calledFromDBus()) {
-            sendErrorReply("org.freedesktop.Secret.Error.NoSession");
+            sendErrorReply("org.freedesktop.DaemonSecret.Error.NoSession");
         }
         return rc;
     }

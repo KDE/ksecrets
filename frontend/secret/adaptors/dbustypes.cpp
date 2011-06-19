@@ -25,8 +25,8 @@
 void registerDBusTypes()
 {
     // register meta-types needed for this adaptor
-    qRegisterMetaType<Secret>();
-    qDBusRegisterMetaType<Secret>();
+    qRegisterMetaType<DaemonSecret>();
+    qDBusRegisterMetaType<DaemonSecret>();
     qRegisterMetaType<StringStringMap>();
     qDBusRegisterMetaType<StringStringMap>();
     qDBusRegisterMetaType<ObjectPathSecretMap>();

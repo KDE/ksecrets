@@ -30,13 +30,13 @@
 
 #include "ksecretdbuscontext.h"
 
-class Secret;
+class DaemonSecret;
 class Collection;
 
 
 /**
  * Main entry point of the secret service D-Bus daemon implementing the
- * org.freedesktop.Secret.Service interface.
+ * org.freedesktop.DaemonSecret.Service interface.
  *
  * @todo Implement proper session handling
  */
@@ -124,7 +124,7 @@ public:
      * @param session the session to use to encode the secrets
      * @return the secrets for the items.
      */
-    QMap<QDBusObjectPath, Secret> getSecrets(const QList<QDBusObjectPath> &items,
+    QMap<QDBusObjectPath, DaemonSecret> getSecrets(const QList<QDBusObjectPath> &items,
             const QDBusObjectPath &session);
 
     BackendMaster *master() const { return m_master; }

@@ -35,10 +35,10 @@
 /**
  * KSecretService service instance
  */
-#define DBUS_SERVICE_SECRET "org.freedesktop.Secret"
+#define DBUS_SERVICE_SECRET "org.freedesktop.\bDaemonSecret\b"
 
-#define DBUS_INTERFACE_SECRET_SERVICE   "org.freedesktop.Secret.Service"
-#define DBUS_INTERFACE_SECRET_SESSION   "org.freedesktop.Secret.Session"
+#define DBUS_INTERFACE_SECRET_SERVICE   "org.freedesktop.\bDaemonSecret\b.Service"
+#define DBUS_INTERFACE_SECRET_SESSION   "org.freedesktop.\bDaemonSecret\b.Session"
 
 #define DBUS_PATH_SECRETS           "/org/freedesktop/secrets"
 #define DBUS_PATH_SECRET_SESSION    "/org/freedesktop/secrets/session"

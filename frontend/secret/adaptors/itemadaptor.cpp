@@ -20,7 +20,7 @@
 
 #include "itemadaptor.h"
 #include "../item.h"
-#include "secret.h"
+#include "daemonsecret.h"
 
 namespace orgFreedesktopSecret
 {
@@ -71,12 +71,12 @@ QDBusObjectPath ItemAdaptor::Delete()
     return m_item->deleteItem();
 }
 
-Secret ItemAdaptor::GetSecret(const QDBusObjectPath &session)
+DaemonSecret ItemAdaptor::GetSecret(const QDBusObjectPath &session)
 {
     return m_item->getSecret(session);
 }
 
-void ItemAdaptor::SetSecret(const Secret &secret)
+void ItemAdaptor::SetSecret(const DaemonSecret &secret)
 {
     m_item->setSecret(secret);
 }

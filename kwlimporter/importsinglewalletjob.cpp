@@ -204,7 +204,7 @@ void ImportSingleWalletJob::processNextEntry()
     itemProperties["Locked"] = false;
     QList<QVariant> itemInput;
 
-    Secret secret;
+    DaemonSecret secret;
     
     if(walletEntry->type() != KWallet::Entry::Map) {
         // Read the entry

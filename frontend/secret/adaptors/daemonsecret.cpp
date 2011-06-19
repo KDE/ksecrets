@@ -18,65 +18,65 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "secret.h"
+#include "daemonsecret.h"
 
 #include <QtCore/QSharedData>
 
-Secret::Secret() : d(new SecretData)
+DaemonSecret::DaemonSecret() : d(new SecretData)
 {
 }
 
-Secret::Secret(const Secret &other) : d(other.d)
+DaemonSecret::DaemonSecret(const DaemonSecret &other) : d(other.d)
 {
 }
 
-Secret::~Secret()
+DaemonSecret::~DaemonSecret()
 {
 }
 
-void Secret::setSession(const QDBusObjectPath &session)
+void DaemonSecret::setSession(const QDBusObjectPath &session)
 {
     d->m_session = session;
 }
 
-const QDBusObjectPath &Secret::session() const
+const QDBusObjectPath &DaemonSecret::session() const
 {
     return d->m_session;
 }
 
-void Secret::setParameters(const QByteArray &parameters)
+void DaemonSecret::setParameters(const QByteArray &parameters)
 {
     d->m_parameters = parameters;
 }
 
-const QByteArray &Secret::parameters() const
+const QByteArray &DaemonSecret::parameters() const
 {
     return d->m_parameters;
 }
 
-void Secret::setValue(const QByteArray &value)
+void DaemonSecret::setValue(const QByteArray &value)
 {
     // TODO: encryption
     d->m_value = value;
 }
 
-const QByteArray &Secret::value() const
+const QByteArray &DaemonSecret::value() const
 {
     // TODO: decryption
     return d->m_value;
 }
 
-void Secret::setContentType(const QString& contentType)
+void DaemonSecret::setContentType(const QString& contentType)
 {
     d->m_contentType = contentType;
 }
 
-const QString& Secret::contentType() const
+const QString& DaemonSecret::contentType() const
 {
     return d->m_contentType;
 }
 
-QDBusArgument &operator<<(QDBusArgument &argument, const Secret &secret)
+QDBusArgument &operator<<(QDBusArgument &argument, const DaemonSecret &secret)
 {
     argument.beginStructure();
     argument << secret.session() << secret.parameters() << secret.value();
@@ -84,7 +84,7 @@ QDBusArgument &operator<<(QDBusArgument &argument, const Secret &secret)
     return argument;
 }
 
-const QDBusArgument &operator>>(const QDBusArgument &argument, Secret &secret)
+const QDBusArgument &operator>>(const QDBusArgument &argument, DaemonSecret &secret)
 {
     QDBusObjectPath session;
     QByteArray parameters;

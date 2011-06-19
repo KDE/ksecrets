@@ -33,7 +33,7 @@
  *
  * @remarks Objects of this class are implicitly shared
  */
-class Secret
+class DaemonSecret
 {
     // TODO: this should actually be inside secret.cpp but I'm getting strange
     //       errors if I put it there. investigate.
@@ -53,19 +53,19 @@ class Secret
 
 public:
     /**
-     * Constructs an empty Secret.
+     * Constructs an empty DaemonSecret.
      */
-    Secret();
+    DaemonSecret();
 
     /**
      * Copy constructor.
      */
-    Secret(const Secret &other);
+    DaemonSecret(const DaemonSecret &other);
 
     /**
      * Destructor.
      */
-    ~Secret();
+    ~DaemonSecret();
 
     /**
      * Set the session object D-Bus path.
@@ -112,9 +112,9 @@ private:
     QSharedDataPointer<SecretData> d;
 };
 
-Q_DECLARE_METATYPE(Secret)
+Q_DECLARE_METATYPE(DaemonSecret)
 
-QDBusArgument &operator<<(QDBusArgument &argument, const Secret &secret);
-const QDBusArgument &operator>>(const QDBusArgument &argument, Secret &secret);
+QDBusArgument &operator<<(QDBusArgument &argument, const DaemonSecret &secret);
+const QDBusArgument &operator>>(const QDBusArgument &argument, DaemonSecret &secret);
 
 #endif

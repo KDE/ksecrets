@@ -21,7 +21,7 @@
 #ifndef DAEMON_SESSION_H
 #define DAEMON_SESSION_H
 
-#include "adaptors/secret.h"
+#include "adaptors/daemonsecret.h"
 
 #include <peer.h>
 
@@ -35,7 +35,7 @@ class Peer;
 
 /**
  * Represents an open session of a client on the D-Bus implementing the
- * org.freedesktop.Secret.Session interface.
+ * org.freedesktop.DaemonSecret.Session interface.
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */
@@ -83,16 +83,16 @@ public:
      * @param ok set to true if encrypting succeeds, set to false else
      * @return the secret encrypted for transport
      */
-    Secret encrypt(const QCA::SecureArray &value, bool &ok);
+    DaemonSecret encrypt(const QCA::SecureArray &value, bool &ok);
 
     /**
      * Decrypt a secret value using this session.
      *
-     * @param secret Secret received on the D-Bus
+     * @param secret DaemonSecret received on the D-Bus
      * @param ok set to true if decrypting succeeds, set to false else
      * @return the unencryped value
      */
-    QCA::SecureArray decrypt(const Secret &secret, bool &ok);
+    QCA::SecureArray decrypt(const DaemonSecret &secret, bool &ok);
 
     /**
      * Close this session.

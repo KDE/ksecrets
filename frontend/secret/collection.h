@@ -21,7 +21,7 @@
 #ifndef DAEMON_COLLECTION_H
 #define DAEMON_COLLECTION_H
 
-#include "adaptors/secret.h"
+#include "adaptors/daemonsecret.h"
 
 #include <QtCore/QObject>
 #include <QtDBus/QDBusObjectPath>
@@ -35,7 +35,7 @@ class Service;
 class Item;
 
 /**
- * Represents a collection on the D-Bus implementing the org.freedesktop.Secret.Collection
+ * Represents a collection on the D-Bus implementing the org.freedesktop.DaemonSecret.Collection
  * interface.
  */
 class Collection : public QObject, protected KSecretDBusContext
@@ -119,7 +119,7 @@ public:
      * Create a new item inside the collection.
      *
      * @param properties Properties for the new item
-     * @param secret Secret for the new item
+     * @param secret DaemonSecret for the new item
      * @param replace if true, an existing item with the same attributes will be replaced,
      *                if false and an item with the same attributes exists, no new item
      *                will be created
@@ -128,7 +128,7 @@ public:
      * @return object path of the new item or "/" if prompting is necessary
      */
     QDBusObjectPath createItem(const QMap<QString, QVariant> &properties,
-                               const Secret &secret, bool replace, QDBusObjectPath &prompt);
+                               const DaemonSecret &secret, bool replace, QDBusObjectPath &prompt);
 
     /**
      * Get the backend collection linked to this object.
