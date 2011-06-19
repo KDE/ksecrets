@@ -29,7 +29,7 @@ class PeerData;
 /**
  * Representation of a daemon peer, which is typically a client application.
  * Note that the client application firstly connect to the dbus daemon which
- * forwards messages to ksecretservice daemon using another connection.
+ * forwards messages to ksecretsservice daemon using another connection.
  */
 class Peer
 {
@@ -82,7 +82,7 @@ public:
 
     /**
      * This method is used to get information about the current process and is intended
-     * to be internally used by the ksecretserviced daemon
+     * to be internally used by the ksecretsserviced daemon
      * @return reference to an internal Peer instance reflecting the current process
      */
     static const Peer& currentProcess();

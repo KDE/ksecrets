@@ -41,7 +41,7 @@ void KSecretUiTest::initTestCase()
     BackendMaster *master = BackendMaster::instance();
     master->setUiManager(new DialogUiManager);
     // use special test-directory for the .ksecret files
-    m_manager = new KSecretCollectionManager("share/apps/ksecretservice-test", master);
+    m_manager = new KSecretCollectionManager("share/apps/ksecretsservice-test", master);
     // remove all files in the resource directory so no previous
     // collections are present when performing the test!
     QDir dir = QDir(KGlobal::dirs()->saveLocation("ksecret"));

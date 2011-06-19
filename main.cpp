@@ -35,12 +35,12 @@
 
 int main(int argc, char **argv)
 {
-    KAboutData aboutdata("ksecretservice", 0, ki18n("KDE Secret Service"),
+    KAboutData aboutdata("ksecretsservice", 0, ki18n("KDE Secret Service"),
                          "0.0", ki18n("KDE Secret Service"),
                          KAboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
-    aboutdata.setProgramIconName("ksecretservice");
+    aboutdata.setProgramIconName("ksecretsservice");
 
     KCmdLineArgs::init(argc, argv, &aboutdata);
     
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     app.setQuitOnLastWindowClosed(false);
 
     if(!KUniqueApplication::start()) {
-        kDebug() << "ksecretservice is already running!";
+        kDebug() << "ksecretsservice is already running!";
         return 0;
     }
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     BackendMaster *master = BackendMaster::instance();
     master->setUiManager( new DialogUiManager );
-    master->addManager( new KSecretCollectionManager( "share/apps/ksecretservice", master ) );
+    master->addManager( new KSecretCollectionManager( "share/apps/ksecretsservice", master ) );
     Service service( BackendMaster::instance() ); // NOTE: this will also initialize QCA
     
     if ( KwlImporterJob::userHasWallets() ) {
