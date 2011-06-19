@@ -36,7 +36,7 @@ class Service;
 class QDBusAbstractInterface;
 
 /**
- * Unit-test for the fd.o \bDaemonSecret\b daemon
+ * Unit-test for the fd.o Secret daemon
  */
 class ServiceTest : public QObject
 {
@@ -112,7 +112,7 @@ private:
 };
 
 /**
- * Client mini-stub for org.freedesktop.\bDaemonSecret\b.Prompt.
+ * Client mini-stub for org.freedesktop.Secret.Prompt.
  */
 class ClientPrompt : public QObject
 {

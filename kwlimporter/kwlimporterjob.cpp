@@ -83,8 +83,8 @@ void KwlImporterJob::run()
     // Obtain the collections labels
     QStringList collectionLabels;
     foreach(const QDBusObjectPath & path, _service->collections()) {
-        QDBusInterface ifaceCollection("org.freedesktop.\bDaemonSecret\b", path.path(),
-                                       "org.freedesktop.\bDaemonSecret\b.Collection");
+        QDBusInterface ifaceCollection("org.freedesktop.Secret", path.path(),
+                                       "org.freedesktop.Secret.Collection");
         if(ifaceCollection.isValid()) {
             QDBusPendingReply< QString > reply = ifaceCollection.asyncCall("Label");
             reply.waitForFinished();

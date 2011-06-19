@@ -337,7 +337,7 @@ QMap<QDBusObjectPath, DaemonSecret> Service::getSecrets(const QList<QDBusObjectP
     object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
     if(!object || !(sessionObj = qobject_cast<Session*>(object))) {
         if(calledFromDBus()) {
-            sendErrorReply("org.freedesktop.DaemonSecret.Error.NoSession");
+            sendErrorReply("org.freedesktop.Secret.Error.NoSession");
         }
         return rc;
     }

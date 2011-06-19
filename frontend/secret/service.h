@@ -36,7 +36,7 @@ class Collection;
 
 /**
  * Main entry point of the secret service D-Bus daemon implementing the
- * org.freedesktop.DaemonSecret.Service interface.
+ * org.freedesktop.Secret.Service interface.
  *
  * @todo Implement proper session handling
  */

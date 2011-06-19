@@ -35,7 +35,7 @@ class Peer;
 
 /**
  * Represents an open session of a client on the D-Bus implementing the
- * org.freedesktop.DaemonSecret.Session interface.
+ * org.freedesktop.Secret.Session interface.
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */

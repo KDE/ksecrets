@@ -32,7 +32,7 @@
 class Service;
 
 /**
- * Implementation of prompt objects according to the org.freedesktop.\bDaemonSecret\b.Prompt
+ * Implementation of prompt objects according to the org.freedesktop.Secret.Prompt
  * interface.
  */
 class PromptBase : public QObject, protected KSecretDBusContext

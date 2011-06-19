@@ -31,7 +31,7 @@ class BackendItem;
 class Collection;
 
 /**
- * Represents an item on the D-Bus implementing the org.freedesktop.DaemonSecret.Item
+ * Represents an item on the D-Bus implementing the org.freedesktop.Secret.Item
  * interface.
  */
 class Item : public QObject, protected KSecretDBusContext

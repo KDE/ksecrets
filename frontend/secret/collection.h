@@ -35,7 +35,7 @@ class Service;
 class Item;
 
 /**
- * Represents a collection on the D-Bus implementing the org.freedesktop.DaemonSecret.Collection
+ * Represents a collection on the D-Bus implementing the org.freedesktop.Secret.Collection
  * interface.
  */
 class Collection : public QObject, protected KSecretDBusContext
