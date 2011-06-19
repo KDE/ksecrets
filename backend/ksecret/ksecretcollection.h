@@ -36,7 +36,7 @@ class KSecretCreateItemJob;
 /**
  * Represents a part of the ksecret file stored in memory. The part's type
  * is stored as unsigned integer as the part is unknown to this version of
- * ksecretservice.
+ * ksecretsservice.
  */
 struct UnknownFilePart {
     quint32 m_type;
@@ -46,7 +46,7 @@ struct UnknownFilePart {
 /**
  * Represents an encrypted key as stored inside the ksecret file. The key
  * type is stored as unsigned integer as the key type might not be known
- * to this version of ksecretservice.
+ * to this version of ksecretsservice.
  */
 struct EncryptedKey {
     quint32 m_type;
