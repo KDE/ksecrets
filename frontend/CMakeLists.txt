@@ -27,7 +27,7 @@ KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})
 TARGET_LINK_LIBRARIES (ksecretservicefrontend ${KDE4_KDECORE_LIBS} ${QCA2_LIBRARIES})
 
 INSTALL(FILES 
-    secret/adaptors/secret.h
+    secret/adaptors/daemonsecret.h
     secret/adaptors/dbustypes.h
     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretservice COMPONENT Devel 
 )
