@@ -29,5 +29,5 @@ TARGET_LINK_LIBRARIES (ksecretservicefrontend ${KDE4_KDECORE_LIBS} ${QCA2_LIBRAR
 INSTALL(FILES 
     secret/adaptors/daemonsecret.h
     secret/adaptors/dbustypes.h
-    DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretservice COMPONENT Devel 
+    DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel 
 )
