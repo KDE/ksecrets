@@ -33,6 +33,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QSet>
 #include <QtCore/QTimer>
+#include <kdebug.h>
 
 // this must not be changed or else file compatibility is gone!
 #define VERIFIER_LENGTH 64
@@ -973,16 +974,19 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     if(!file.isValid()) {
         errorMessage = i18nc("Error message: collection file could not be opened for writing",
                              "Collection file could not be opened for writing");
+        kDebug() << errorMessage;
         return false;
     }
 
     if(!serializeHeader(file)) {
         errorMessage = genericSavingErrorMessage();
+        kDebug() << errorMessage;
         return false;
     }
 
     if(!serializeParts(file)) {
         errorMessage = genericSavingErrorMessage();
+        kDebug() << errorMessage;
         return false;
     }
     
