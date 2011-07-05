@@ -29,6 +29,7 @@
 #include <QtCrypto/QtCrypto>
 
 #include "ksecretdbuscontext.h"
+#include <secretcodec.h>
 
 class Service;
 class Peer;
@@ -49,7 +50,7 @@ private:
      *
      * @param parent Parent Service object
      */
-    Session(Service *parent);
+    Session(Service *parent, SecretCodec *codec);
 
 public:
     /**
@@ -80,19 +81,19 @@ public:
      * Encrypt a secret value using this session.
      *
      * @param value value to encrypt
-     * @param ok set to true if encrypting succeeds, set to false else
-     * @return the secret encrypted for transport
+     * @param encrypted the secret encrypted for transport
+     * @return true if encrypting succeeds
      */
-    DaemonSecret encrypt(const QCA::SecureArray &value, bool &ok);
+    bool encrypt(const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams);
 
     /**
      * Decrypt a secret value using this session.
      *
      * @param secret DaemonSecret received on the D-Bus
-     * @param ok set to true if decrypting succeeds, set to false else
-     * @return the unencryped value
+     * @param value unencryped value
+     * @return true if decrypting succeeds
      */
-    QCA::SecureArray decrypt(const DaemonSecret &secret, bool &ok);
+    bool decrypt(const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value);
 
     /**
      * Close this session.
@@ -110,13 +111,7 @@ private:
     QDBusObjectPath m_objectPath;
     Peer m_peer; // Information about the application that requested this session
 
-    // if true, use encryption, if false, use plaintext
-    bool m_encrypted;
-
-    // the cipher and the symmetric key used for encryption
-    QCA::Cipher *m_cipher;
-    QCA::SymmetricKey m_symmetricKey;
-
+    SecretCodec  *m_secretCodec;
 };
 
 #endif

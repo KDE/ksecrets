@@ -119,14 +119,14 @@ public: // called by D-Bus adaptors
      * @param session Session to use for securing the D-Bus transport
      * @return the (possibly encrypted) DaemonSecret structure
      */
-    DaemonSecret getSecret(const QDBusObjectPath &session);
+    SecretStruct getSecret(const QDBusObjectPath &session);
 
     /**
      * Set the secret stored within the item.
      *
      * @param secret DaemonSecret to store inside the item
      */
-    void setSecret(const DaemonSecret &secret);
+    void setSecret(const SecretStruct &secret);
 
 public:
     /**

@@ -29,7 +29,7 @@ KDE4_ADD_EXECUTABLE (ksecretsserviced
 TARGET_LINK_LIBRARIES (ksecretsserviced
     ksecretservicebackend
     ksecretservicefrontend
-    ksecretservicelib
+    ksecretsservicelib
     ksecretserviceui
     ksecretsserviceclient
     kwl_importer

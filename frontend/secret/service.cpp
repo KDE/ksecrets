@@ -324,15 +324,13 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
     return rc;
 }
 
-QMap<QDBusObjectPath, DaemonSecret> Service::getSecrets(const QList<QDBusObjectPath> &items,
+QMap<QDBusObjectPath, SecretStruct> Service::getSecrets(const QList<QDBusObjectPath> &items,
         const QDBusObjectPath &session)
 {
-    QMap<QDBusObjectPath, DaemonSecret> rc;
+    QMap<QDBusObjectPath, SecretStruct> rc;
     QObject *object;
     Session *sessionObj;
     Item *item;
-    bool ok;
-    DaemonSecret secret;
 
     object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
     if(!object || !(sessionObj = qobject_cast<Session*>(object))) {
@@ -347,15 +345,9 @@ QMap<QDBusObjectPath, DaemonSecret> Service::getSecrets(const QList<QDBusObjectP
         if(object && (item = qobject_cast<Item*>(object))) {
             BackendItem *bi = item->backendItem();
             if(bi && !bi->isLocked()) {
-                BackendReturn<QCA::SecureArray> be = bi->secret();
+                SecretStruct secret = item->getSecret( session );
                 // TODO: what should this do if getting the secret failed?
-                if(!be.isError()) {
-                    secret = sessionObj->encrypt(be.value(), ok);
-                    // TODO: what should this do if encrypting failed?
-                    if(ok) {
-                        rc.insert(path, secret);
-                    }
-                }
+                rc.insert(path, secret);
             }
         }
     }

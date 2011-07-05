@@ -29,8 +29,8 @@
 #include <QtDBus/QDBusConnectionInterface>
 
 #include "ksecretdbuscontext.h"
+#include "adaptors/secretstruct.h"
 
-class DaemonSecret;
 class Collection;
 
 
@@ -124,7 +124,7 @@ public:
      * @param session the session to use to encode the secrets
      * @return the secrets for the items.
      */
-    QMap<QDBusObjectPath, DaemonSecret> getSecrets(const QList<QDBusObjectPath> &items,
+    QMap<QDBusObjectPath, SecretStruct> getSecrets(const QList<QDBusObjectPath> &items,
             const QDBusObjectPath &session);
 
     BackendMaster *master() const { return m_master; }

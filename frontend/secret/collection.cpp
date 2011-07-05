@@ -120,7 +120,7 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
 }
 
 QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties,
-                                       const DaemonSecret &secret, bool replace,
+                                       const SecretStruct &secret, bool replace,
                                        QDBusObjectPath &prompt)
 {
     // default label?
@@ -129,7 +129,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     bool locked = false;
 
     // get the session object
-    QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.session().path());
+    QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.m_session.path());
     Session *session;
     if(!(session = qobject_cast<Session*>(object))) {
         // TODO: error, requires session
@@ -146,9 +146,8 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     }
 
     // TODO: check the parameters before creating the prompt
-    bool ok;
-    QCA::SecureArray secretValue = session->decrypt(secret, ok);
-    if(!ok) {
+    QCA::SecureArray secretValue;
+    if(!session->decrypt(secret.m_value, secret.m_parameters, secretValue)) {
         // TODO: invalid session
         kDebug() << "ERROR Attempting to create an item without a valid session";
     }

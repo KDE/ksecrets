@@ -22,12 +22,18 @@
 
 #include <QtCore/QSharedData>
 
-DaemonSecret::DaemonSecret() : d(new SecretData)
+DaemonSecret::DaemonSecret()
 {
 }
 
 DaemonSecret::DaemonSecret(const DaemonSecret &other) : d(other.d)
 {
+}
+
+DaemonSecret::DaemonSecret(const SecretStruct& secretStruct) :
+    d( secretStruct )
+{
+
 }
 
 DaemonSecret::~DaemonSecret()
@@ -36,50 +42,55 @@ DaemonSecret::~DaemonSecret()
 
 void DaemonSecret::setSession(const QDBusObjectPath &session)
 {
-    d->m_session = session;
+    d.m_session = session;
 }
 
 const QDBusObjectPath &DaemonSecret::session() const
 {
-    return d->m_session;
+    return d.m_session;
 }
 
 void DaemonSecret::setParameters(const QByteArray &parameters)
 {
-    d->m_parameters = parameters;
+    d.m_parameters = parameters;
 }
 
 const QByteArray &DaemonSecret::parameters() const
 {
-    return d->m_parameters;
+    return d.m_parameters;
 }
 
 void DaemonSecret::setValue(const QByteArray &value)
 {
     // TODO: encryption
-    d->m_value = value;
+    d.m_value = value;
 }
 
 const QByteArray &DaemonSecret::value() const
 {
     // TODO: decryption
-    return d->m_value;
+    return d.m_value;
 }
 
 void DaemonSecret::setContentType(const QString& contentType)
 {
-    d->m_contentType = contentType;
+    d.m_contentType = contentType;
+}
+
+SecretStruct DaemonSecret::secretStruct() const
+{
+    return d;
 }
 
 const QString& DaemonSecret::contentType() const
 {
-    return d->m_contentType;
+    return d.m_contentType;
 }
 
 QDBusArgument &operator<<(QDBusArgument &argument, const DaemonSecret &secret)
 {
     argument.beginStructure();
-    argument << secret.session() << secret.parameters() << secret.value();
+    argument << secret.session() << secret.parameters() << secret.value() << secret.contentType();
     argument.endStructure();
     return argument;
 }
@@ -89,14 +100,16 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, DaemonSecret &sec
     QDBusObjectPath session;
     QByteArray parameters;
     QByteArray value;
+    QString contentType;
 
     argument.beginStructure();
-    argument >> session >> parameters >> value;
+    argument >> session >> parameters >> value >> contentType;
     argument.endStructure();
 
     secret.setSession(session);
     secret.setParameters(parameters);
     secret.setValue(value);
+    secret.setContentType(contentType);
 
     return argument;
 }

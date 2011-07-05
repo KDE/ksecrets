@@ -71,14 +71,14 @@ QDBusObjectPath ItemAdaptor::Delete()
     return m_item->deleteItem();
 }
 
-DaemonSecret ItemAdaptor::GetSecret(const QDBusObjectPath &session)
+SecretStruct ItemAdaptor::GetSecret(const QDBusObjectPath &session)
 {
     return m_item->getSecret(session);
 }
 
-void ItemAdaptor::SetSecret(const DaemonSecret &secret)
+void ItemAdaptor::SetSecret(const SecretStruct &secret)
 {
-    m_item->setSecret(secret);
+    m_item->setSecret( secret );
 }
 
 }

@@ -147,6 +147,9 @@ public:
     BackendCollection *collection() const {
         return m_collection;
     }
+    
+    BackendReturn<QString> contentType() const;
+    BackendReturn<void> setContentType(const QString&);
 
 Q_SIGNALS:
     /**

@@ -128,7 +128,7 @@ public:
      * @return object path of the new item or "/" if prompting is necessary
      */
     QDBusObjectPath createItem(const QMap<QString, QVariant> &properties,
-                               const DaemonSecret &secret, bool replace, QDBusObjectPath &prompt);
+                               const SecretStruct &secret, bool replace, QDBusObjectPath &prompt);
 
     /**
      * Get the backend collection linked to this object.

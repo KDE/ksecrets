@@ -28,10 +28,10 @@
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QRegExp>
 
-
-Session::Session(Service *parent)
+Session::Session(Service *parent, SecretCodec *codec)
     : QObject(parent),
-      m_objectPath(parent->objectPath().path() + "/session/" + createId()), m_cipher(0)
+      m_objectPath(parent->objectPath().path() + "/session/" + createId()),
+      m_secretCodec(codec)
 {
     // register on the bus
     new orgFreedesktopSecret::SessionAdaptor(this);
@@ -40,7 +40,7 @@ Session::Session(Service *parent)
 
 Session::~Session()
 {
-    delete m_cipher;
+    delete m_secretCodec;
 }
 
 const QDBusObjectPath &Session::objectPath() const
@@ -51,173 +51,51 @@ const QDBusObjectPath &Session::objectPath() const
 Session *Session::create(const QString &algorithm, const QVariant &input,
                          QVariant &output, const Peer &peer, Service *parent)
 {
-    static QRegExp rxAlgorithm("^dh-ietf(\\d+)-([^-]+)-([^-]+)-([^-]+)$",
-                               Qt::CaseInsensitive);
-
     Session *session = 0;
 
     if(algorithm == "plain") {
-        session = new Session(parent);
-        session->m_encrypted = false;
+        session = new Session(parent, 0);
         output.setValue(QString(""));
-    } else if(rxAlgorithm.exactMatch(algorithm) &&
-              input.type() == QVariant::ByteArray) {
-        QString encalgo = rxAlgorithm.cap(2).toLower();
-        QString blockmode = rxAlgorithm.cap(3).toLower();
-        QString padding = rxAlgorithm.cap(4).toLower();
-
-        QCA::KeyGenerator keygen;
-
-        // determine the discrete logarithm group to use
-        QCA::DLGroupSet groupnum;
-        switch(rxAlgorithm.cap(1).toInt()) {
-        case 768:
-            groupnum = QCA::IETF_768;
-            break;
-        case 1024:
-            groupnum = QCA::IETF_1024;
-            break;
-        case 1536:
-            groupnum = QCA::IETF_1536;
-            break;
-        case 2048:
-            groupnum = QCA::IETF_2048;
-            break;
-        case 3072:
-            groupnum = QCA::IETF_3072;
-            break;
-        case 4096:
-            groupnum = QCA::IETF_4096;
-            break;
-        case 6144:
-            groupnum = QCA::IETF_6144;
-            break;
-        case 8192:
-            groupnum = QCA::IETF_8192;
-            break;
-        default:
-            // no known discrete logarithm group
-            return 0;
+    }
+    else {
+        SecretCodec *codec = new SecretCodec;
+        if ( codec->initServer( algorithm, input, output ) ) {
+            session = new Session(parent, codec);
         }
-        QCA::DLGroup dlgroup(keygen.createDLGroup(groupnum));
-        if(dlgroup.isNull()) {
-            return 0;
+        else {
+            delete codec;
         }
-
-        // determine if we support (or want to support)
-        // the encryption algorithm.
-        if((encalgo == "blowfish" || encalgo == "twofish" ||
-                encalgo == "aes128" || encalgo == "aes192" ||
-                encalgo == "aes256") &&
-                QCA::isSupported(QString("%1-%2-%3").arg(encalgo, blockmode, padding)
-                                 .toLatin1().constData())) {
-
-            // get client's public key
-            QCA::DHPublicKey clientKey(dlgroup,
-                                       QCA::BigInteger(QCA::SecureArray(input.toByteArray())));
-            // generate own private key
-            QCA::PrivateKey privKey(keygen.createDH(dlgroup));
-            // generate the shared symmetric key
-            QCA::SymmetricKey sharedKey(privKey.deriveKey(clientKey));
-
-            QCA::Cipher::Mode cbm;
-            if(blockmode == "cbc") {
-                cbm = QCA::Cipher::CBC;
-            } else {
-                return 0;
-            }
-
-            QCA::Cipher::Padding cp;
-            if(padding == "pkcs7") {
-                cp = QCA::Cipher::PKCS7;
-            } else if(padding == "default") {
-                cp = QCA::Cipher::DefaultPadding;
-            } else {
-                return 0;
-            }
-
-            QCA::Cipher *cipher = new QCA::Cipher(encalgo, cbm, cp);
-
-            // check if creating the cipher worked and if our shared
-            // key is longer than the minimum length required.
-            if(sharedKey.size() >= cipher->keyLength().minimum()) {
-                // generate the response to the client so it can derive
-                // the key as well.
-                session = new Session(parent);
-                session->m_encrypted = true;
-                session->m_cipher = cipher;
-                session->m_symmetricKey = sharedKey;
-                output.setValue(privKey.toPublicKey().toDH().y().toArray().toByteArray());
-            } else {
-                return 0;
-            }
-        }
-    } else {
-        return 0;
     }
 
-    // creating the session was successful
-    session->m_peer = peer;
+    if ( session ) {
+        session->m_peer = peer;
+    }
+    
     return session;
 }
 
-DaemonSecret Session::encrypt(const QCA::SecureArray &value, bool &ok)
+bool Session::encrypt(const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams)
 {
-    ok = false;
-
-    DaemonSecret s;
-    s.setSession(m_objectPath);
-    if(m_encrypted) {
-        Q_ASSERT(m_cipher);
-        QCA::InitializationVector iv(m_cipher->blockSize());
-        m_cipher->setup(QCA::Encode, m_symmetricKey, iv);
-        QCA::SecureArray encval = m_cipher->update(value);
-        if(!m_cipher->ok()) {
-            return s;
-        }
-        encval += m_cipher->final();
-        if(m_cipher->ok()) {
-            return s;
-        }
-        s.setValue(encval.toByteArray());
-        s.setParameters(iv.toByteArray());
-    } else {
-        s.setValue(value.toByteArray());
+    bool result = true;
+    if ( m_secretCodec ) {
+        result = m_secretCodec->encryptServer( value, encrypted, encryptedParams );
     }
-
-
-    ok = true;
-    return s;
+    else {
+        encrypted = value;
+    }
+    return result;
 }
 
-QCA::SecureArray Session::decrypt(const DaemonSecret &secret, bool &ok)
+bool Session::decrypt(const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value)
 {
-    // make sure this is really meant for us
-    Q_ASSERT(secret.session() == m_objectPath);
-    ok = false;
-
-    QCA::SecureArray value;
-    if(m_encrypted) {
-        Q_ASSERT(m_cipher);
-        if(!secret.parameters().size() == m_cipher->blockSize()) {
-            return value;
-        }
-        QCA::InitializationVector iv(secret.parameters());
-        m_cipher->setup(QCA::Decode, m_symmetricKey, iv);
-        value = m_cipher->update(secret.value());
-        if(!m_cipher->ok()) {
-            return value;
-        }
-        value += m_cipher->final();
-        if(!m_cipher->ok()) {
-            return value;
-        }
-    } else {
-        value = secret.value();
+    bool result = true;
+    if ( m_secretCodec ) {
+        result = m_secretCodec->decryptServer( encrypted, encryptedParams, value );
     }
-
-    ok = true;
-    return value;
+    else {
+        value = encrypted;
+    }
+    return result;
 }
 
 void Session::close()

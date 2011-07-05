@@ -69,7 +69,7 @@ public Q_SLOTS:
     QList<QDBusObjectPath> SearchItems(const StringStringMap &attributes);
 
     QDBusObjectPath CreateItem(const QMap<QString, QVariant> &properties,
-                               const DaemonSecret &secret, bool replace,
+                               const SecretStruct &secret, bool replace,
                                QDBusObjectPath &prompt);
 
 Q_SIGNALS:

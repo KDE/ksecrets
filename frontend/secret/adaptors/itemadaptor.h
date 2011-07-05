@@ -70,9 +70,9 @@ public:
 public Q_SLOTS:
     QDBusObjectPath Delete();
 
-    DaemonSecret GetSecret(const QDBusObjectPath &session);
+    SecretStruct GetSecret(const QDBusObjectPath &session);
 
-    void SetSecret(const DaemonSecret &secret);
+    void SetSecret(const SecretStruct &secret);
 
 private:
     Item *m_item;

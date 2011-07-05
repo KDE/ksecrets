@@ -21,12 +21,15 @@
 #include "dbustypes.h"
 
 #include <QtDBus/QDBusMetaType>
+#include "daemonsecret.h"
 
 void registerDBusTypes()
 {
     // register meta-types needed for this adaptor
-    qRegisterMetaType<DaemonSecret>();
-    qDBusRegisterMetaType<DaemonSecret>();
+    qRegisterMetaType<SecretStruct>();
+    qDBusRegisterMetaType<SecretStruct>();
+/*    qRegisterMetaType<DaemonSecret>();
+    qDBusRegisterMetaType<DaemonSecret>();*/
     qRegisterMetaType<StringStringMap>();
     qDBusRegisterMetaType<StringStringMap>();
     qDBusRegisterMetaType<ObjectPathSecretMap>();

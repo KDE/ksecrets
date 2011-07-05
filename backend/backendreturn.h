@@ -70,6 +70,11 @@ public:
     const T &value() const {
         return m_value;
     }
+    
+    BackendReturn &operator = ( const T& value ) {
+        m_value = value;
+        return *this;
+    }
 
     /**
      * Check if this return object contains an error.
@@ -93,6 +98,11 @@ public:
      */
     const QString &errorMessage() const {
         return m_errorMessage;
+    }
+    
+    void setError( ErrorType errType, const QString& msg ) {
+        m_error = errType;
+        m_errorMessage = msg;
     }
 
 private:
@@ -139,6 +149,11 @@ public:
         return m_errorMessage;
     }
 
+    void setError( ErrorType errType, const QString& msg ) {
+        m_error = errType;
+        m_errorMessage = msg;
+    }
+    
 private:
     ErrorType m_error;
     QString m_errorMessage;

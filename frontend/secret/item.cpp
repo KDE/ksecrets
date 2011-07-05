@@ -107,60 +107,68 @@ QDBusObjectPath Item::deleteItem()
     }
 }
 
-DaemonSecret Item::getSecret(const QDBusObjectPath &session)
+SecretStruct Item::getSecret(const QDBusObjectPath &session)
 {
+    SecretStruct result;
+    
     if(m_item->isLocked()) {
         // TODO: error, requires unlocking
-        return DaemonSecret();
+        Q_ASSERT(0);
     }
-
-    QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
-    Session *sessionObj;
-    if(object && (sessionObj = qobject_cast<Session*>(object))) {
-        BackendReturn<QCA::SecureArray> br = m_item->secret();
-        if(br.isError()) {
-            // TODO: handle error
-            return DaemonSecret();
+    else {
+        QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
+        Session *sessionObj;
+        if(object && (sessionObj = qobject_cast<Session*>(object))) {
+            BackendReturn< QCA::SecureArray > secretRet = m_item->secret();
+            QCA::SecureArray encryptedValue;
+            QByteArray encryptedParams;
+            if ( secretRet.error() == NoError && 
+                 sessionObj->encrypt( secretRet.value(), encryptedValue, encryptedParams ) ) {
+                result.m_session.setPath( session.path() );
+                result.m_value = encryptedValue.toByteArray();
+                result.m_parameters = encryptedParams;
+            
+                BackendReturn<QString> contentTypeRet = m_item->contentType();
+                if ( !contentTypeRet.isError() ) {
+                    result.m_contentType = contentTypeRet.value();
+                }
+                else {
+                    // TODO: handle error
+                    Q_ASSERT(0);
+                }
+            }
+            
+        } else {
+            // TODO: error, requires session
+            Q_ASSERT(0);
         }
-        bool ok;
-        DaemonSecret secret = sessionObj->encrypt(br.value(), ok);
-        if(br.isError()) {
-            // TODO: error, invalid session
-            return DaemonSecret();
-        }
-        return secret;
-    } else {
-        // TODO: error, requires session
-        return DaemonSecret();
     }
+    return result;
 }
 
-void Item::setSecret(const DaemonSecret &secret)
+void Item::setSecret(const SecretStruct &secret)
 {
     if(m_item->isLocked()) {
         // TODO: error, requires unlocking
         return;
     }
 
-    QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.session().path());
+    QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.m_session.path());
     Session *sessionObj;
     if(object && (sessionObj = qobject_cast<Session*>(object))) {
-        bool ok;
-        BackendReturn<QCA::SecureArray> br = sessionObj->decrypt(secret, ok);
-        if(!ok) {
+        QCA::SecureArray secretValue;
+        if( !sessionObj->decrypt(secret.m_value, secret.m_parameters, secretValue)) {
             // TODO: invalid session
+            Q_ASSERT(0);
             return;
         }
-        BackendReturn<void> rc = m_item->setSecret(br.value());
+        BackendReturn<void> rc = m_item->setSecret(secretValue);
         if(rc.isError()) {
             // TODO: handle error
+            Q_ASSERT(0);
             return;
         }
     }
-
-    // TODO: error, invalid session
-
-    return;
 }
 
 BackendItem *Item::backendItem() const

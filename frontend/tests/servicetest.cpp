@@ -309,14 +309,15 @@ void ServiceTest::nonBlockingItem()
     itemProperties["Label"] = "item1";
     itemProperties["Locked"] = false;
     QList<QVariant> itemInput;
-    DaemonSecret secret;
-    secret.setSession(sessionPath);
-    secret.setValue(QByteArray("mysecret"));
+    SecretStruct secret;
+    secret.m_session = sessionPath;
+    secret.m_value = QByteArray("mysecret");
     itemInput << QVariant::fromValue(itemProperties);
     itemInput << QVariant::fromValue(secret);
     itemInput << false;
     QDBusMessage itemReply = ifaceColl.callWithArgumentList(QDBus::Block, "CreateItem",
                              itemInput);
+    kDebug() << itemReply.errorMessage();
     QCOMPARE(itemReply.type(), QDBusMessage::ReplyMessage);
     QList<QVariant> itemArgs = itemReply.arguments();
     QCOMPARE(itemArgs.size(), 2);
@@ -377,9 +378,9 @@ void ServiceTest::nonBlockingItem()
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     QList<QVariant> secretOutput = secretReply.arguments();
     QCOMPARE(secretOutput.count(), 1);
-    DaemonSecret outsecret = qdbus_cast<DaemonSecret>(secretOutput.at(0));
-    QCOMPARE(outsecret.session(), sessionPath);
-    QCOMPARE(outsecret.value(), QByteArray("mysecret"));
+    SecretStruct outsecret = qdbus_cast<SecretStruct>(secretOutput.at(0));
+    QCOMPARE(outsecret.m_session, sessionPath);
+    QCOMPARE(outsecret.m_value, QByteArray("mysecret"));
 
     // set and re-read item properties
     ifaceItem.setProperty("Label", QString("item2"));
@@ -400,17 +401,17 @@ void ServiceTest::nonBlockingItem()
     QCOMPARE(propAttributesMap.value("attribute3"), QLatin1String("value3"));
 
     // set and re-read the secret
-    secret.setValue("mysecret2");
-    secretReply = ifaceItem.call(QDBus::Block, "SetSecret", QVariant::fromValue<DaemonSecret>(secret));
+    secret.m_value = "mysecret2";
+    secretReply = ifaceItem.call(QDBus::Block, "SetSecret", QVariant::fromValue<SecretStruct>(secret));
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     secretReply = ifaceItem.call(QDBus::Block, "GetSecret",
                                  QVariant::fromValue<QDBusObjectPath>(sessionPath));
     QCOMPARE(secretReply.type(), QDBusMessage::ReplyMessage);
     secretOutput = secretReply.arguments();
     QCOMPARE(secretOutput.count(), 1);
-    outsecret = qdbus_cast<DaemonSecret>(secretOutput.at(0));
-    QCOMPARE(outsecret.session(), sessionPath);
-    QCOMPARE(outsecret.value(), QByteArray("mysecret2"));
+    outsecret = qdbus_cast<SecretStruct>(secretOutput.at(0));
+    QCOMPARE(outsecret.m_session, sessionPath);
+    QCOMPARE(outsecret.m_value, QByteArray("mysecret2"));
 
 
     // we should have received 2 ItemChanged signals

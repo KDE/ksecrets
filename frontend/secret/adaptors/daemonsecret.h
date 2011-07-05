@@ -21,6 +21,8 @@
 #ifndef DAEMON_SECRET_H
 #define DAEMON_SECRET_H
 
+#include "secretstruct.h"
+
 #include <QtCore/QSharedDataPointer>
 #include <QtCore/QByteArray>
 #include <QtDBus/QDBusObjectPath>
@@ -35,22 +37,6 @@
  */
 class DaemonSecret
 {
-    // TODO: this should actually be inside secret.cpp but I'm getting strange
-    //       errors if I put it there. investigate.
-    class SecretData : public QSharedData
-    {
-    public:
-        SecretData() {}
-        SecretData(const SecretData &other)
-            : QSharedData(other), m_session(other.m_session), m_parameters(other.m_parameters),
-              m_value(other.m_value) {}
-        ~SecretData() {}
-        QDBusObjectPath m_session;
-        QByteArray m_parameters;
-        QByteArray m_value;
-        QString m_contentType;
-    };
-
 public:
     /**
      * Constructs an empty DaemonSecret.
@@ -61,11 +47,13 @@ public:
      * Copy constructor.
      */
     DaemonSecret(const DaemonSecret &other);
+    
+    DaemonSecret( const SecretStruct &secretStruct );
 
     /**
      * Destructor.
      */
-    ~DaemonSecret();
+    virtual ~DaemonSecret();
 
     /**
      * Set the session object D-Bus path.
@@ -106,15 +94,16 @@ public:
      * Get the secret's content type
      */
     const QString& contentType() const;
+    
+    SecretStruct secretStruct() const;
 
 private:
-    class SecretData;
-    QSharedDataPointer<SecretData> d;
+    SecretStruct d;
 };
 
-Q_DECLARE_METATYPE(DaemonSecret)
-
-QDBusArgument &operator<<(QDBusArgument &argument, const DaemonSecret &secret);
-const QDBusArgument &operator>>(const QDBusArgument &argument, DaemonSecret &secret);
+// Q_DECLARE_METATYPE(DaemonSecret)
+// 
+// QDBusArgument &operator<<(QDBusArgument &argument, const DaemonSecret &secret);
+// const QDBusArgument &operator>>(const QDBusArgument &argument, DaemonSecret &secret);
 
 #endif

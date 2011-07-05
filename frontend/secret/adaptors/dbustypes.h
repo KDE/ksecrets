@@ -21,7 +21,7 @@
 #ifndef ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
 #define ORG_FREEDESKTOP_SECRET_DBUSTYPES_H
 
-#include "daemonsecret.h"
+#include "secretstruct.h"
 
 #include <QtDBus/QDBusObjectPath>
 #include <QtCore/QMap>
@@ -33,7 +33,7 @@
 void registerDBusTypes();
 
 typedef QMap<QString, QString> StringStringMap;
-typedef QMap<QDBusObjectPath, DaemonSecret> ObjectPathSecretMap;
+typedef QMap<QDBusObjectPath, SecretStruct> ObjectPathSecretMap;
 typedef QMap<QString, QVariant> StringVariantMap;
 
 Q_DECLARE_METATYPE(StringStringMap);

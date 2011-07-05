@@ -21,6 +21,7 @@
 
 #include "importsinglewalletjob.h"
 #include "../frontend/secret/adaptors/dbustypes.h"
+#include "../frontend/secret/adaptors/daemonsecret.h"
 #include "kwalletbackend/kwalletbackend.h"
 #include "../frontend/secret/service.h"
 #include "../backend/backendmaster.h"
