@@ -42,6 +42,8 @@ public:
     virtual BackendReturn<void> setSecret(const QCA::SecureArray &secret);
     virtual BackendReturn<QMap<QString, QString> > attributes() const;
     virtual BackendReturn<void> setAttributes(const QMap<QString, QString> &attributes);
+    virtual BackendReturn<QString> contentType() const;
+    virtual BackendReturn<void> setContentType(const QString&);
     virtual QDateTime created() const;
     virtual QDateTime modified() const;
     virtual bool isLocked() const;
@@ -64,6 +66,7 @@ private:
     QMap<QString, QString> m_attributes;
 
     QCA::SecureArray m_secret;
+    QString m_contentType;
 };
 
 #endif

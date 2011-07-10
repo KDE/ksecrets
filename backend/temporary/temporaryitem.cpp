@@ -65,6 +65,18 @@ BackendReturn<void> TemporaryItem::setSecret(const QCA::SecureArray &secret)
     return BackendReturn<void>();
 }
 
+BackendReturn< QString > TemporaryItem::contentType() const
+{
+    return m_contentType;
+}
+
+BackendReturn< void > TemporaryItem::setContentType(const QString& contentType)
+{
+    m_contentType = contentType;
+    markAsModified();
+    return BackendReturn<void>();
+}
+
 BackendReturn<QMap<QString, QString> > TemporaryItem::attributes() const
 {
     return m_attributes;

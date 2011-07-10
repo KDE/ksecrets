@@ -120,7 +120,8 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
 }
 
 QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties,
-                                       const SecretStruct &secret, bool replace,
+                                       const SecretStruct &secret, 
+                                       bool replace,
                                        QDBusObjectPath &prompt)
 {
     // default label?
@@ -135,14 +136,15 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         // TODO: error, requires session
     }
 
-    if(properties.contains("Label")) {
-        label = properties["Label"].toString();
-    }
     if(properties.contains("Locked")) {
         locked = properties["Locked"].toBool();
     }
     if(properties.contains("Attributes")) {
         attributes = qdbus_cast<StringStringMap>(properties["Attributes"].value<QDBusArgument>());
+    }
+    if(properties.contains("Label")) {
+        label = properties["Label"].toString();
+        attributes["Label"] = label;
     }
 
     // TODO: check the parameters before creating the prompt
@@ -151,7 +153,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         // TODO: invalid session
         kDebug() << "ERROR Attempting to create an item without a valid session";
     }
-    ItemCreateInfo createInfo(label, attributes, secretValue, replace, locked, getCallingPeer());
+    ItemCreateInfo createInfo(label, attributes, secretValue, secret.m_contentType, replace, locked, getCallingPeer());
     CreateItemJob *cij = m_collection->createCreateItemJob(createInfo);
     if(cij->isImmediate()) {
         cij->exec();

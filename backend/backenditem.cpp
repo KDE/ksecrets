@@ -33,37 +33,4 @@ BackendItem::~BackendItem()
 {
 }
 
-BackendReturn<QString> BackendItem::contentType() const
-{
-    BackendReturn<QString> result("");
-    BackendReturn< QMap< QString, QString > > attrsRet = attributes();
-    if ( attrsRet.error() == NoError ) {
-        result = attrsRet.value()[ATTR_CONTENT_TYPE];
-    }
-    else {
-        result.setError( ErrorOther, "Cannot get contentType attribute for current item");
-    }
-    return result;
-}
-
-BackendReturn<void> BackendItem::setContentType(const QString& contentType)
-{
-    BackendReturn<void> result;
-    if (contentType.length()>0) {
-        BackendReturn< QMap< QString, QString > > attrsRet = attributes();
-        if ( attrsRet.error() == NoError ) {
-            QMap< QString, QString > attrs = attrsRet.value();
-            attrs[ATTR_CONTENT_TYPE] = contentType;
-            BackendReturn< void > setRet = setAttributes( attrs );
-            if ( setRet.isError() ) {
-                result.setError( setRet.error(), "Cannot set contentType attribute for current item" );
-            }
-        }
-        else {
-            result.setError( ErrorOther, "Cannot get contentType attribute for current item" );
-        }
-    }
-    return result;
-}
-
 #include "backenditem.moc"

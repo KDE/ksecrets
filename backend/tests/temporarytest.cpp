@@ -84,7 +84,7 @@ void TemporaryTest::testCreateItemSync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(4, 'c');
-    ItemCreateInfo createInfo("testitem", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem", attr, array, "testcontent", false, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(collection, SIGNAL(itemCreated(BackendItem*)));
 
@@ -105,6 +105,7 @@ void TemporaryTest::testCreateItemSync()
     QCOMPARE(collection->items().value().size(), 1);
     QCOMPARE(collection->items().value().first(), createItem->item());
     QCOMPARE(collection->items().value().first()->secret().value().toByteArray(), QByteArray("cccc"));
+    QCOMPARE(collection->items().value().first()->contentType().value(), QString("testcontent"));
 }
 
 void TemporaryTest::testReplaceItemSync()
@@ -113,7 +114,7 @@ void TemporaryTest::testReplaceItemSync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("arealsecrete243"));
-    ItemCreateInfo createInfo("testitem2", attr, array, true, false, Peer());
+    ItemCreateInfo createInfo("testitem2", attr, array, "testcontent", true, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));
@@ -135,6 +136,7 @@ void TemporaryTest::testReplaceItemSync()
     QCOMPARE(collection->items().value().size(), 1);
     QCOMPARE(collection->items().value().first(), createItem->item());
     QCOMPARE(collection->items().value().first()->secret().value().toByteArray(), QByteArray("arealsecrete243"));
+    QCOMPARE(collection->items().value().first()->contentType().value(), QString("testcontent"));
 }
 
 void TemporaryTest::testDoNotReplaceItemSync()
@@ -143,7 +145,7 @@ void TemporaryTest::testDoNotReplaceItemSync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("anothersecret"));
-    ItemCreateInfo createInfo("testitem3", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem3", attr, array, "testcontent", false, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));
@@ -163,6 +165,7 @@ void TemporaryTest::testDoNotReplaceItemSync()
     // Check the item is present and alive
     QCOMPARE(collection->items().value().size(), 1);
     QCOMPARE(collection->items().value().first()->secret().value().toByteArray(), QByteArray("arealsecrete243"));
+    QCOMPARE(collection->items().value().first()->contentType().value(), QString("testcontent"));
 }
 
 void TemporaryTest::testDeleteItemSync()
@@ -253,7 +256,7 @@ void TemporaryTest::testCreateItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(4, 'c');
-    ItemCreateInfo createInfo("testitem", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem", attr, array, "", false, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(collection, SIGNAL(itemCreated(BackendItem*)));
     QEventLoop loop;
@@ -284,7 +287,7 @@ void TemporaryTest::testReplaceItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("arealsecrete243"));
-    ItemCreateInfo createInfo("testitem2", attr, array, true, false, Peer());
+    ItemCreateInfo createInfo("testitem2", attr, array, "", true, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));
@@ -316,7 +319,7 @@ void TemporaryTest::testDoNotReplaceItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("anothersecret"));
-    ItemCreateInfo createInfo("testitem3", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem3", attr, array, "", false, false, Peer());
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));

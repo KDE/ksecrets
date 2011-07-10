@@ -17,7 +17,7 @@ KDE4_ADD_EXECUTABLE (ksecretservice_frontend_test
 TARGET_LINK_LIBRARIES (ksecretservice_frontend_test
    ksecretservicebackend
    ksecretservicefrontend
-   ksecretservicelib
+   ksecretsservicelib
    ksecretserviceui
    ${QT_QTTEST_LIBRARIES}
 )

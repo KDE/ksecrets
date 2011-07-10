@@ -595,6 +595,8 @@ protected:
      * @remarks this is called by inheriting classes
      */
     void setItem(BackendItem *item);
+    
+    const QString& contentType() const;
 
 private:
     BackendCollection *m_collection;

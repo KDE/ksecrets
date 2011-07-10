@@ -84,6 +84,9 @@ public:
      * @param secret the secret to store
      */
     virtual BackendReturn<void> setSecret(const QCA::SecureArray &secret);
+    
+    virtual BackendReturn<QString> contentType() const;
+    virtual BackendReturn<void> setContentType(const QString& contentType);
 
     /**
      * The attributes of the item.
@@ -230,6 +233,7 @@ private:
     QMap<QString, QString> m_attributes;
 
     QCA::SecureArray m_secret;
+    QString m_contentType;
 };
 
 #endif

@@ -121,6 +121,7 @@ struct ItemCreateInfo : public JobBaseInfo {
     const QCA::SecureArray m_secret; /*!< The secret to store */
     bool m_replace; /*!< If true, replace an item with the same attributes if it already exists */
     bool m_locked; /*!< true if the item should be locked after creation, false else */
+    const QString m_contentType;
 
     /**
      * @param label human-readable label for the new item
@@ -133,12 +134,13 @@ struct ItemCreateInfo : public JobBaseInfo {
     ItemCreateInfo(const QString &label,
                    const QMap<QString, QString> &attributes,
                    const QCA::SecureArray &secret,
+                   const QString& contentType,
                    bool replace,
                    bool locked,
                    const Peer &peer) :
         JobBaseInfo(peer),
         m_label(label), m_attributes(attributes), m_secret(secret),
-        m_replace(replace), m_locked(locked) {
+        m_replace(replace), m_locked(locked), m_contentType(contentType)  {
         /* nothing */
     }
 };

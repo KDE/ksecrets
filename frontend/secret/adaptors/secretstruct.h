@@ -41,7 +41,7 @@ Q_DECLARE_METATYPE( SecretStruct )
 inline QDBusArgument &operator<<(QDBusArgument &argument, const SecretStruct &secret)
 {
     argument.beginStructure();
-    argument << secret.m_session << secret.m_parameters << secret.m_value;
+    argument << secret.m_session << secret.m_parameters << secret.m_value << secret.m_contentType;
     argument.endStructure();
     return argument;
 }
@@ -49,7 +49,7 @@ inline QDBusArgument &operator<<(QDBusArgument &argument, const SecretStruct &se
 inline const QDBusArgument &operator>>(const QDBusArgument &argument, SecretStruct &secret)
 {
     argument.beginStructure();
-    argument >> secret.m_session >> secret.m_parameters >> secret.m_value;
+    argument >> secret.m_session >> secret.m_parameters >> secret.m_value >> secret.m_contentType;
     argument.endStructure();
     return argument;
 }

@@ -261,7 +261,8 @@ ChangeAuthenticationCollectionJob *KSecretCollection::createChangeAuthentication
 BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
         const QMap<QString, QString> &attributes,
         const QCA::SecureArray &secret,
-        bool locked, bool replace)
+        const QString& contentType,
+        bool replace, bool locked)
 {
     // TODO: use locked argument
     Q_UNUSED(locked);
@@ -300,6 +301,7 @@ BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
         item->m_label = label;
         item->m_attributes = attributes;
         item->m_secret = secret;
+        item->m_contentType = contentType;
 
         // insert new item's hashes
         changeAttributeHashes(item);

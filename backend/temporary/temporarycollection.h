@@ -174,7 +174,9 @@ protected:
     // Method for creating items. This is only called by TemporaryCreateItemJobs.
     BackendReturn<BackendItem*> createItem(const QString &label,
                                            const QMap<QString, QString> &attributes,
-                                           const QCA::SecureArray &secret, bool replace,
+                                           const QCA::SecureArray &secret, 
+                                           const QString &contentType,
+                                           bool replace,
                                            bool locked);
 
 private Q_SLOTS:

@@ -127,6 +127,7 @@ SecretStruct Item::getSecret(const QDBusObjectPath &session)
                 result.m_session.setPath( session.path() );
                 result.m_value = encryptedValue.toByteArray();
                 result.m_parameters = encryptedParams;
+                result.m_contentType = m_item->contentType().value();
             
                 BackendReturn<QString> contentTypeRet = m_item->contentType();
                 if ( !contentTypeRet.isError() ) {
@@ -164,6 +165,12 @@ void Item::setSecret(const SecretStruct &secret)
         }
         BackendReturn<void> rc = m_item->setSecret(secretValue);
         if(rc.isError()) {
+            // TODO: handle error
+            Q_ASSERT(0);
+            return;
+        }
+        BackendReturn< void > rc2 = m_item->setContentType(secret.m_contentType);
+        if (rc2.isError()) {
             // TODO: handle error
             Q_ASSERT(0);
             return;

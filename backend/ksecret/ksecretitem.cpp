@@ -83,6 +83,28 @@ BackendReturn<void> KSecretItem::setSecret(const QCA::SecureArray &secret)
     }
 }
 
+BackendReturn< QString > KSecretItem::contentType() const
+{
+    if (isLocked()) {
+        return BackendReturn<QString>(QString(), ErrorIsLocked);
+    }
+    else {
+        markAsUsed();
+        return m_contentType;
+    }
+}
+
+BackendReturn< void > KSecretItem::setContentType(const QString& contentType)
+{
+    if(isLocked()) {
+        return BackendReturn<void>(ErrorIsLocked);
+    } else {
+        m_contentType = contentType;
+        markAsModified();
+        return BackendReturn<void>();
+    }
+}
+
 BackendReturn<QMap<QString, QString> > KSecretItem::attributes() const
 {
     if(isLocked()) {
@@ -200,12 +222,20 @@ bool KSecretItem::deserializeUnlocked(KSecretFile &file)
     if(!file.readSecret(&secret)) {
         return false;
     }
+    
+    // read content type
+    QString *contentType =0;
+    if (!file.readString(contentType)) {
+        return false;
+    }
+    Q_ASSERT(contentType!=0);
 
     m_label = itemLabel;
     m_created = itemCreated;
     m_modified = itemModified;
     m_attributes = attributes;
     m_secret = secret;
+    m_contentType = *contentType;
 
     return true;
 }
@@ -241,6 +271,11 @@ bool KSecretItem::serializeUnlocked(KSecretFile &file)
 
     // serialize secret
     if(!tempFile.writeSecret(m_secret)) {
+        return false;
+    }
+    
+    // serialize contentType
+    if(!tempFile.writeString(m_contentType)) {
         return false;
     }
 

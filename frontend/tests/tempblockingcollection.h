@@ -54,8 +54,10 @@ public:
 protected:
     BackendReturn<BackendItem*> createItem(const QString &label,
                                            const QMap<QString, QString> &attributes,
-                                           const QCA::SecureArray &secret, bool locked,
-                                           bool replace);
+                                           const QCA::SecureArray &secret, 
+                                           const QString& contentType,
+                                           bool replace,
+                                           bool locked);
 
 private Q_SLOTS:
     void slotItemDeleted(BackendItem *item);

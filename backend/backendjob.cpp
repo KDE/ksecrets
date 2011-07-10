@@ -319,4 +319,9 @@ void CreateItemJob::setItem(BackendItem *item)
     m_item = item;
 }
 
+const QString& CreateItemJob::contentType() const
+{
+    return m_createInfo.m_contentType;
+}
+
 #include "backendjob.moc"

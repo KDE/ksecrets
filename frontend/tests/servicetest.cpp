@@ -368,7 +368,7 @@ void ServiceTest::nonBlockingItem()
     QVERIFY(propAttributes.isValid());
     QCOMPARE(propAttributes.userType(), qMetaTypeId<StringStringMap>());
     StringStringMap propAttributesMap = propAttributes.value<StringStringMap>();
-    QCOMPARE(propAttributesMap.size(), 2);
+    QCOMPARE(propAttributesMap.size(), 3); // the Label attribute is automatically added when creating the new item
     QCOMPARE(propAttributesMap.value("attribute1"), QLatin1String("value1"));
     QCOMPARE(propAttributesMap.value("attribute2"), QLatin1String("value2"));
 
@@ -396,7 +396,7 @@ void ServiceTest::nonBlockingItem()
     QVERIFY(propAttributes.isValid());
     QCOMPARE(propAttributes.userType(), qMetaTypeId<StringStringMap>());
     propAttributesMap = propAttributes.value<StringStringMap>();
-    QCOMPARE(propAttributesMap.size(), 2);
+    QCOMPARE(propAttributesMap.size(), 3); // Label attribute is automatically created when creating the item
     QCOMPARE(propAttributesMap.value("attribute1"), QLatin1String("othervalue"));
     QCOMPARE(propAttributesMap.value("attribute3"), QLatin1String("value3"));
 
@@ -414,11 +414,11 @@ void ServiceTest::nonBlockingItem()
     QCOMPARE(outsecret.m_value, QByteArray("mysecret2"));
 
 
-    // we should have received 2 ItemChanged signals
-    if(changedSpy.size() < 3) {
-        changedSpy.waitForSignals(3, 5000);
+    // we should have received 4 ItemChanged signals
+    if(changedSpy.size() < 4) {
+        changedSpy.waitForSignals(4, 5000);
     }
-    QCOMPARE(changedSpy.size(), 3);
+    QCOMPARE(changedSpy.size(), 4);
     QCOMPARE(changedSpy.takeFirst(), itemPath);
     QCOMPARE(changedSpy.takeFirst(), itemPath);
     QCOMPARE(changedSpy.takeFirst(), itemPath);

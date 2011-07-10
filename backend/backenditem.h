@@ -148,8 +148,8 @@ public:
         return m_collection;
     }
     
-    BackendReturn<QString> contentType() const;
-    BackendReturn<void> setContentType(const QString&);
+    virtual BackendReturn<QString> contentType() const =0;
+    virtual BackendReturn<void> setContentType(const QString&) =0;
 
 Q_SIGNALS:
     /**

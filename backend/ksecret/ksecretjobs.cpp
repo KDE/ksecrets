@@ -325,7 +325,7 @@ KSecretCreateItemJob::KSecretCreateItemJob(const ItemCreateInfo& createInfo,
 void KSecretCreateItemJob::exec()
 {
     BackendReturn<BackendItem*> rc = m_collection->createItem(label(), attributes(),
-                                     secret(), locked(), replace());
+                                     secret(), contentType(), replace(), locked());
     if(rc.isError()) {
         setError(rc.error(), rc.errorMessage());
         setItem(0);

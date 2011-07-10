@@ -63,6 +63,19 @@ BackendReturn<void> TempBlockingItem::setSecret(const QCA::SecureArray &secret)
     return BackendReturn<void>();
 }
 
+BackendReturn< QString > TempBlockingItem::contentType() const
+{
+    return m_contentType;
+}
+
+BackendReturn< void > TempBlockingItem::setContentType(const QString& contentType)
+{
+    m_contentType = contentType;
+    markAsModified();
+    return BackendReturn<void>();
+}
+
+
 BackendReturn<QMap<QString, QString> > TempBlockingItem::attributes() const
 {
     return m_attributes;

@@ -94,6 +94,9 @@ public:
      */
     virtual BackendReturn<void> setAttributes(const QMap<QString, QString> &attributes);
 
+    virtual BackendReturn<QString> contentType() const;
+    virtual BackendReturn<void> setContentType(const QString&);
+    
     /**
      * The time this item was created.
      */
@@ -161,6 +164,7 @@ private:
     QMap<QString, QString> m_attributes;
 
     QCA::SecureArray m_secret;
+    QString m_contentType;
 };
 
 #endif

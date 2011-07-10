@@ -120,7 +120,8 @@ ChangeAuthenticationCollectionJob *TempBlockingCollection::createChangeAuthentic
 BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &label,
         const QMap<QString, QString> &attributes,
         const QCA::SecureArray &secret,
-        bool locked, bool replace)
+        const QString& contentType,
+        bool replace, bool locked)
 {
     Q_UNUSED(locked);
 

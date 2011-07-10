@@ -295,8 +295,10 @@ protected:
      */
     BackendReturn<BackendItem*> createItem(const QString &label,
                                            const QMap<QString, QString> &attributes,
-                                           const QCA::SecureArray &secret, bool locked,
-                                           bool replace);
+                                           const QCA::SecureArray &secret, 
+                                           const QString& contentType,
+                                           bool replace,
+                                           bool locked);
 
     /**
      * Delete this collection and emit the corresponding signals.

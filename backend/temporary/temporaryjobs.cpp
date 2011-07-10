@@ -98,8 +98,7 @@ void TemporaryCreateItemJob::exec()
 {
     // let the collection do all the work.
     BackendReturn<BackendItem*> rc = m_tempColl->createItem(label(), attributes(),
-                                     secret(), locked(),
-                                     replace());
+                                     secret(), contentType(), replace(), locked());
     if(rc.isError()) {
         setError(rc.error(), rc.errorMessage());
     } else {

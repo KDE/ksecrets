@@ -78,5 +78,6 @@ int main(int argc, char **argv)
         }
     }
 
+    kDebug() << "ksecretsserviced ready";
     return app.exec();
 }

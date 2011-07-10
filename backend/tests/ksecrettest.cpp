@@ -158,7 +158,7 @@ void KSecretTest::testCreateItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(4, 'c');
-    ItemCreateInfo createInfo("testitem", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem", attr, array, "", false, false, Peer());
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemCreated(BackendItem*)));
     QTestEventLoop loop;
@@ -282,7 +282,7 @@ void KSecretTest::testReplaceItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("arealsecrete243"));
-    ItemCreateInfo createInfo("testitem2", attr, array, true, false, Peer());
+    ItemCreateInfo createInfo("testitem2", attr, array, "", true, false, Peer());
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemChanged(BackendItem*)));
     QTestEventLoop loop;
@@ -312,7 +312,7 @@ void KSecretTest::testDoNotReplaceItemAsync()
     QMap<QString, QString> attr;
     attr["mainattr"] = "haha";
     QCA::SecureArray array(QByteArray("anothersecret"));
-    ItemCreateInfo createInfo("testitem3", attr, array, false, false, Peer());
+    ItemCreateInfo createInfo("testitem3", attr, array, "", false, false, Peer());
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemChanged(BackendItem*)));
     QTestEventLoop loop;

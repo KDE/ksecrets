@@ -120,7 +120,8 @@ CreateItemJob *TemporaryCollection::createCreateItemJob(const ItemCreateInfo& cr
 BackendReturn<BackendItem*> TemporaryCollection::createItem(const QString &label,
         const QMap<QString, QString> &attributes,
         const QCA::SecureArray &secret,
-        bool locked, bool replace)
+        const QString& contentType,
+        bool replace, bool locked)
 {
     Q_UNUSED(locked);
 
@@ -154,6 +155,7 @@ BackendReturn<BackendItem*> TemporaryCollection::createItem(const QString &label
     item->setLabel(label);
     item->setAttributes(attributes);
     item->setSecret(secret);
+    item->setContentType(contentType);
     item->blockSignals(false);
 
     if(replacing) {

@@ -3,7 +3,7 @@ INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
 KDE4_ADD_EXECUTABLE (temporary_collection_test temporarytest.cpp)
 TARGET_LINK_LIBRARIES (temporary_collection_test
    ksecretservicebackend
-   ksecretservicelib
+   ksecretsservicelib
    ksecretserviceui
    ${QT_QTTEST_LIBRARIES}
 )
@@ -13,7 +13,7 @@ ADD_TEST (TemporaryCollectionTest temporary_collection_test)
 KDE4_ADD_EXECUTABLE (ksecret_collection_test ksecrettest.cpp)
 TARGET_LINK_LIBRARIES (ksecret_collection_test
    ksecretservicebackend
-   ksecretservicelib
+   ksecretsservicelib
    ksecretserviceui
    ${QT_QTTEST_LIBRARIES}
 )
@@ -23,7 +23,7 @@ ADD_TEST (KSecretCollectionTest ksecret_collection_test)
 KDE4_ADD_EXECUTABLE (ksecret_collection_ui_test ksecretuitest.cpp)
 TARGET_LINK_LIBRARIES (ksecret_collection_ui_test
    ksecretservicebackend
-   ksecretservicelib
+   ksecretsservicelib
    ksecretserviceui
    ${QT_QTTEST_LIBRARIES}
 )
