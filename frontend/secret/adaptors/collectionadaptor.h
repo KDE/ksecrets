@@ -39,7 +39,7 @@ class CollectionAdaptor : public QDBusAbstractAdaptor
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Collection")
     Q_PROPERTY(QList<QDBusObjectPath> Items READ items)
     Q_PROPERTY(QString Label READ label WRITE setLabel)
-    Q_PROPERTY(bool Locked READ locked)
+    Q_PROPERTY(QString Locked READ locked)
     Q_PROPERTY(qulonglong Created READ created)
     Q_PROPERTY(qulonglong Modified READ modified)
 
