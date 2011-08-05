@@ -41,7 +41,12 @@
 #include "../secret/adaptors/dbustypes.h"
 #include <kdebug.h>
 
-#define DBUS_SERVICE "org.freedesktop.secrets"
+/*
+ * NOTE the DBUS_SERVICE here is purposely not the same as the name
+ * used by the daemon, as theses tests must be performed locally
+ * and not over the dbus and calling an eventually running daemon
+ */
+#define DBUS_SERVICE "org.freedesktop.secrets.frontend.test"
 
 void ServiceTest::initTestCase()
 {
