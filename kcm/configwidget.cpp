@@ -63,7 +63,7 @@ void ConfigWidget::createActions()
 
 void ConfigWidget::onAddComputer()
 {
-    QPointer dlg = new AddComputerDialog( this );
+    QPointer<AddComputerDialog> dlg = new AddComputerDialog( this );
     if ( dlg->exec() == QDialog::Accepted ) {
         QString computerName = dlg->computerName();
         if ( _computerList->findItems( computerName, Qt::MatchExactly ).count() >0 ) {
