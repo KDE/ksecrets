@@ -31,12 +31,12 @@
 #include <kstandarddirs.h>
 #include <kconfig.h>
 #include <ksharedconfig.h>
-#include <kdebug.h>
 #include <QStandardItemModel>
 #include <QListWidgetItem>
 #include <QListWidget>
 #include <kconfigdialogmanager.h>
 #include <kdebug.h>
+#include <QPointer>
 
 ConfigWidget::ConfigWidget(QWidget* parent, Qt::WindowFlags f): 
     QWidget(parent, f),
@@ -63,9 +63,9 @@ void ConfigWidget::createActions()
 
 void ConfigWidget::onAddComputer()
 {
-    AddComputerDialog dlg( this );
-    if ( dlg.exec() == QDialog::Accepted ) {
-        QString computerName = dlg.computerName();
+    QPointer dlg = new AddComputerDialog( this );
+    if ( dlg->exec() == QDialog::Accepted ) {
+        QString computerName = dlg->computerName();
         if ( _computerList->findItems( computerName, Qt::MatchExactly ).count() >0 ) {
             KMessageBox::error( this, i18n("The computer '%1' is already present into the computer list", computerName ) );
         }
@@ -92,7 +92,7 @@ void ConfigWidget::load(KSecretSyncCfg* settings)
 {
     kDebug() << "ConfigWidget::load";
     _computerList->clear();
-    foreach ( QString computerName, settings->computerList() ) {
+    foreach ( const QString &computerName, settings->computerList() ) {
         _computerList->addItem( computerName );
     }
 }

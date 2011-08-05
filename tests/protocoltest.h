@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETCONNECTIONTEST_H
-#define SOCKETCONNECTIONTEST_H
+#ifndef PROTOCOLTEST_H
+#define PROTOCOLTEST_H
 
 #include "../synclogger.h"
 
@@ -45,4 +45,4 @@ private Q_SLOTS:
 private:
 };
 
-#endif // SOCKETCONNECTIONTEST_H
+#endif // PROTOCOLTEST_H

@@ -29,7 +29,7 @@ class KCSecretSyncModule : public KCModule
 {
     Q_OBJECT
 public:
-    KCSecretSyncModule( QWidget* parent =0L, const QVariantList &args = QVariantList());
+    explicit KCSecretSyncModule( QWidget* parent =0L, const QVariantList &args = QVariantList());
     virtual void load();
     virtual void save();
     virtual void defaults();

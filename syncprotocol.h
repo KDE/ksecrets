@@ -128,7 +128,7 @@ public:
 
     /**
      * @param request is the client request
-     * @param response reference to a QString which will contain the server response upon successfull return of this method
+     * @param response reference to a QString which will contain the server response upon successful return of this method
      * @return true if the request was successfully handled and response is set to a valid reply
      */
     virtual bool handleRequest( const QString& request, QString& response );

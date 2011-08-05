@@ -24,7 +24,6 @@
 #include <kcmdlineargs.h>
 #include <kdebug.h>
 #include <QtDBus/QDBusConnection>
-#include <QtCrypto/QtCrypto>
 #include <klocalizedstring.h>
 #include <kstandarddirs.h>
 #include <QtCrypto/QtCrypto>

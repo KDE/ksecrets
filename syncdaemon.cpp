@@ -33,7 +33,6 @@
 #include <kicon.h>
 #include <QTimer>
 #include <QStandardItemModel>
-#include <kdebug.h>
 #include <QtNetwork/QSslSocket>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,7 +69,7 @@ void SyncDaemon::startSyncing()
 
     if ( KSecretSyncCfg::enableSync() ){
         int syncInterval = KSecretSyncCfg::syncInterval() * 60000; // the sync interval is configured in minutes
-        createLogEntry( i18n("SyncDaemon started sync; syncInterval = ", syncInterval) );
+        createLogEntry( i18n("SyncDaemon started sync; syncInterval = %1", syncInterval) );
         _syncTimer->setInterval( syncInterval );
         _syncTimer->start();
     }
