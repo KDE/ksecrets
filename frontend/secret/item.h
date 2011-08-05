@@ -114,7 +114,7 @@ public: // called by D-Bus adaptors
     QDBusObjectPath deleteItem();
 
     /**
-     * Get the secret stored withing the item.
+     * Get the secret stored within the item.
      *
      * @param session Session to use for securing the D-Bus transport
      * @return the (possibly encrypted) DaemonSecret structure

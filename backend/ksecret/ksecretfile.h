@@ -104,14 +104,14 @@ public:
     void close();
 
     /**
-     * Get the current position withing the file.
+     * Get the current position within the file.
      *
      * @return the current file position
      */
     qint64 pos() const;
 
     /**
-     * Set the current position withing the file to pos.
+     * Set the current position within the file to pos.
      *
      * @param pos position to seek inside the underlying device
      * @return true on success, false on error
