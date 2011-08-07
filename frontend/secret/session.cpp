@@ -23,7 +23,7 @@
 #include "service.h"
 #include "peer.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QRegExp>

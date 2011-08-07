@@ -22,7 +22,7 @@
 #include "tempblockingitem.h"
 #include "tempblockingjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 TempBlockingCollection::TempBlockingCollection(const QString &id, BackendCollectionManager *parent)
     : BackendCollection(parent)

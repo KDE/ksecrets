@@ -24,7 +24,7 @@
 #include <QtCore/QMap>
 #include <qca.h>
 #include <qwindowdefs.h>
-#include <queuedjob.h>
+#include "../lib/queuedjob.h"
 #include "../jobinfostructs.h"
 #include "backendreturn.h"
 

@@ -22,7 +22,7 @@
 #include "ksecretcollection.h"
 #include "ksecretjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 #include <kglobal.h>
 #include <kstandarddirs.h>
 

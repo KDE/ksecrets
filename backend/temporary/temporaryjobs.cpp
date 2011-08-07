@@ -20,7 +20,7 @@
 
 #include "temporaryjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 TemporaryCreateCollectionJob::TemporaryCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
         TemporaryCollectionManager *manager)

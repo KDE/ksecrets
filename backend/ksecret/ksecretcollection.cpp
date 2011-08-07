@@ -23,7 +23,7 @@
 #include "ksecretjobs.h"
 #include "ksecretfile.h"
 #include "../securebuffer.h"
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 #include <klocalizedstring.h>
 #include <ksavefile.h>

@@ -22,7 +22,7 @@
 
 #include <backend/backendmaster.h>
 #include <ui/abstractuimanager.h>
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 #include <backendcollection.h>
 
 #include <QtCore/QTimer>

@@ -20,7 +20,7 @@
 
 #include "tempblockingjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 #include <QtCore/QTimer>
 

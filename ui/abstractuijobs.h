@@ -21,8 +21,8 @@
 #ifndef ABSTRACTUIJOBS_H
 #define ABSTRACTUIJOBS_H
 
-#include <queuedjob.h>
-#include <jobqueue.h>
+#include "../lib/queuedjob.h"
+#include "../lib/jobqueue.h"
 
 #include <QtCore/QQueue>
 #include <QtCrypto/QtCrypto>

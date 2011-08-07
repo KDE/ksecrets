@@ -23,7 +23,7 @@
 
 #include "backendreturn.h"
 
-#include <jobqueue.h>
+#include "../lib/jobqueue.h"
 
 #include <QtCore/QObject>
 

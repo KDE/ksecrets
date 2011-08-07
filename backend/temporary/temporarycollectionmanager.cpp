@@ -22,7 +22,7 @@
 #include "temporarycollection.h"
 #include "temporaryjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 #include <QtCore/QTimer>
 

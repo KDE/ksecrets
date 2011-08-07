@@ -24,7 +24,7 @@
 #include "backendreturn.h"
 #include "backendjob.h"
 
-#include <jobqueue.h>
+#include "../lib/jobqueue.h"
 #include "jobinfostructs.h"
 
 #include <QtCore/QMap>

@@ -22,4 +22,10 @@ KDE4_ADD_UI_FILES( ksecretservice_ui_SRCS
 )
     
 KDE4_ADD_LIBRARY (ksecretserviceui STATIC ${ksecretservice_ui_SRCS})
-TARGET_LINK_LIBRARIES (ksecretserviceui ${KDE4_KDEUI_LIBS} ${QCA2_LIBRARIES})
+
+TARGET_LINK_LIBRARIES (
+    ksecretserviceui 
+    daemonlib
+    ${KDE4_KDEUI_LIBS} 
+    ${QCA2_LIBRARIES}
+)

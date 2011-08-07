@@ -22,7 +22,7 @@
 #include "temporaryitem.h"
 #include "temporaryjobs.h"
 
-#include <secrettool.h>
+#include "../lib/secrettool.h"
 
 #include <klocalizedstring.h>
 #include <QtCore/QTimer>
