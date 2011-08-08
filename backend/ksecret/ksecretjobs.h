@@ -1,5 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
+ * Copyright 2011, Valentin Rusu <kde@rusu.info>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -127,18 +128,18 @@ private:
 };
 
 /**
- * Job for changing a ksecret collection's authentication.
- *
- * @todo implement changing the authentication. in order to achieve this the UI
- *       framework has to be in place.
+ * Job for changing a ksecret collection's authentication, that is change the password
  */
 class KSecretChangeAuthenticationCollectionJob : public ChangeAuthenticationCollectionJob
 {
     Q_OBJECT
 
 public:
-    KSecretChangeAuthenticationCollectionJob(BackendCollection *coll);
+    KSecretChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& peer);
     virtual void exec();
+    
+private Q_SLOTS:
+    void unlockResult(QueuedJob*);
 };
 
 /**

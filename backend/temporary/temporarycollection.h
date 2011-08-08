@@ -137,7 +137,7 @@ public:
     /**
      * Create a job for changingcoll this collection's authentication.
      */
-    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob();
+    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob( const Peer& );
 
     virtual ApplicationPermission applicationPermission(const QString&) const {
         return PermissionAllow;

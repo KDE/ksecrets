@@ -1,5 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
+ * Copyright 2011, Valentin Rusu <kde@rusu.info>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -335,17 +336,33 @@ void KSecretCreateItemJob::exec()
     emitResult();
 }
 
-KSecretChangeAuthenticationCollectionJob::KSecretChangeAuthenticationCollectionJob(BackendCollection *coll)
-    : ChangeAuthenticationCollectionJob(coll)
+KSecretChangeAuthenticationCollectionJob::KSecretChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& peer)
+    : ChangeAuthenticationCollectionJob(coll, peer)
 {
 }
 
 void KSecretChangeAuthenticationCollectionJob::exec()
 {
-    setError(ErrorOther, "Not implemented.");
-    setResult(false);
-    emitResult();
+    CollectionUnlockInfo unlockInfo( peer() );
+    UnlockCollectionJob *unlockJob = collection()->createUnlockJob( unlockInfo );
+    connect( unlockJob, SIGNAL(result(QueuedJob*)), this, SLOT(unlockResult(QueuedJob*)) );
+    unlockJob->enqueue();
+    
+    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
+    AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
+    newPasswordJob->enqueue();
 }
+
+void KSecretChangeAuthenticationCollectionJob::unlockResult(QueuedJob* j)
+{
+    UnlockCollectionJob *unlockJob = qobject_cast< UnlockCollectionJob* >( j );
+    Q_ASSERT( unlockJob != 0 );
+/*    if ( unlockJob-> ) {
+    }*/
+    unlockJob->deleteLater();
+}
+
+
 
 KSecretUnlockItemJob::KSecretUnlockItemJob(const ItemUnlockInfo& unlockInfo,
         KSecretCollection *collection)

@@ -173,6 +173,13 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     }
 }
 
+QDBusObjectPath Collection::changePassword()
+{
+    ChangeAuthenticationCollectionJob *cpj = m_collection->createChangeAuthenticationJob( getCallingPeer() );
+    SingleJobPrompt *pj = new SingleJobPrompt(m_service, cpj, this );
+    return pj->objectPath();
+}
+
 BackendCollection *Collection::backendCollection() const
 {
     return m_collection;

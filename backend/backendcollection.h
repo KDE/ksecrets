@@ -146,7 +146,7 @@ public:
     /**
      * Create a job for changing this collection's authentication.
      */
-    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob() = 0;
+    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob( const Peer& ) = 0;
 
     /**
      * Check if the given DBus peer has access to this collection

@@ -188,7 +188,7 @@ public:
     /**
      * Create a job for changing this collection's authentication.
      */
-    virtual ChangeAuthenticationCollectionJob* createChangeAuthenticationJob();
+    virtual ChangeAuthenticationCollectionJob* createChangeAuthenticationJob( const Peer& );
 
     /**
      * Get the path of the ksecret file the collection is stored inside.

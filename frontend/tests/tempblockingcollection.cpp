@@ -112,9 +112,9 @@ CreateItemJob *TempBlockingCollection::createCreateItemJob(const ItemCreateInfo&
     return new TempBlockingCreateItemJob(createInfo, this);
 }
 
-ChangeAuthenticationCollectionJob *TempBlockingCollection::createChangeAuthenticationJob()
+ChangeAuthenticationCollectionJob *TempBlockingCollection::createChangeAuthenticationJob( const Peer& peer )
 {
-    return new TempBlockingChangeAuthenticationCollectionJob(this);
+    return new TempBlockingChangeAuthenticationCollectionJob(this, peer);
 }
 
 BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &label,

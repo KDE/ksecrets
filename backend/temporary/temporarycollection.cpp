@@ -171,9 +171,9 @@ BackendReturn<BackendItem*> TemporaryCollection::createItem(const QString &label
     return item;
 }
 
-ChangeAuthenticationCollectionJob *TemporaryCollection::createChangeAuthenticationJob()
+ChangeAuthenticationCollectionJob *TemporaryCollection::createChangeAuthenticationJob( const Peer& peer )
 {
-    return new TemporaryChangeAuthenticationCollectionJob(this);
+    return new TemporaryChangeAuthenticationCollectionJob(this, peer);
 }
 
 void TemporaryCollection::slotItemDeleted(BackendItem *item)

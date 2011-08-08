@@ -253,9 +253,9 @@ CreateItemJob *KSecretCollection::createCreateItemJob(const ItemCreateInfo& crea
     return new KSecretCreateItemJob(createInfo, this);
 }
 
-ChangeAuthenticationCollectionJob *KSecretCollection::createChangeAuthenticationJob()
+ChangeAuthenticationCollectionJob *KSecretCollection::createChangeAuthenticationJob( const Peer& peer )
 {
-    return new KSecretChangeAuthenticationCollectionJob(this);
+    return new KSecretChangeAuthenticationCollectionJob(this, peer);
 }
 
 BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,

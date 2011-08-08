@@ -135,6 +135,12 @@ public:
      * Get the backend collection linked to this object.
      */
     BackendCollection *backendCollection() const;
+    
+    /**
+     * Requests for current collection's password change
+     * @return object path of the prompt that'll collect the new password
+     */
+    QDBusObjectPath changePassword();
 
 Q_SIGNALS:
     /**

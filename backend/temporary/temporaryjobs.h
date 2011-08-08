@@ -85,7 +85,7 @@ class TemporaryChangeAuthenticationCollectionJob : public ChangeAuthenticationCo
     Q_OBJECT
 
 public:
-    TemporaryChangeAuthenticationCollectionJob(BackendCollection *coll);
+    TemporaryChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& );
     virtual void exec();
 };
 

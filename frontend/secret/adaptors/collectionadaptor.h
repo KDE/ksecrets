@@ -62,7 +62,7 @@ public:
     qulonglong created() const;
 
     qulonglong modified() const;
-
+    
 public Q_SLOTS:
     QDBusObjectPath Delete();
 
@@ -71,6 +71,12 @@ public Q_SLOTS:
     QDBusObjectPath CreateItem(const QMap<QString, QVariant> &properties,
                                const SecretStruct &secret, bool replace,
                                QDBusObjectPath &prompt);
+    /**
+     * Request password change on the current collection
+     * @note this metod is KDE specific
+     * @return the DBus path to the prompt used to change the password of this collection
+     */
+    QDBusObjectPath ChangePassword();
 
 Q_SIGNALS:
     void ItemCreated(const QDBusObjectPath &item);

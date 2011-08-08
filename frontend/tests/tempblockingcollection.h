@@ -43,7 +43,7 @@ public:
     virtual LockCollectionJob *createLockJob();
     virtual DeleteCollectionJob *createDeleteJob(const CollectionDeleteInfo& deleteJobInfo);
     virtual CreateItemJob *createCreateItemJob(const ItemCreateInfo& createInfo);
-    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob();
+    virtual ChangeAuthenticationCollectionJob *createChangeAuthenticationJob(const Peer&);
     virtual ApplicationPermission applicationPermission(const QString& path) const;
     virtual bool setApplicationPermission(const QString& path, ApplicationPermission perm);
     virtual bool setCreatorApplication(QString exePath);

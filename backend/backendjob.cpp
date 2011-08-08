@@ -252,15 +252,21 @@ BackendItem *DeleteItemJob::item()
     return m_deleteInfo.m_item;
 }
 
-ChangeAuthenticationCollectionJob::ChangeAuthenticationCollectionJob(BackendCollection* collection)
+ChangeAuthenticationCollectionJob::ChangeAuthenticationCollectionJob(BackendCollection* collection, const Peer& peer)
     : BooleanResultJob(BackendJob::TypeChangeAuthenticationCollection, collection),
-      m_collection(collection)
+      m_collection(collection),
+      m_peer(peer)
 {
 }
 
 BackendCollection *ChangeAuthenticationCollectionJob::collection()
 {
     return m_collection;
+}
+
+const Peer& ChangeAuthenticationCollectionJob::peer() const
+{
+    return m_peer;
 }
 
 ChangeAuthenticationItemJob::ChangeAuthenticationItemJob(BackendItem *item)

@@ -75,8 +75,8 @@ void TempBlockingDeleteCollectionJob::perform()
     emitResult();
 }
 
-TempBlockingChangeAuthenticationCollectionJob::TempBlockingChangeAuthenticationCollectionJob(BackendCollection* coll)
-    : ChangeAuthenticationCollectionJob(coll)
+TempBlockingChangeAuthenticationCollectionJob::TempBlockingChangeAuthenticationCollectionJob(BackendCollection* coll, const Peer& peer)
+    : ChangeAuthenticationCollectionJob(coll, peer)
 {
 }
 

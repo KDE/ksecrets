@@ -491,16 +491,18 @@ public:
     /**
      * Constructor.
      */
-    explicit ChangeAuthenticationCollectionJob(BackendCollection *collection);
+    explicit ChangeAuthenticationCollectionJob(BackendCollection *collection, const Peer& peer);
 
 protected:
     /**
      * Get the collection to change the authentication for.
      */
     BackendCollection *collection();
+    const Peer& peer() const;
 
 private:
     BackendCollection *m_collection;
+    Peer               m_peer;
 };
 
 /**

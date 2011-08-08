@@ -84,6 +84,11 @@ QDBusObjectPath CollectionAdaptor::CreateItem(const QMap<QString, QVariant> &pro
     return m_collection->createItem(properties, secret, replace, prompt);
 }
 
+QDBusObjectPath CollectionAdaptor::ChangePassword()
+{
+    return m_collection->changePassword();
+}
+
 }
 
 #include "collectionadaptor.moc"

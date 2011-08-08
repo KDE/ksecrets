@@ -75,8 +75,8 @@ void TemporaryDeleteCollectionJob::exec()
     emitResult();
 }
 
-TemporaryChangeAuthenticationCollectionJob::TemporaryChangeAuthenticationCollectionJob(BackendCollection *coll)
-    : ChangeAuthenticationCollectionJob(coll)
+TemporaryChangeAuthenticationCollectionJob::TemporaryChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& peer)
+    : ChangeAuthenticationCollectionJob(coll, peer)
 {
 }
 

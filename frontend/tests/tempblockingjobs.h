@@ -113,7 +113,7 @@ class TempBlockingChangeAuthenticationCollectionJob : public ChangeAuthenticatio
     Q_OBJECT
 
 public:
-    TempBlockingChangeAuthenticationCollectionJob(BackendCollection *coll);
+    TempBlockingChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& peer );
     virtual bool isImmediate() const {
         return false;
     }
