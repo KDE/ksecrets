@@ -32,11 +32,13 @@
 #include "frontend/secret/service.h"
 #include "ui/dialoguimanager.h"
 #include "kwlimporter/kwlimporterjob.h"
+#include "../client/version.h"
 
 int main(int argc, char **argv)
 {
     KAboutData aboutdata("ksecretsservice", 0, ki18n("KDE DaemonSecret Service"),
-                         "0.0", ki18n("KDE DaemonSecret Service"),
+                         ksecretsserviceclient_version, // please note that client version always match daemon version
+                         ki18n("KDE DaemonSecret Service"),
                          KAboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
