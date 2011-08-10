@@ -137,7 +137,8 @@ public:
     virtual void start();
     
 private Q_SLOTS:
-    void unlockResult(KJob*);
+    void slotUnlockResult(KJob*);
+    void slotNewPasswordFinished(KJob*);
 };
 
 /**

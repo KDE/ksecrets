@@ -332,25 +332,51 @@ void KSecretChangeAuthenticationCollectionJob::start()
 {
     CollectionUnlockInfo unlockInfo( peer() );
     UnlockCollectionJob *unlockJob = collection()->createUnlockJob( unlockInfo );
-    connect( unlockJob, SIGNAL(finished(KJob*)), this, SLOT(unlockResult(KJob*)) );
-    if (!addSubjob( unlockJob )) {
+    connect( unlockJob, SIGNAL(finished(KJob*)), this, SLOT(slotUnlockResult(KJob*)) );
+    if (addSubjob( unlockJob )) {
+        unlockJob->start();
+    }
+    else {
         kDebug() << "Failed to add unlock subjob";
         setError(BackendErrorOther, i18n("Cannot start collection unlocking"));
     }
 }
 
-void KSecretChangeAuthenticationCollectionJob::unlockResult(KJob* j)
+void KSecretChangeAuthenticationCollectionJob::slotUnlockResult(KJob* j)
 {
     UnlockCollectionJob *unlockJob = qobject_cast< UnlockCollectionJob* >( j );
     Q_ASSERT( unlockJob != 0 );
-/*    if ( unlockJob-> ) {
-    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
-    AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
-    newPasswordJob->start();
-    }*/
+    if (unlockJob->result()) {
+        AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
+        AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
+        if (addSubjob(newPasswordJob)) {
+            connect(newPasswordJob, SIGNAL(finished(KJob*)), this, SLOT(slotNewPasswordFinished(KJob*)));
+            newPasswordJob->start();
+        }
+        else {
+            setError(BackendErrorOther, i18n("Cannot start subjob."));
+            emitResult();
+        }
+    }
+    else {
+        setError(BackendErrorIsLocked, i18n("The collection cannot be unlocked."));
+        emitResult();
+    }
     unlockJob->deleteLater();
 }
 
+void KSecretChangeAuthenticationCollectionJob::slotNewPasswordFinished(KJob* job)
+{
+   AbstractNewPasswordJob *newPasswordJob = qobject_cast< AbstractNewPasswordJob* >(job);
+   Q_ASSERT(newPasswordJob != 0);
+   if ( !newPasswordJob->cancelled() ) {
+       setError(BackendNoError);
+   }
+   else {
+       setError(BackendErrorOther, i18n("Cannot change password"));
+   }
+   emitResult();
+}
 
 
 KSecretUnlockItemJob::KSecretUnlockItemJob(const ItemUnlockInfo& unlockInfo,
