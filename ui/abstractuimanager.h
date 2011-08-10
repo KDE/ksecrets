@@ -32,7 +32,7 @@
  * (probably for mobile devices) or even a bogus UI which can be used inside
  * unit-tests.
  */
-class AbstractUiManager : public JobQueue
+class AbstractUiManager /* : public JobQueue */
 {
 public:
     virtual ~AbstractUiManager() {

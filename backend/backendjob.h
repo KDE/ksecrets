@@ -27,11 +27,12 @@
 #include "../jobinfostructs.h"
 #include "backendreturn.h"
 #include <kcompositejob.h>
+#include "../lib/daemonjob.h"
 
 /**
  * Queued job for implementing various backend actions which need queueing.
  */
-class BackendJob : public KCompositeJob
+class BackendJob : public DaemonJob
 {
     Q_OBJECT
 
@@ -87,8 +88,6 @@ public:
      */
     bool isDismissed() const;
     
-    bool isFinished() const;
-
     /**
      * Dismiss this job.
      */
@@ -109,20 +108,13 @@ public:
     const QString &errorMessage() const;
 
     /**
-     * Default implementation for start() which just calls exec. This is
-     * implemented for convenience reasons as it eases the implementation of
-     * jobs which can be called immediately.
+     * Default implementation for start() 
      *
      * @warning this MUST be reimplemented if the job being implemented is not
      *          always immediate or needs special handling.
      */
     virtual void start();
     
-    /**
-     * This overrides KCompositeJob::addSubjob only to make it public
-     */
-    bool addSubjob(KJob*);
-
 protected:
     /**
      * Set the job result to be an error.
@@ -132,15 +124,11 @@ protected:
      */
     void setError(ErrorType error, const QString &errorMessage = QString());
 
-private Q_SLOTS:
-    void slotJobFinished(KJob*);
-    
 private:
     JobType m_type;
     bool m_dismissed;
     ErrorType m_error;
     QString m_errorMessage;
-    bool m_finished;
 };
 
 class BackendMaster;
@@ -249,11 +237,6 @@ public:
      *         be queued
      */
     virtual bool isImmediate() const;
-
-    /**
-     * Execute the job synchronously.
-     */
-    virtual void exec();
 
     /**
      * Get the collection created by the job.

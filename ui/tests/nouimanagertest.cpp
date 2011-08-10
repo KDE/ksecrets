@@ -41,7 +41,7 @@ void NoUiManagerTest::testAskPassword()
 
     QTestEventLoop loop;
     connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    job->enqueue();
+    job->start();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
 
@@ -66,7 +66,7 @@ void NoUiManagerTest::testNewPassword()
 
     QTestEventLoop loop;
     connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    job->enqueue();
+    job->start();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
 
@@ -81,38 +81,6 @@ void NoUiManagerTest::testNewPassword()
     QVERIFY(!loop.timeout());
 }
 
-void NoUiManagerTest::testJobOrder()
-{
-    NoUiManager manager;
-
-    // create 3 jobs
-    AbstractNewPasswordJob *job1 = manager.createNewPasswordJob("1");
-    AbstractNewPasswordJob *job2 = manager.createNewPasswordJob("2");
-    AbstractNewPasswordJob *job3 = manager.createNewPasswordJob("3");
-
-    // enqueue the job so they should end up in order 1 -> 2 -> 3
-    job2->enqueue();
-    job3->enqueue();
-    job1->enqueue(true);
-
-    QTestEventLoop loop;
-    connect(job1, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    connect(job2, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    connect(job3, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-
-    // check if jobs are executed in the right order
-    // NOTE: once a job is done it will be deleted, so successive tests
-    //       for isFinished() might fail on them.
-    loop.enterLoop(5);
-    QVERIFY(job1->isFinished() && !job2->isFinished() && !job3->isFinished());
-
-    loop.enterLoop(5);
-    QVERIFY(job2->isFinished() && !job3->isFinished());
-
-    loop.enterLoop(5);
-    QVERIFY(job3->isFinished());
-}
-
 void NoUiManagerTest::testAskPasswordCancelled()
 {
     NoUiManager manager;
@@ -124,7 +92,7 @@ void NoUiManagerTest::testAskPasswordCancelled()
 
     QTestEventLoop loop;
     connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    job->enqueue();
+    job->start();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
 
@@ -150,7 +118,7 @@ void NoUiManagerTest::testNewPasswordCancelled()
 
     QTestEventLoop loop;
     connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    job->enqueue();
+    job->start();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
 
@@ -163,39 +131,6 @@ void NoUiManagerTest::testNewPasswordCancelled()
     connect(job, SIGNAL(destroyed(QObject*)), &loop, SLOT(exitLoop()));
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
-}
-
-void NoUiManagerTest::testJobOrderCancelled()
-{
-    NoUiManager manager;
-    manager.setCancelAll(true);
-
-    // create 3 jobs
-    AbstractNewPasswordJob *job1 = manager.createNewPasswordJob("1");
-    AbstractNewPasswordJob *job2 = manager.createNewPasswordJob("2");
-    AbstractNewPasswordJob *job3 = manager.createNewPasswordJob("3");
-
-    // enqueue the job so they should end up in order 1 -> 2 -> 3
-    job2->enqueue();
-    job3->enqueue();
-    job1->enqueue(true);
-
-    QTestEventLoop loop;
-    connect(job1, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    connect(job2, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-    connect(job3, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
-
-    // check if jobs are executed in the right order
-    // NOTE: once a job is done it will be deleted, so successive tests
-    //       for isFinished() might fail on them.
-    loop.enterLoop(5);
-    QVERIFY(job1->isFinished() && !job2->isFinished() && !job3->isFinished());
-
-    loop.enterLoop(5);
-    QVERIFY(job2->isFinished() && !job3->isFinished());
-
-    loop.enterLoop(5);
-    QVERIFY(job3->isFinished());
 }
 
 void NoUiManagerTest::cleanupTestCase()

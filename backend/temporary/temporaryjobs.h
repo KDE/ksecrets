@@ -38,7 +38,7 @@ class TemporaryCreateCollectionJob : public CreateCollectionJob
 public:
     TemporaryCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
                                  TemporaryCollectionManager *manager);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -50,7 +50,7 @@ class TemporaryUnlockCollectionJob : public UnlockCollectionJob
 
 public:
     TemporaryUnlockCollectionJob(const CollectionUnlockInfo &unlockInfo, BackendCollection *coll);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -62,7 +62,7 @@ class TemporaryLockCollectionJob : public LockCollectionJob
 
 public:
     TemporaryLockCollectionJob(BackendCollection *coll);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -74,7 +74,7 @@ class TemporaryDeleteCollectionJob : public DeleteCollectionJob
 
 public:
     TemporaryDeleteCollectionJob(const CollectionDeleteInfo& deleteInfo);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -86,7 +86,7 @@ class TemporaryChangeAuthenticationCollectionJob : public ChangeAuthenticationCo
 
 public:
     TemporaryChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& );
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -99,7 +99,7 @@ class TemporaryCreateItemJob : public CreateItemJob
 public:
     TemporaryCreateItemJob(const ItemCreateInfo& createInfo,
                            TemporaryCollection *collection);
-    virtual void exec();
+    virtual void start();
 
 private:
     TemporaryCollection *m_tempColl;
@@ -114,7 +114,7 @@ class TemporaryUnlockItemJob : public UnlockItemJob
 
 public:
     TemporaryUnlockItemJob(const ItemUnlockInfo& unlockInfo);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -126,7 +126,7 @@ class TemporaryLockItemJob : public LockItemJob
 
 public:
     TemporaryLockItemJob(BackendItem *item);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -138,7 +138,7 @@ class TemporaryDeleteItemJob : public DeleteItemJob
 
 public:
     TemporaryDeleteItemJob(const ItemDeleteInfo& deleteInfo);
-    virtual void exec();
+    virtual void start();
 };
 
 /**
@@ -150,7 +150,7 @@ class TemporaryChangeAuthenticationItemJob : public ChangeAuthenticationItemJob
 
 public:
     TemporaryChangeAuthenticationItemJob(BackendItem *item);
-    virtual void exec();
+    virtual void start();
 };
 
 #endif

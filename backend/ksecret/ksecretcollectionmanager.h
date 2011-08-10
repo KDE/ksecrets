@@ -27,6 +27,7 @@
 
 #include <QtCore/QMap>
 
+class KJob;
 class KSecretCollection;
 class KSecretCreateCollectionJob;
 
@@ -86,7 +87,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void createCollectionJobResult(QueuedJob *job);
+    void createCollectionJobResult(KJob *job);
 
 private:
     friend class KSecretCreateCollectionJob;

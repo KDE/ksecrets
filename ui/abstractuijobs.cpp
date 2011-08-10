@@ -25,7 +25,7 @@
 #include <QtCore/QTimer>
 
 AbstractUiJob::AbstractUiJob(AbstractUiManager *manager) : 
-    QueuedJob(manager), m_cancelled(false)
+    m_cancelled(false)
 {
 }
 

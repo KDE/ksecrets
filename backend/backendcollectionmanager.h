@@ -23,8 +23,6 @@
 
 #include "backendreturn.h"
 
-#include "../lib/jobqueue.h"
-
 #include <QtCore/QObject>
 
 class CreateCollectionJob;
@@ -42,7 +40,7 @@ class CollectionCreateInfo;
  * pure virtual methods. The inheriting class is responsible for emitting the
  * \sa collectionCreated, \sa collectionDeleted and \sa collectionChanged signals.
  */
-class BackendCollectionManager : public QObject, public JobQueue
+class BackendCollectionManager : public QObject
 {
     Q_OBJECT
 

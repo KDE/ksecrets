@@ -42,7 +42,6 @@ public:
     KSecretCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
                                KSecretCollectionManager *manager);
     virtual bool isImmediate() const;
-    virtual void exec();
 
 protected:
     virtual void start();
@@ -65,14 +64,13 @@ class KSecretUnlockCollectionJob : public UnlockCollectionJob
 public:
     KSecretUnlockCollectionJob(const CollectionUnlockInfo &unlockInfo, KSecretCollection *coll);
     virtual bool isImmediate() const;
-    virtual void exec();
 
 protected:
     virtual void start();
 
 private Q_SLOTS:
-    void askPasswordJobResult(QueuedJob *job);
-    void askAclPrefsJobResult(QueuedJob *job);
+    void askPasswordJobResult(KJob *job);
+    void askAclPrefsJobResult(KJob *job);
 
 private:
     void createAskPasswordJob();
@@ -90,7 +88,7 @@ class KSecretLockCollectionJob : public LockCollectionJob
 
 public:
     KSecretLockCollectionJob(KSecretCollection *coll);
-    virtual void exec();
+    virtual void start();
 
 private:
     KSecretCollection *m_collection;
@@ -105,7 +103,7 @@ class KSecretDeleteCollectionJob : public DeleteCollectionJob
 
 public:
     KSecretDeleteCollectionJob(const CollectionDeleteInfo& deleteInfo);
-    virtual void exec();
+    virtual void start();
 
 private:
     KSecretCollection *m_collection;
@@ -121,7 +119,7 @@ class KSecretCreateItemJob : public CreateItemJob
 public:
     KSecretCreateItemJob(const ItemCreateInfo& createInfo,
                          KSecretCollection* collection);
-    virtual void exec();
+    virtual void start();
 
 private:
     KSecretCollection *m_collection;
@@ -136,7 +134,7 @@ class KSecretChangeAuthenticationCollectionJob : public ChangeAuthenticationColl
 
 public:
     KSecretChangeAuthenticationCollectionJob(BackendCollection *coll, const Peer& peer);
-    virtual void exec();
+    virtual void start();
     
 private Q_SLOTS:
     void unlockResult(KJob*);
@@ -153,7 +151,6 @@ public:
     KSecretUnlockItemJob(const ItemUnlockInfo& unlockInfo, KSecretCollection *collection);
     virtual ~KSecretUnlockItemJob();
     virtual bool isImmediate() const;
-    virtual void exec();
 
 protected:
     virtual void start();
@@ -176,7 +173,6 @@ public:
     KSecretLockItemJob(KSecretItem *item, KSecretCollection *collection);
     virtual ~KSecretLockItemJob();
     virtual bool isImmediate() const;
-    virtual void exec();
 
 protected:
     virtual void start();
@@ -197,7 +193,7 @@ class KSecretDeleteItemJob : public DeleteItemJob
 
 public:
     KSecretDeleteItemJob(const ItemDeleteInfo &deleteInfo);
-    virtual void exec();
+    virtual void start();
 
 private:
     KSecretItem *m_item;
@@ -212,7 +208,7 @@ class KSecretChangeAuthenticationItemJob : public ChangeAuthenticationItemJob
 
 public:
     KSecretChangeAuthenticationItemJob(BackendItem *item);
-    virtual void exec();
+    virtual void start();
 };
 
 #endif

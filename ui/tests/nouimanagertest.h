@@ -32,11 +32,9 @@ private Q_SLOTS:
 
     void testAskPassword();
     void testNewPassword();
-    void testJobOrder();
 
     void testAskPasswordCancelled();
     void testNewPasswordCancelled();
-    void testJobOrderCancelled();
 
     void cleanupTestCase();
 };

@@ -28,7 +28,7 @@ TemporaryCreateCollectionJob::TemporaryCreateCollectionJob(const CollectionCreat
 {
 }
 
-void TemporaryCreateCollectionJob::exec()
+void TemporaryCreateCollectionJob::start()
 {
     TemporaryCollection *coll = new TemporaryCollection(createId(), manager());
     coll->setLabel(label());
@@ -43,7 +43,7 @@ TemporaryUnlockCollectionJob::TemporaryUnlockCollectionJob(const CollectionUnloc
 {
 }
 
-void TemporaryUnlockCollectionJob::exec()
+void TemporaryUnlockCollectionJob::start()
 {
     // collection is always unlocked.
     setResult(true);
@@ -55,7 +55,7 @@ TemporaryLockCollectionJob::TemporaryLockCollectionJob(BackendCollection *coll)
 {
 }
 
-void TemporaryLockCollectionJob::exec()
+void TemporaryLockCollectionJob::start()
 {
     // collection can not be locked as that's not supported for this backend.
     setError(BackendErrorNotSupported);
@@ -68,7 +68,7 @@ TemporaryDeleteCollectionJob::TemporaryDeleteCollectionJob(const CollectionDelet
 {
 }
 
-void TemporaryDeleteCollectionJob::exec()
+void TemporaryDeleteCollectionJob::start()
 {
     setResult(true);
     collection()->deleteLater();
@@ -80,7 +80,7 @@ TemporaryChangeAuthenticationCollectionJob::TemporaryChangeAuthenticationCollect
 {
 }
 
-void TemporaryChangeAuthenticationCollectionJob::exec()
+void TemporaryChangeAuthenticationCollectionJob::start()
 {
     setError(BackendErrorNotSupported);
     setResult(false);
@@ -94,7 +94,7 @@ TemporaryCreateItemJob::TemporaryCreateItemJob(const ItemCreateInfo& createInfo,
 {
 }
 
-void TemporaryCreateItemJob::exec()
+void TemporaryCreateItemJob::start()
 {
     // let the collection do all the work.
     BackendReturn<BackendItem*> rc = m_tempColl->createItem(label(), attributes(),
@@ -111,7 +111,7 @@ TemporaryUnlockItemJob::TemporaryUnlockItemJob(const ItemUnlockInfo& unlockInfo)
 {
 }
 
-void TemporaryUnlockItemJob::exec()
+void TemporaryUnlockItemJob::start()
 {
     // item is always unlocked.
     setResult(true);
@@ -122,7 +122,7 @@ TemporaryLockItemJob::TemporaryLockItemJob(BackendItem *item) : LockItemJob(item
 {
 }
 
-void TemporaryLockItemJob::exec()
+void TemporaryLockItemJob::start()
 {
     // item can not be locked as that's not supported for this backend.
     setError(BackendErrorNotSupported);
@@ -134,7 +134,7 @@ TemporaryDeleteItemJob::TemporaryDeleteItemJob(const ItemDeleteInfo& deleteInfo)
 {
 }
 
-void TemporaryDeleteItemJob::exec()
+void TemporaryDeleteItemJob::start()
 {
     setResult(true);
     item()->deleteLater();
@@ -146,7 +146,7 @@ TemporaryChangeAuthenticationItemJob::TemporaryChangeAuthenticationItemJob(Backe
 {
 }
 
-void TemporaryChangeAuthenticationItemJob::exec()
+void TemporaryChangeAuthenticationItemJob::start()
 {
     setError(BackendErrorNotSupported);
     setResult(false);

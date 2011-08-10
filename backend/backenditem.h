@@ -24,7 +24,6 @@
 #include "backendreturn.h"
 #include "backendjob.h"
 
-#include "../lib/jobqueue.h"
 #include "jobinfostructs.h"
 
 #include <QtCore/QMap>
@@ -40,7 +39,7 @@ class BackendCollection;
  * virtual methods. The inheriting class is responsible for emitting the
  * \sa itemDeleted and \sa itemChanged signals.
  */
-class BackendItem : public QObject, public JobQueue
+class BackendItem : public QObject
 {
     Q_OBJECT
 

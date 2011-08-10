@@ -30,16 +30,8 @@
 BackendJob::BackendJob(JobType type)
     : m_type(type), 
     m_dismissed(false), 
-    m_error(BackendNoError),
-    m_finished(false)
+    m_error(BackendNoError)
 {
-    connect(this, SIGNAL(finished(KJob*)), this, SLOT(slotJobFinished(KJob*)));
-}
-
-void BackendJob::slotJobFinished(KJob* job)
-{
-    Q_ASSERT(this == job);
-    m_finished = true;
 }
 
 bool BackendJob::isImmediate() const
@@ -55,11 +47,6 @@ BackendJob::JobType BackendJob::type() const
 bool BackendJob::isDismissed() const
 {
     return m_dismissed;
-}
-
-bool BackendJob::isFinished() const
-{
-    return m_finished;
 }
 
 void BackendJob::dismiss()
@@ -81,14 +68,8 @@ const QString &BackendJob::errorMessage() const
 
 void BackendJob::start()
 {
-    exec();
+    qWarning("Calling NOOP BackendJob::start()");
 }
-
-bool BackendJob::addSubjob(KJob* job)
-{
-    return KCompositeJob::addSubjob(job);
-}
-
 
 void BackendJob::setError(ErrorType error, const QString &errorMessage)
 {
@@ -149,17 +130,6 @@ bool CreateCollectionMasterJob::isImmediate() const
     }
 }
 
-void CreateCollectionMasterJob::exec()
-{
-    if(m_master->managers().count() == 0) {
-        setError(BackendErrorOther, i18n("No backend to create the collection was found."));
-        emitResult();
-    } else {
-        // can't call synchronous if there's a backend.
-        Q_ASSERT(false);
-    }
-}
-
 void CreateCollectionMasterJob::start()
 {
     if(m_master->managers().count() == 0) {
@@ -170,7 +140,13 @@ void CreateCollectionMasterJob::start()
         m_subJob = m_master->managers().first()->createCreateCollectionJob(m_createCollectionInfo);
         connect(m_subJob, SIGNAL(result(KJob*)),
                 SLOT(createCollectionJobFinished(KJob*)));
-        
+        if (addSubjob(m_subJob)) {
+            m_subJob->start();
+        }
+        else {
+            setError(BackendErrorOther, i18n("Cannot start subjob."));
+            emitResult();
+        }
     } else {
         setError(BackendErrorOther, i18n("Not implemented."));
         emitResult();

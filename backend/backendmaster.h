@@ -24,8 +24,6 @@
 #include "backendreturn.h"
 #include "backendjob.h"
 
-#include "../lib/jobqueue.h"
-
 #include <QtCore/QObject>
 #include <QtCore/QList>
 
@@ -43,7 +41,7 @@ class AbstractUiManager;
  * @remarks this class exists to allow several different frontends to operate on
  *          the same backends.
  */
-class BackendMaster : public QObject, public JobQueue
+class BackendMaster : public QObject
 {
     Q_OBJECT
 

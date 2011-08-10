@@ -21,20 +21,19 @@
 #ifndef ABSTRACTUIJOBS_H
 #define ABSTRACTUIJOBS_H
 
-#include "../lib/queuedjob.h"
-#include "../lib/jobqueue.h"
-
 #include <QtCore/QQueue>
 #include <QtCrypto/QtCrypto>
 #include <kglobal.h>
 #include <kjob.h>
+#include <kcompositejob.h>
+#include "../lib/daemonjob.h"
 
 class AbstractUiManager;
 
 /*
  * Abstract master-class of user interface jobs.
  */
-class AbstractUiJob : public QueuedJob
+class AbstractUiJob : public DaemonJob
 {
     Q_OBJECT
 
@@ -65,6 +64,11 @@ public:
         return m_cancelled; 
     }
 
+    // TODO: get rid of isImmediate usage in the code, all jobs should be async
+    bool isImmediate() const {
+        return false;
+    }
+    
 protected:
     /**
      * Set if the user cancels the UI operation.

@@ -45,11 +45,6 @@ bool KSecretCreateCollectionJob::isImmediate() const
     return false;
 }
 
-void KSecretCreateCollectionJob::exec()
-{
-    Q_ASSERT(false);
-}
-
 void KSecretCreateCollectionJob::start()
 {
     // start a job for getting a new password for the collection from the user.
@@ -57,13 +52,7 @@ void KSecretCreateCollectionJob::start()
     AbstractNewPasswordJob *subJob = uiManager->createNewPasswordJob(label());
     connect(subJob, SIGNAL(result(KJob*)),
             SLOT(newPasswordJobResult(KJob*)));
-    subJob->enqueue();
-
-    // then create a job asking user preferences for handling application permission
-    AbstractAskAclPrefsJob *aclSubjob = uiManager->createAskAclPrefsJob(createCollectionInfo());
-    connect(aclSubjob, SIGNAL(result(KJob*)),
-            SLOT(askAclPrefsJobResult(KJob*)));
-    aclSubjob->enqueue();
+    subJob->start();
 }
 
 void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
@@ -102,6 +91,11 @@ void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
     setCollection(coll);
     // not yet time for  emitResult(); 
     // let the ACL dialog to pop before 
+    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
+    AbstractAskAclPrefsJob *aclSubjob = uiManager->createAskAclPrefsJob(createCollectionInfo());
+    connect(aclSubjob, SIGNAL(result(KJob*)),
+            SLOT(askAclPrefsJobResult(KJob*)));
+    aclSubjob->start();
 }
 
 void KSecretCreateCollectionJob::askAclPrefsJobResult(KJob* job)
@@ -136,13 +130,6 @@ bool KSecretUnlockCollectionJob::isImmediate() const
     } else {
         return false;
     }
-}
-
-void KSecretUnlockCollectionJob::exec()
-{
-    Q_ASSERT(!collection()->isLocked());
-    setResult(true);
-    emitResult();
 }
 
 void KSecretUnlockCollectionJob::start()
@@ -202,13 +189,12 @@ void KSecretUnlockCollectionJob::createAskPasswordJob()
                                      !m_firstTry);
     connect(subJob, SIGNAL(result(KJob*)), SLOT(askPasswordJobResult(KJob*)));
 
-    // if this is not the first try, enqueue in front so the dialog gets shown again
-    // right away.
-    subJob->enqueue(m_firstTry);
+    // TODO: handle severaly retries
+    subJob->start();
     m_firstTry = false;
 }
 
-void KSecretUnlockCollectionJob::askAclPrefsJobResult(QueuedJob *job)
+void KSecretUnlockCollectionJob::askAclPrefsJobResult(KJob *job)
 {
     AbstractAskAclPrefsJob *apj = qobject_cast<AbstractAskAclPrefsJob*>(job);
     Q_ASSERT(apj);
@@ -238,7 +224,7 @@ void KSecretUnlockCollectionJob::askAclPrefsJobResult(QueuedJob *job)
     }
 }
 
-void KSecretUnlockCollectionJob::askPasswordJobResult(QueuedJob *job)
+void KSecretUnlockCollectionJob::askPasswordJobResult(KJob *job)
 {
     AbstractAskPasswordJob *apj = qobject_cast<AbstractAskPasswordJob*>(job);
     Q_ASSERT(apj);
@@ -265,7 +251,7 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(QueuedJob *job)
             AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
             AbstractAskAclPrefsJob* askAclPrefsJob = uiManager->createAskAclPrefsJob(unlockInfo());
             connect(askAclPrefsJob, SIGNAL(result(KJob*)), SLOT(askAclPrefsJobResult(KJob*)));
-            askAclPrefsJob->enqueue();        
+            askAclPrefsJob->start();        
         }
         else {
             setResult(true);
@@ -279,7 +265,7 @@ KSecretLockCollectionJob::KSecretLockCollectionJob(KSecretCollection *coll)
 {
 }
 
-void KSecretLockCollectionJob::exec()
+void KSecretLockCollectionJob::start()
 {
     // nothing to do if already locked
     if(collection()->isLocked()) {
@@ -305,7 +291,7 @@ KSecretDeleteCollectionJob::KSecretDeleteCollectionJob(const CollectionDeleteInf
     m_collection = qobject_cast< KSecretCollection* >(deleteInfo.m_collection);
 }
 
-void KSecretDeleteCollectionJob::exec()
+void KSecretDeleteCollectionJob::start()
 {
     BackendReturn<bool> rc = m_collection->deleteCollection();
     if(rc.isError()) {
@@ -324,7 +310,7 @@ KSecretCreateItemJob::KSecretCreateItemJob(const ItemCreateInfo& createInfo,
 {
 }
 
-void KSecretCreateItemJob::exec()
+void KSecretCreateItemJob::start()
 {
     BackendReturn<BackendItem*> rc = m_collection->createItem(label(), attributes(),
                                      secret(), contentType(), replace(), locked());
@@ -342,7 +328,7 @@ KSecretChangeAuthenticationCollectionJob::KSecretChangeAuthenticationCollectionJ
 {
 }
 
-void KSecretChangeAuthenticationCollectionJob::exec()
+void KSecretChangeAuthenticationCollectionJob::start()
 {
     CollectionUnlockInfo unlockInfo( peer() );
     UnlockCollectionJob *unlockJob = collection()->createUnlockJob( unlockInfo );
@@ -360,7 +346,7 @@ void KSecretChangeAuthenticationCollectionJob::unlockResult(KJob* j)
 /*    if ( unlockJob-> ) {
     AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
     AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
-    newPasswordJob->enqueue();
+    newPasswordJob->start();
     }*/
     unlockJob->deleteLater();
 }
@@ -389,14 +375,6 @@ bool KSecretUnlockItemJob::isImmediate() const
 {
     Q_ASSERT(!m_subJob.isNull());
     return m_subJob->isImmediate();
-}
-
-void KSecretUnlockItemJob::exec()
-{
-    qWarning("KsecretUnlockItemJob::exec() called and nothing should be done in sync!");
-    Q_ASSERT(!m_subJob.isNull());
-    m_subJob->exec();
-    handleSubJobResult(m_subJob);
 }
 
 void KSecretUnlockItemJob::start()
@@ -438,13 +416,6 @@ bool KSecretLockItemJob::isImmediate() const
     return m_subJob->isImmediate();
 }
 
-void KSecretLockItemJob::exec()
-{
-    Q_ASSERT(!m_subJob.isNull());
-    m_subJob->exec();
-    handleSubJobResult(m_subJob);
-}
-
 void KSecretLockItemJob::start()
 {
     connect(m_subJob, SIGNAL(result(KJob*)),
@@ -475,7 +446,7 @@ KSecretDeleteItemJob::KSecretDeleteItemJob(const ItemDeleteInfo &deleteInfo)
     m_item = qobject_cast< KSecretItem* >(deleteInfo.m_item);
 }
 
-void KSecretDeleteItemJob::exec()
+void KSecretDeleteItemJob::start()
 {
     // TODO: this could easily be delegated to the collection
     BackendReturn<bool> rc = m_item->deleteItem();
@@ -493,7 +464,7 @@ KSecretChangeAuthenticationItemJob::KSecretChangeAuthenticationItemJob(BackendIt
 {
 }
 
-void KSecretChangeAuthenticationItemJob::exec()
+void KSecretChangeAuthenticationItemJob::start()
 {
     setError(BackendErrorNotSupported);
     setResult(false);

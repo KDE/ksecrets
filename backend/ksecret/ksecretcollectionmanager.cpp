@@ -80,7 +80,7 @@ void KSecretCollectionManager::slotStartupDiscovery()
     slotDirectoryChanged(KGlobal::dirs()->saveLocation("ksecret"));
 }
 
-void KSecretCollectionManager::createCollectionJobResult(QueuedJob *job)
+void KSecretCollectionManager::createCollectionJobResult(KJob *job)
 {
     KSecretCreateCollectionJob *ccj = qobject_cast<KSecretCreateCollectionJob*>(job);
     Q_ASSERT(ccj);

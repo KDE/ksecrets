@@ -24,7 +24,6 @@
 #include "backendreturn.h"
 #include "backendjob.h"
 
-#include "../lib/jobqueue.h"
 #include <jobinfostructs.h>
 #include <acl.h>
 
@@ -46,7 +45,7 @@ class BackendItem;
  * \sa itemCreated, \sa itemDeleted, \sa itemChanged, \sa collectionDeleted and
  * \sa collectionChanged signals.
  */
-class BackendCollection : public QObject, public JobQueue
+class BackendCollection : public QObject
 {
     Q_OBJECT
 
