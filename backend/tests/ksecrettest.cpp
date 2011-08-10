@@ -57,14 +57,14 @@ void KSecretTest::testCreateCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionCreated(BackendCollection*)));
     QSignalSpy masterSpy(BackendMaster::instance(), SIGNAL(collectionCreated(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(createColl, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    createColl->enqueue();
+    QVERIFY(loop.connect(createColl, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    createColl->start();
     if(!createColl->isFinished()) {
         loop.enterLoop(5);
     }
 
     QVERIFY(createColl->isFinished());
-    QCOMPARE(createColl->error(), NoError);
+    QCOMPARE(createColl->error(), BackendNoError);
     QVERIFY(!createColl->isDismissed());
     QVERIFY(createColl->collection() != 0);
 
@@ -102,14 +102,14 @@ void KSecretTest::testLockCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionChanged(BackendCollection*)));
     QSignalSpy collSpy(m_collection, SIGNAL(collectionChanged(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(lockColl, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    lockColl->enqueue();
+    QVERIFY(loop.connect(lockColl, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    lockColl->start();
     if(!lockColl->isFinished()) {
         loop.enterLoop(5);
     }
 
     QVERIFY(lockColl->isFinished());
-    QCOMPARE(lockColl->error(), NoError);
+    QCOMPARE(lockColl->error(), BackendNoError);
     QVERIFY(!lockColl->isDismissed());
     QVERIFY(lockColl->result());
     QVERIFY(m_collection->isLocked());
@@ -132,14 +132,14 @@ void KSecretTest::testUnlockCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionChanged(BackendCollection*)));
     QSignalSpy collSpy(m_collection, SIGNAL(collectionChanged(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(unlockColl, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    unlockColl->enqueue();
+    QVERIFY(loop.connect(unlockColl, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    unlockColl->start();
     if (!unlockColl->isFinished()) {
         loop.enterLoop(5);
     }
 
     QVERIFY(unlockColl->isFinished());
-    QCOMPARE(unlockColl->error(), NoError);
+    QCOMPARE(unlockColl->error(), BackendNoError);
     QVERIFY(!unlockColl->isDismissed());
     QVERIFY(unlockColl->result());
     QVERIFY(!m_collection->isLocked());
@@ -162,14 +162,14 @@ void KSecretTest::testCreateItemAsync()
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemCreated(BackendItem*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    createItem->start();
     if (!createItem->isFinished()) {
         loop.enterLoop(5);
     }
     
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
     
@@ -286,14 +286,14 @@ void KSecretTest::testReplaceItemAsync()
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemChanged(BackendItem*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    createItem->start();
     if (!createItem->isFinished()) {
         loop.enterLoop(5);
     }
     
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
     
@@ -316,14 +316,14 @@ void KSecretTest::testDoNotReplaceItemAsync()
     CreateItemJob *createItem = m_collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemChanged(BackendItem*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    createItem->start();
     if (!createItem->isFinished()) {
         loop.enterLoop(5);
     }
     
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), ErrorAlreadyExists);
+    QCOMPARE(createItem->error(), BackendErrorAlreadyExists);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() == 0);
     
@@ -342,14 +342,14 @@ void KSecretTest::testDeleteItemAsync()
     DeleteItemJob *deleteItem = item->createDeleteJob(deleteInfo);
     QSignalSpy collectionSpy(m_collection, SIGNAL(itemDeleted(BackendItem*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(deleteItem, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    deleteItem->enqueue();
+    QVERIFY(loop.connect(deleteItem, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    deleteItem->start();
     if (!deleteItem->isFinished()) {
         loop.enterLoop(5);
     }
     
     QVERIFY(deleteItem->isFinished());
-    QCOMPARE(deleteItem->error(), NoError);
+    QCOMPARE(deleteItem->error(), BackendNoError);
     QVERIFY(deleteItem->result());
     QVERIFY(!deleteItem->isDismissed());
     
@@ -369,14 +369,14 @@ void KSecretTest::testDeleteCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionDeleted(BackendCollection*)));
     QSignalSpy masterSpy(master, SIGNAL(collectionDeleted(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(deleteCollection, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    deleteCollection->enqueue();
+    QVERIFY(loop.connect(deleteCollection, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    deleteCollection->start();
     if (!deleteCollection->isFinished()) {
         loop.enterLoop(5);
     }
     
     QVERIFY(deleteCollection->isFinished());
-    QCOMPARE(deleteCollection->error(), NoError);
+    QCOMPARE(deleteCollection->error(), BackendNoError);
     QVERIFY(deleteCollection->result());
     QVERIFY(!deleteCollection->isDismissed());
     

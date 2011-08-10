@@ -149,7 +149,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void deleteItemJobResult(QueuedJob *job);
+    void deleteItemJobResult(KJob *job);
 
 private:
     /**

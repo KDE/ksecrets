@@ -122,7 +122,7 @@ SecretStruct Item::getSecret(const QDBusObjectPath &session)
             BackendReturn< QCA::SecureArray > secretRet = m_item->secret();
             QCA::SecureArray encryptedValue;
             QByteArray encryptedParams;
-            if ( secretRet.error() == NoError && 
+            if ( secretRet.error() == BackendNoError && 
                  sessionObj->encrypt( secretRet.value(), encryptedValue, encryptedParams ) ) {
                 result.m_session.setPath( session.path() );
                 result.m_value = encryptedValue.toByteArray();

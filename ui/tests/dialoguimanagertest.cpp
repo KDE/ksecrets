@@ -38,7 +38,7 @@ void DialogUiManagerTest::testAskPassword()
     AbstractAskPasswordJob *asyncJob1 = fact.createAskPasswordJob("TESTCOLLECTION-ASYNC1", false);
     AbstractAskPasswordJob *asyncJob2 = fact.createAskPasswordJob("TESTCOLLECTION-ASYNC2", false);
     QEventLoop loop;
-    connect(asyncJob2, SIGNAL(result(QueuedJob*)), &loop, SLOT(quit()));
+    connect(asyncJob2, SIGNAL(result(KJob*)), &loop, SLOT(quit()));
     asyncJob1->enqueue();
     asyncJob2->enqueue();
     loop.exec();
@@ -51,7 +51,7 @@ void DialogUiManagerTest::testNewPassword()
     // ask for a new password (asynchronously)
     AbstractNewPasswordJob *asyncJob1 = fact.createNewPasswordJob("TESTCOLLECTION");
     QEventLoop loop;
-    connect(asyncJob1, SIGNAL(result(QueuedJob*)), &loop, SLOT(quit()));
+    connect(asyncJob1, SIGNAL(result(KJob*)), &loop, SLOT(quit()));
     asyncJob1->enqueue();
     loop.exec();
 }

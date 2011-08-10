@@ -107,8 +107,8 @@ DeleteCollectionJob *TemporaryCollection::createDeleteJob(const CollectionDelete
 {
     deleteJobInfo.m_collection = this;
     TemporaryDeleteCollectionJob *job = new TemporaryDeleteCollectionJob(deleteJobInfo);
-    connect(job, SIGNAL(result(QueuedJob*)),
-            SLOT(deleteCollectionJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)),
+            SLOT(deleteCollectionJobResult(KJob*)));
     return job;
 }
 
@@ -140,7 +140,7 @@ BackendReturn<BackendItem*> TemporaryCollection::createItem(const QString &label
                     replacing = true;
                 } else {
                     // item existing but should not be replaced
-                    return BackendReturn<BackendItem*>(0, ErrorAlreadyExists);
+                    return BackendReturn<BackendItem*>(0, BackendErrorAlreadyExists);
                 }
                 break;
             }
@@ -182,7 +182,7 @@ void TemporaryCollection::slotItemDeleted(BackendItem *item)
     emit itemDeleted(item);
 }
 
-void TemporaryCollection::deleteCollectionJobResult(QueuedJob *job)
+void TemporaryCollection::deleteCollectionJobResult(KJob *job)
 {
     TemporaryDeleteCollectionJob *dcj = qobject_cast<TemporaryDeleteCollectionJob*>(job);
     Q_ASSERT(dcj);

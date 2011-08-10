@@ -24,6 +24,7 @@
 #include "backend/backendcollectionmanager.h"
 
 class TempBlockingCollection;
+class KJob;
 
 // implement a temporary collection manager that blocks every call.
 class TempBlockingCollectionManager : public BackendCollectionManager
@@ -39,7 +40,7 @@ public:
     virtual CreateCollectionJob *createCreateCollectionJob(const CollectionCreateInfo &createCollectionInfod);
 
 private Q_SLOTS:
-    void createCollectionJobResult(QueuedJob *job);
+    void createCollectionJobResult(KJob *job);
 };
 
 #endif

@@ -30,6 +30,7 @@
 #include <klocalizedstring.h>
 
 #include <QtCore/QDebug>
+#include <kdebug.h>
 
 KSecretCreateCollectionJob::KSecretCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
         KSecretCollectionManager *manager)
@@ -54,25 +55,25 @@ void KSecretCreateCollectionJob::start()
     // start a job for getting a new password for the collection from the user.
     AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
     AbstractNewPasswordJob *subJob = uiManager->createNewPasswordJob(label());
-    connect(subJob, SIGNAL(result(QueuedJob*)),
-            SLOT(newPasswordJobResult(QueuedJob*)));
+    connect(subJob, SIGNAL(result(KJob*)),
+            SLOT(newPasswordJobResult(KJob*)));
     subJob->enqueue();
 
     // then create a job asking user preferences for handling application permission
     AbstractAskAclPrefsJob *aclSubjob = uiManager->createAskAclPrefsJob(createCollectionInfo());
-    connect(aclSubjob, SIGNAL(result(QueuedJob*)),
-            SLOT(askAclPrefsJobResult(QueuedJob*)));
+    connect(aclSubjob, SIGNAL(result(KJob*)),
+            SLOT(askAclPrefsJobResult(KJob*)));
     aclSubjob->enqueue();
 }
 
-void KSecretCreateCollectionJob::newPasswordJobResult(QueuedJob *job)
+void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
 {
     AbstractNewPasswordJob *npj = qobject_cast<AbstractNewPasswordJob*>(job);
     Q_ASSERT(npj);
 
     if(npj->cancelled()) {
         setCollection(0);
-        setError(ErrorOther, i18n("Creating the collection was cancelled by the user."));
+        setError(BackendErrorOther, i18n("Creating the collection was cancelled by the user."));
         dismiss(); // this will also emitResult()
         return;
     }
@@ -83,7 +84,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(QueuedJob *job)
                               manager(), errorMessage);
     if(!coll) {
         setCollection(0);
-        setError(ErrorOther, errorMessage);
+        setError(BackendErrorOther, errorMessage);
         dismiss(); // this will also emitResult()
         return;
     }
@@ -103,7 +104,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(QueuedJob *job)
     // let the ACL dialog to pop before 
 }
 
-void KSecretCreateCollectionJob::askAclPrefsJobResult(QueuedJob* job)
+void KSecretCreateCollectionJob::askAclPrefsJobResult(KJob* job)
 {
     AbstractAskAclPrefsJob *aclJob = qobject_cast< AbstractAskAclPrefsJob* >(job);
     Q_ASSERT(aclJob);
@@ -111,7 +112,7 @@ void KSecretCreateCollectionJob::askAclPrefsJobResult(QueuedJob* job)
     if (!collection()->setApplicationPermission(
         createCollectionInfo().m_peer.exePath(),
         aclJob->permission() ) ) {
-            setError(ErrorAclSetPermission, i18n("Cannot store application ACL policy into the back-end.") );
+            setError(BackendErrorAclSetPermission, i18n("Cannot store application ACL policy into the back-end.") );
             // FIXME: should we remove the freshly created collection ?
             emitResult();
     }
@@ -199,7 +200,7 @@ void KSecretUnlockCollectionJob::createAskPasswordJob()
     // start a job for getting the password for the collection from the user.
     AbstractAskPasswordJob *subJob = uiManager->createAskPasswordJob(collection()->label().value(),
                                      !m_firstTry);
-    connect(subJob, SIGNAL(result(QueuedJob*)), SLOT(askPasswordJobResult(QueuedJob*)));
+    connect(subJob, SIGNAL(result(KJob*)), SLOT(askPasswordJobResult(KJob*)));
 
     // if this is not the first try, enqueue in front so the dialog gets shown again
     // right away.
@@ -213,12 +214,12 @@ void KSecretUnlockCollectionJob::askAclPrefsJobResult(QueuedJob *job)
     Q_ASSERT(apj);
     if(apj->denied()) {
         setResult(false);
-        setError(ErrorOther, i18n("Unlocking the collection was denied."));
+        setError(BackendErrorOther, i18n("Unlocking the collection was denied."));
         emitResult();
     } else 
     if (apj->cancelled() ) {
         setResult(false);
-        setError(ErrorOther, i18n("Unlocking the collection was canceled by the user."));
+        setError(BackendErrorOther, i18n("Unlocking the collection was canceled by the user."));
         emitResult();
     }
     else {
@@ -228,7 +229,7 @@ void KSecretUnlockCollectionJob::askAclPrefsJobResult(QueuedJob *job)
             apj->permission() ) )
         {
             setResult(false);
-            setError(ErrorAclSetPermission, i18n("Cannot store application ACL policy into the back-end.") );
+            setError(BackendErrorAclSetPermission, i18n("Cannot store application ACL policy into the back-end.") );
             emitResult();
         }
         else {
@@ -244,7 +245,7 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(QueuedJob *job)
 
     if(apj->cancelled()) {
         setResult(false);
-        setError(ErrorOther, i18n("Unlocking the collection was canceled by the user."));
+        setError(BackendErrorOther, i18n("Unlocking the collection was canceled by the user."));
         emitResult();
         return;
     }
@@ -263,7 +264,7 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(QueuedJob *job)
             // ask for the ACL preference if the application is unknown by this collection
             AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
             AbstractAskAclPrefsJob* askAclPrefsJob = uiManager->createAskAclPrefsJob(unlockInfo());
-            connect(askAclPrefsJob, SIGNAL(result(QueuedJob*)), SLOT(askAclPrefsJobResult(QueuedJob*)));
+            connect(askAclPrefsJob, SIGNAL(result(KJob*)), SLOT(askAclPrefsJobResult(KJob*)));
             askAclPrefsJob->enqueue();        
         }
         else {
@@ -345,19 +346,21 @@ void KSecretChangeAuthenticationCollectionJob::exec()
 {
     CollectionUnlockInfo unlockInfo( peer() );
     UnlockCollectionJob *unlockJob = collection()->createUnlockJob( unlockInfo );
-    connect( unlockJob, SIGNAL(result(QueuedJob*)), this, SLOT(unlockResult(QueuedJob*)) );
-    unlockJob->enqueue();
-    
-    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
-    AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
-    newPasswordJob->enqueue();
+    connect( unlockJob, SIGNAL(finished(KJob*)), this, SLOT(unlockResult(KJob*)) );
+    if (!addSubjob( unlockJob )) {
+        kDebug() << "Failed to add unlock subjob";
+        setError(BackendErrorOther, i18n("Cannot start collection unlocking"));
+    }
 }
 
-void KSecretChangeAuthenticationCollectionJob::unlockResult(QueuedJob* j)
+void KSecretChangeAuthenticationCollectionJob::unlockResult(KJob* j)
 {
     UnlockCollectionJob *unlockJob = qobject_cast< UnlockCollectionJob* >( j );
     Q_ASSERT( unlockJob != 0 );
 /*    if ( unlockJob-> ) {
+    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
+    AbstractNewPasswordJob *newPasswordJob = uiManager->createNewPasswordJob( collection()->label().value() );
+    newPasswordJob->enqueue();
     }*/
     unlockJob->deleteLater();
 }
@@ -390,6 +393,7 @@ bool KSecretUnlockItemJob::isImmediate() const
 
 void KSecretUnlockItemJob::exec()
 {
+    qWarning("KsecretUnlockItemJob::exec() called and nothing should be done in sync!");
     Q_ASSERT(!m_subJob.isNull());
     m_subJob->exec();
     handleSubJobResult(m_subJob);
@@ -397,20 +401,19 @@ void KSecretUnlockItemJob::exec()
 
 void KSecretUnlockItemJob::start()
 {
-    connect(m_subJob, SIGNAL(result(QueuedJob*)),
-            SLOT(handleSubJobResult(QueuedJob*)));
-    m_subJob->enqueue();
+    connect(m_subJob, SIGNAL(result(KJob*)),
+            SLOT(handleSubJobResult(KJob*)));
+    if (addSubjob(m_subJob)) {
+        m_subJob->start();
+    }
+    else {
+        setError( BackendErrorOther );
+        emitResult();
+    }
 }
 
-void KSecretUnlockItemJob::handleSubJobResult(QueuedJob *job)
+void KSecretUnlockItemJob::handleSubJobResult(KJob *job)
 {
-    Q_UNUSED(job);
-    Q_ASSERT(!m_subJob.isNull());
-    Q_ASSERT(m_subJob == job);
-    Q_ASSERT(m_subJob->isFinished());
-    setError(m_subJob->error(), m_subJob->errorMessage());
-    setResult(m_subJob->result());
-    emitResult();
 }
 
 KSecretLockItemJob::KSecretLockItemJob(KSecretItem *item,
@@ -444,17 +447,22 @@ void KSecretLockItemJob::exec()
 
 void KSecretLockItemJob::start()
 {
-    connect(m_subJob, SIGNAL(result(QueuedJob*)),
-            SLOT(handleSubJobResult(QueuedJob*)));
-    m_subJob->enqueue();
+    connect(m_subJob, SIGNAL(result(KJob*)),
+            SLOT(handleSubJobResult(KJob*)));
+    if (addSubjob(m_subJob)) {
+    }
+    else {
+        setError(BackendErrorOther);
+        emitResult();
+    }
 }
 
-void KSecretLockItemJob::handleSubJobResult(QueuedJob *job)
+void KSecretLockItemJob::handleSubJobResult(KJob *job)
 {
     Q_UNUSED(job);
     Q_ASSERT(!m_subJob.isNull());
     Q_ASSERT(m_subJob == job);
-    Q_ASSERT(m_subJob->isFinished());
+//     Q_ASSERT(m_subJob->isFinished());
     setError(m_subJob->error(), m_subJob->errorMessage());
     setResult(m_subJob->result());
     emitResult();
@@ -487,7 +495,7 @@ KSecretChangeAuthenticationItemJob::KSecretChangeAuthenticationItemJob(BackendIt
 
 void KSecretChangeAuthenticationItemJob::exec()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }

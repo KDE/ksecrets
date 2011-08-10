@@ -59,15 +59,15 @@ void KSecretUiTest::testCreateCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionCreated(BackendCollection*)));
     QSignalSpy masterSpy(BackendMaster::instance(), SIGNAL(collectionCreated(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(createColl, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    createColl->enqueue();
+    QVERIFY(loop.connect(createColl, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    createColl->start();
     while(!createColl->isFinished()) {
         loop.enterLoop(120);
     }
 
     QVERIFY(createColl->isFinished());
     QVERIFY(!createColl->isDismissed());
-    QCOMPARE(createColl->error(), NoError);
+    QCOMPARE(createColl->error(), BackendNoError);
     QVERIFY(createColl->collection() != 0);
 
     // Verify signals
@@ -99,8 +99,8 @@ void KSecretUiTest::testLockCollectionAsync()
     QVERIFY( m_collection != 0);
     LockCollectionJob* lockJob = m_collection->createLockJob();
     QTestEventLoop loop;
-    QVERIFY(loop.connect(lockJob, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    lockJob->enqueue();
+    QVERIFY(loop.connect(lockJob, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    lockJob->start();
     if (!lockJob->isFinished()) {
         loop.enterLoop(200);
     }
@@ -118,14 +118,14 @@ void KSecretUiTest::testUnlockCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionChanged(BackendCollection*)));
     QSignalSpy collSpy(m_collection, SIGNAL(collectionChanged(BackendCollection*)));
     QTestEventLoop loop;
-    QVERIFY(loop.connect(unlockColl, SIGNAL(result(QueuedJob*)), SLOT(exitLoop())));
-    unlockColl->enqueue();
+    QVERIFY(loop.connect(unlockColl, SIGNAL(result(KJob*)), SLOT(exitLoop())));
+    unlockColl->start();
     if (!unlockColl->isFinished()) {
         loop.enterLoop(200);
     }
 
     QVERIFY(unlockColl->isFinished());
-    QCOMPARE(unlockColl->error(), NoError);
+    QCOMPARE(unlockColl->error(), BackendNoError);
     QVERIFY(!unlockColl->isDismissed());
     QVERIFY(unlockColl->result());
     QVERIFY(!m_collection->isLocked());

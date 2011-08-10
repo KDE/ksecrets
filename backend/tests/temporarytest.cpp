@@ -62,7 +62,7 @@ void TemporaryTest::testCreateCollectionSync()
     createColl->exec();
 
     QVERIFY(createColl->isFinished());
-    QCOMPARE(createColl->error(), NoError);
+    QCOMPARE(createColl->error(), BackendNoError);
     QVERIFY(!createColl->isDismissed());
     QVERIFY(createColl->collection() != 0);
 
@@ -93,7 +93,7 @@ void TemporaryTest::testCreateItemSync()
     createItem->exec();
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
 
@@ -124,7 +124,7 @@ void TemporaryTest::testReplaceItemSync()
     createItem->exec();
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
 
@@ -155,7 +155,7 @@ void TemporaryTest::testDoNotReplaceItemSync()
     createItem->exec();
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), ErrorAlreadyExists);
+    QCOMPARE(createItem->error(), BackendErrorAlreadyExists);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() == 0);
 
@@ -181,7 +181,7 @@ void TemporaryTest::testDeleteItemSync()
     deleteItem->exec();
 
     QVERIFY(deleteItem->isFinished());
-    QCOMPARE(deleteItem->error(), NoError);
+    QCOMPARE(deleteItem->error(), BackendNoError);
     QVERIFY(deleteItem->result());
     QVERIFY(!deleteItem->isDismissed());
 
@@ -206,7 +206,7 @@ void TemporaryTest::testDeleteCollectionSync()
     deleteCollection->exec();
 
     QVERIFY(deleteCollection->isFinished());
-    QCOMPARE(deleteCollection->error(), NoError);
+    QCOMPARE(deleteCollection->error(), BackendNoError);
     QVERIFY(deleteCollection->result());
     QVERIFY(!deleteCollection->isDismissed());
 
@@ -227,14 +227,14 @@ void TemporaryTest::testCreateCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionCreated(BackendCollection*)));
     QSignalSpy masterSpy(m_master, SIGNAL(collectionCreated(BackendCollection*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(createColl, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    createColl->enqueue();
+    QVERIFY(loop.connect(createColl, SIGNAL(result(KJob*)), SLOT(quit())));
+    createColl->start();
     if(!createColl->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(createColl->isFinished());
-    QCOMPARE(createColl->error(), NoError);
+    QCOMPARE(createColl->error(), BackendNoError);
     QVERIFY(!createColl->isDismissed());
     QVERIFY(createColl->collection() != 0);
 
@@ -260,14 +260,14 @@ void TemporaryTest::testCreateItemAsync()
     CreateItemJob *createItem = collection->createCreateItemJob(createInfo);
     QSignalSpy collectionSpy(collection, SIGNAL(itemCreated(BackendItem*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(quit())));
+    createItem->start();
     if(!createItem->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
 
@@ -292,14 +292,14 @@ void TemporaryTest::testReplaceItemAsync()
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(quit())));
+    createItem->start();
     if(!createItem->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), NoError);
+    QCOMPARE(createItem->error(), BackendNoError);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() != 0);
 
@@ -324,14 +324,14 @@ void TemporaryTest::testDoNotReplaceItemAsync()
 
     QSignalSpy collectionSpy(collection, SIGNAL(itemChanged(BackendItem*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(createItem, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    createItem->enqueue();
+    QVERIFY(loop.connect(createItem, SIGNAL(result(KJob*)), SLOT(quit())));
+    createItem->start();
     if(!createItem->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(createItem->isFinished());
-    QCOMPARE(createItem->error(), ErrorAlreadyExists);
+    QCOMPARE(createItem->error(), BackendErrorAlreadyExists);
     QVERIFY(!createItem->isDismissed());
     QVERIFY(createItem->item() == 0);
 
@@ -351,14 +351,14 @@ void TemporaryTest::testDeleteItemAsync()
     DeleteItemJob *deleteItem = item->createDeleteJob(deleteInfo);
     QSignalSpy collectionSpy(collection, SIGNAL(itemDeleted(BackendItem*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(deleteItem, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    deleteItem->enqueue();
+    QVERIFY(loop.connect(deleteItem, SIGNAL(result(KJob*)), SLOT(quit())));
+    deleteItem->start();
     if(!deleteItem->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(deleteItem->isFinished());
-    QCOMPARE(deleteItem->error(), NoError);
+    QCOMPARE(deleteItem->error(), BackendNoError);
     QVERIFY(deleteItem->result());
     QVERIFY(!deleteItem->isDismissed());
 
@@ -378,14 +378,14 @@ void TemporaryTest::testDeleteCollectionAsync()
     QSignalSpy managerSpy(m_manager, SIGNAL(collectionDeleted(BackendCollection*)));
     QSignalSpy masterSpy(m_master, SIGNAL(collectionDeleted(BackendCollection*)));
     QEventLoop loop;
-    QVERIFY(loop.connect(deleteCollection, SIGNAL(result(QueuedJob*)), SLOT(quit())));
-    deleteCollection->enqueue();
+    QVERIFY(loop.connect(deleteCollection, SIGNAL(result(KJob*)), SLOT(quit())));
+    deleteCollection->start();
     if(!deleteCollection->isFinished()) {
         loop.exec();
     }
 
     QVERIFY(deleteCollection->isFinished());
-    QCOMPARE(deleteCollection->error(), NoError);
+    QCOMPARE(deleteCollection->error(), BackendNoError);
     QVERIFY(deleteCollection->result());
     QVERIFY(!deleteCollection->isDismissed());
 

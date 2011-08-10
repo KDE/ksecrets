@@ -40,12 +40,12 @@ CreateCollectionJob *TemporaryCollectionManager::createCreateCollectionJob(
 {
     TemporaryCreateCollectionJob *job = new TemporaryCreateCollectionJob(createCollectionInfo,
             this);
-    connect(job, SIGNAL(result(QueuedJob*)),
-            SLOT(createCollectionJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)),
+            SLOT(createCollectionJobResult(KJob*)));
     return job;
 }
 
-void TemporaryCollectionManager::createCollectionJobResult(QueuedJob *job)
+void TemporaryCollectionManager::createCollectionJobResult(KJob *job)
 {
     CreateCollectionJob *ccj = qobject_cast<CreateCollectionJob*>(job);
     Q_ASSERT(ccj);

@@ -27,14 +27,14 @@
   * Error codes for backend calls.
   */
 enum ErrorType {
-    NoError,               /// no error
-    ErrorOther,            /// an unspecified error
-    ErrorAlreadyExists,    /// a collection could not be created because one with
+    BackendNoError,               /// no error
+    BackendErrorOther,            /// an unspecified error
+    BackendErrorAlreadyExists,    /// a collection could not be created because one with
     /// the same name already exists
-    ErrorIsLocked,         /// the object (item/collection) must be unlocked before this
+    BackendErrorIsLocked,         /// the object (item/collection) must be unlocked before this
     /// call can be made
-    ErrorNotSupported,     /// the backend doesn't support calling this method
-    ErrorAclSetPermission /// the permission could not be set
+    BackendErrorNotSupported,     /// the backend doesn't support calling this method
+    BackendErrorAclSetPermission /// the permission could not be set
 };
 
 
@@ -52,7 +52,7 @@ public:
     /**
      * Constructor.
      */
-    BackendReturn(const T &value, ErrorType error = NoError,
+    BackendReturn(const T &value, ErrorType error = BackendNoError,
                   const QString &errorMessage = QString())
         : m_value(value), m_error(error), m_errorMessage(errorMessage) {
     }
@@ -83,7 +83,7 @@ public:
      *         an error
      */
     bool isError() const {
-        return m_error != NoError;
+        return m_error != BackendNoError;
     }
 
     /**
@@ -121,7 +121,7 @@ public:
     /**
      * Constructor.
      */
-    BackendReturn(ErrorType error = NoError, const QString &errorMessage = QString())
+    BackendReturn(ErrorType error = BackendNoError, const QString &errorMessage = QString())
         : m_error(error), m_errorMessage(errorMessage) {
     }
 
@@ -132,7 +132,7 @@ public:
      *         an error
      */
     bool isError() const {
-        return m_error != NoError;
+        return m_error != BackendNoError;
     }
 
     /**

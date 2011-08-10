@@ -132,7 +132,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
     CreateCollectionMasterJob *job = m_master->createCreateCollectionMasterJob(createCollectionInfo);
     if(job->isImmediate()) {
         job->exec();
-        if(job->error() != NoError || !job->collection()) {
+        if(job->error() != BackendNoError || !job->collection()) {
             // TODO: error creating the collection
             return QDBusObjectPath("/");
         } else {
@@ -203,7 +203,7 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
                     UnlockCollectionJob *ucj = bc->createUnlockJob(unlockInfo);
                     if(ucj->isImmediate()) {
                         ucj->exec();
-                        if(ucj->error() != NoError || !ucj->result()) {
+                        if(ucj->error() != BackendNoError || !ucj->result()) {
                             // not unlocked, maybe due to an error.
                             // There's not much to do about it. Silently ignore.
                         } else {
@@ -224,7 +224,7 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
                     UnlockItemJob *uij = bi->createUnlockJob(unlockInfo);
                     if(uij->isImmediate()) {
                         uij->exec();
-                        if(uij->error() != NoError || !uij->result()) {
+                        if(uij->error() != BackendNoError || !uij->result()) {
                             // not unlocked, maybe due to an error.
                             // There's not much to do about it. Silently ignore.
                         } else {
@@ -279,7 +279,7 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
                     LockCollectionJob *lcj = bc->createLockJob();
                     if(lcj->isImmediate()) {
                         lcj->exec();
-                        if(lcj->error() != NoError || !lcj->result()) {
+                        if(lcj->error() != BackendNoError || !lcj->result()) {
                             // not locked, maybe due to an error.
                             // There's not much to do about it. Silently ignore.
                         } else {
@@ -299,7 +299,7 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
                     LockItemJob *lij = bi->createLockJob();
                     if(lij->isImmediate()) {
                         lij->exec();
-                        if(lij->error() != NoError || !lij->result()) {
+                        if(lij->error() != BackendNoError || !lij->result()) {
                             // not locked, maybe due to an error.
                             // There's not much to do about it. Silently ignore.
                         } else {

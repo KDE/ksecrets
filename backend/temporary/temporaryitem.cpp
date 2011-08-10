@@ -120,7 +120,7 @@ DeleteItemJob *TemporaryItem::createDeleteJob(const ItemDeleteInfo& deleteJobInf
 {
     deleteJobInfo.m_item = this; //FIXME: what if m_item was already != NULL here ?
     TemporaryDeleteItemJob *job = new TemporaryDeleteItemJob(deleteJobInfo);
-    connect(job, SIGNAL(result(QueuedJob*)), SLOT(deleteItemJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)), SLOT(deleteItemJobResult(KJob*)));
     return job;
 }
 
@@ -143,7 +143,7 @@ bool TemporaryItem::matches(const QMap<QString, QString> &attributes)
     return true;
 }
 
-void TemporaryItem::deleteItemJobResult(QueuedJob *job)
+void TemporaryItem::deleteItemJobResult(KJob *job)
 {
     TemporaryDeleteItemJob *dij = qobject_cast<TemporaryDeleteItemJob*>(job);
     Q_ASSERT(dij);

@@ -192,7 +192,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void deleteCollectionJobResult(QueuedJob *job);
+    void deleteCollectionJobResult(KJob *job);
 
 private:
     friend class TemporaryCreateItemJob;

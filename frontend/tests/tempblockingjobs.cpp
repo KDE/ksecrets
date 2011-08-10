@@ -58,7 +58,7 @@ TempBlockingLockCollectionJob::TempBlockingLockCollectionJob(BackendCollection* 
 
 void TempBlockingLockCollectionJob::perform()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -82,7 +82,7 @@ TempBlockingChangeAuthenticationCollectionJob::TempBlockingChangeAuthenticationC
 
 void TempBlockingChangeAuthenticationCollectionJob::perform()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -125,7 +125,7 @@ TempBlockingLockItemJob::TempBlockingLockItemJob(BackendItem* item)
 
 void TempBlockingLockItemJob::perform()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -149,7 +149,7 @@ TempBlockingChangeAuthenticationItemJob::TempBlockingChangeAuthenticationItemJob
 
 void TempBlockingChangeAuthenticationItemJob::perform()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }

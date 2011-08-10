@@ -23,6 +23,8 @@
 
 #include "../backendcollectionmanager.h"
 
+#include <kjob.h>
+
 /**
  * Manager for temporary collections.
  */
@@ -57,7 +59,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void createCollectionJobResult(QueuedJob *job);
+    void createCollectionJobResult(KJob *job);
 };
 
 #endif

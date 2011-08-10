@@ -61,7 +61,7 @@ protected:
 
 private Q_SLOTS:
     void slotItemDeleted(BackendItem *item);
-    void deleteCollectionJobResult(QueuedJob *job);
+    void deleteCollectionJobResult(KJob *job);
 
 private:
     friend class TempBlockingCreateItemJob;

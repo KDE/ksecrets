@@ -146,7 +146,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void jobResult(QueuedJob *job);
+    void jobResult(KJob *job);
 
 private:
     bool m_prompted; // true if one of the prompt()/dismiss() methods has been called already
@@ -195,7 +195,7 @@ private Q_SLOTS:
      *
      * @param job the job that finished
      */
-    void jobResult(QueuedJob *job);
+    void jobResult(KJob *job);
 
 private:
     bool m_prompted; // true if one of the prompt()/dismiss() methods has been called already

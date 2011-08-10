@@ -58,7 +58,7 @@ TemporaryLockCollectionJob::TemporaryLockCollectionJob(BackendCollection *coll)
 void TemporaryLockCollectionJob::exec()
 {
     // collection can not be locked as that's not supported for this backend.
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -82,7 +82,7 @@ TemporaryChangeAuthenticationCollectionJob::TemporaryChangeAuthenticationCollect
 
 void TemporaryChangeAuthenticationCollectionJob::exec()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -125,7 +125,7 @@ TemporaryLockItemJob::TemporaryLockItemJob(BackendItem *item) : LockItemJob(item
 void TemporaryLockItemJob::exec()
 {
     // item can not be locked as that's not supported for this backend.
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }
@@ -148,7 +148,7 @@ TemporaryChangeAuthenticationItemJob::TemporaryChangeAuthenticationItemJob(Backe
 
 void TemporaryChangeAuthenticationItemJob::exec()
 {
-    setError(ErrorNotSupported);
+    setError(BackendErrorNotSupported);
     setResult(false);
     emitResult();
 }

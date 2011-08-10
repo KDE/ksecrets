@@ -54,7 +54,7 @@ public:
     bool matches(const QMap<QString, QString> &attributes);
 
 private Q_SLOTS:
-    void deleteItemJobResult(QueuedJob *job);
+    void deleteItemJobResult(KJob *job);
 
 private:
     void markAsModified();

@@ -118,7 +118,7 @@ DeleteItemJob *TempBlockingItem::createDeleteJob(const ItemDeleteInfo& deleteJob
 {
     deleteJobInfo.m_item = this;
     TempBlockingDeleteItemJob *job = new TempBlockingDeleteItemJob(deleteJobInfo);
-    connect(job, SIGNAL(result(QueuedJob*)), SLOT(deleteItemJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)), SLOT(deleteItemJobResult(KJob*)));
     return job;
 }
 
@@ -141,7 +141,7 @@ bool TempBlockingItem::matches(const QMap<QString, QString> &attributes)
     return true;
 }
 
-void TempBlockingItem::deleteItemJobResult(QueuedJob *job)
+void TempBlockingItem::deleteItemJobResult(KJob *job)
 {
     TempBlockingDeleteItemJob *dij = qobject_cast<TempBlockingDeleteItemJob*>(job);
     Q_ASSERT(dij);

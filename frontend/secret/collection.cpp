@@ -157,7 +157,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     CreateItemJob *cij = m_collection->createCreateItemJob(createInfo);
     if(cij->isImmediate()) {
         cij->exec();
-        if(cij->error() != NoError || !cij->item()) {
+        if(cij->error() != BackendNoError || !cij->item()) {
             // TODO: error creating the item
             kDebug() << "ERROR creating the item";
         }

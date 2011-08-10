@@ -62,7 +62,7 @@ void PromptBase::emitCompleted(bool dismissed, const QVariant &result)
 SingleJobPrompt::SingleJobPrompt(Service* service, BackendJob* job, QObject* parent)
     : PromptBase(service, parent), m_prompted(false), m_job(job)
 {
-    connect(job, SIGNAL(result(QueuedJob*)), SLOT(jobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)), SLOT(jobResult(KJob*)));
 }
 
 SingleJobPrompt::~SingleJobPrompt()
@@ -79,7 +79,7 @@ void SingleJobPrompt::prompt(const QString &windowId)
     m_prompted = true;
 
     // TODO: convert windowId to a WId and pass it to the job
-    m_job->enqueue();
+    m_job->start();
 }
 
 void SingleJobPrompt::dismiss()
@@ -92,13 +92,13 @@ void SingleJobPrompt::dismiss()
     m_job->dismiss();
 }
 
-void SingleJobPrompt::jobResult(QueuedJob *job)
+void SingleJobPrompt::jobResult(KJob *job)
 {
     Q_ASSERT(job == m_job);
     // check for errors first
     if(m_job->isDismissed()) {
         emit completed(true, QVariant(""));
-    } else if(m_job->error() != NoError) {
+    } else if(m_job->error() != BackendNoError) {
         // TODO: figure out how to handle errors gracefully.
         // FIXME; should we use KMessage here instead of KMessageBox ?
         KMessageBox::error( 0, m_job->errorMessage() );
@@ -186,7 +186,7 @@ ServiceMultiPrompt::ServiceMultiPrompt(Service *service, const QSet<BackendJob*>
             jobTypeUnlock = currentJobTypeUnlock;
             jobTypeDetermined = true;
         }
-        connect(job, SIGNAL(result(QueuedJob*)), SLOT(jobResult(QueuedJob*)));
+        connect(job, SIGNAL(result(KJob*)), SLOT(jobResult(KJob*)));
     }
 }
 
@@ -203,9 +203,15 @@ void ServiceMultiPrompt::prompt(const QString &windowId)
     }
     m_prompted = true;
 
+    // NOTE: this job will autodelete itself when done or dismissed
+    BackendJob *mainJob = new BackendJob( BackendJob::TypeMultiPrompt );
+    
     // TODO: convert windowId to a WId and pass it to the job
     Q_FOREACH(BackendJob * job, m_jobs) {
-        job->enqueue();
+        if (!mainJob->addSubjob(job)) {
+            emitCompleted(true, qVariantFromValue(m_result));
+            break;
+        }
     }
 }
 
@@ -217,7 +223,7 @@ void ServiceMultiPrompt::dismiss()
     m_prompted = true;
 
     Q_FOREACH(BackendJob * job, m_jobs) {
-        disconnect(job, SIGNAL(result(QueuedJob*)), this, SLOT(jobResult(QueuedJob*)));
+        disconnect(job, SIGNAL(result(KJob*)), this, SLOT(jobResult(KJob*)));
         job->dismiss();
     }
 
@@ -227,14 +233,14 @@ void ServiceMultiPrompt::dismiss()
     deleteLater();
 }
 
-void ServiceMultiPrompt::jobResult(QueuedJob *job)
+void ServiceMultiPrompt::jobResult(KJob *job)
 {
     BackendJob *bj = qobject_cast<BackendJob*>(job);
     Q_ASSERT(bj);
     Q_ASSERT(m_jobs.contains(bj));
     // remove job from the set of jobs we're waiting for
     m_jobs.remove(bj);
-    if(bj->error() != NoError) {
+    if(bj->error() != BackendNoError) {
         // TODO: figure out what to do with erroneous jobs
     } else {
         switch(bj->type()) {

@@ -44,7 +44,7 @@ QString KSecretItem::id() const
 BackendReturn<QString> KSecretItem::label() const
 {
     if(isLocked()) {
-        return BackendReturn<QString>(QString(), ErrorIsLocked);
+        return BackendReturn<QString>(QString(), BackendErrorIsLocked);
     } else {
         markAsUsed();
         return m_label;
@@ -54,7 +54,7 @@ BackendReturn<QString> KSecretItem::label() const
 BackendReturn<void> KSecretItem::setLabel(const QString &label)
 {
     if(isLocked()) {
-        return BackendReturn<void>(ErrorIsLocked);
+        return BackendReturn<void>(BackendErrorIsLocked);
     } else {
         m_label = label;
         markAsModified();
@@ -65,7 +65,7 @@ BackendReturn<void> KSecretItem::setLabel(const QString &label)
 BackendReturn<QCA::SecureArray> KSecretItem::secret() const
 {
     if(isLocked()) {
-        return BackendReturn<QCA::SecureArray>(QCA::SecureArray(), ErrorIsLocked);
+        return BackendReturn<QCA::SecureArray>(QCA::SecureArray(), BackendErrorIsLocked);
     } else {
         markAsUsed();
         return m_secret;
@@ -75,7 +75,7 @@ BackendReturn<QCA::SecureArray> KSecretItem::secret() const
 BackendReturn<void> KSecretItem::setSecret(const QCA::SecureArray &secret)
 {
     if(isLocked()) {
-        return BackendReturn<void>(ErrorIsLocked);
+        return BackendReturn<void>(BackendErrorIsLocked);
     } else {
         m_secret = secret;
         markAsModified();
@@ -86,7 +86,7 @@ BackendReturn<void> KSecretItem::setSecret(const QCA::SecureArray &secret)
 BackendReturn< QString > KSecretItem::contentType() const
 {
     if (isLocked()) {
-        return BackendReturn<QString>(QString(), ErrorIsLocked);
+        return BackendReturn<QString>(QString(), BackendErrorIsLocked);
     }
     else {
         markAsUsed();
@@ -97,7 +97,7 @@ BackendReturn< QString > KSecretItem::contentType() const
 BackendReturn< void > KSecretItem::setContentType(const QString& contentType)
 {
     if(isLocked()) {
-        return BackendReturn<void>(ErrorIsLocked);
+        return BackendReturn<void>(BackendErrorIsLocked);
     } else {
         m_contentType = contentType;
         markAsModified();
@@ -108,7 +108,7 @@ BackendReturn< void > KSecretItem::setContentType(const QString& contentType)
 BackendReturn<QMap<QString, QString> > KSecretItem::attributes() const
 {
     if(isLocked()) {
-        return BackendReturn<QMap<QString, QString> >(QMap<QString, QString>(), ErrorIsLocked);
+        return BackendReturn<QMap<QString, QString> >(QMap<QString, QString>(), BackendErrorIsLocked);
     } else {
         markAsUsed();
         return m_attributes;
@@ -118,7 +118,7 @@ BackendReturn<QMap<QString, QString> > KSecretItem::attributes() const
 BackendReturn<void> KSecretItem::setAttributes(const QMap<QString, QString> &attributes)
 {
     if(isLocked()) {
-        return BackendReturn<void>(ErrorIsLocked);
+        return BackendReturn<void>(BackendErrorIsLocked);
     } else {
         m_attributes = attributes;
         markAsModified();

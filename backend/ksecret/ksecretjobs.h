@@ -48,8 +48,8 @@ protected:
     virtual void start();
 
 private Q_SLOTS:
-    void newPasswordJobResult(QueuedJob *job);
-    void askAclPrefsJobResult(QueuedJob *job);
+    void newPasswordJobResult(KJob *job);
+    void askAclPrefsJobResult(KJob *job);
 
 private:
     KSecretCollectionManager *m_manager;
@@ -139,7 +139,7 @@ public:
     virtual void exec();
     
 private Q_SLOTS:
-    void unlockResult(QueuedJob*);
+    void unlockResult(KJob*);
 };
 
 /**
@@ -159,7 +159,7 @@ protected:
     virtual void start();
 
 private Q_SLOTS:
-    void handleSubJobResult(QueuedJob *job);
+    void handleSubJobResult(KJob *job);
 
 private:
     QPointer<UnlockCollectionJob> m_subJob;
@@ -182,7 +182,7 @@ protected:
     virtual void start();
 
 private Q_SLOTS:
-    void handleSubJobResult(QueuedJob *job);
+    void handleSubJobResult(KJob *job);
 
 private:
     QPointer<LockCollectionJob> m_subJob;

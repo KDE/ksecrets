@@ -155,13 +155,13 @@ BackendReturn<void> KSecretCollection::setLabel(const QString &label)
 {
     // label can only be set if the collection is unlocked
     if(isLocked()) {
-        return ErrorIsLocked;
+        return BackendErrorIsLocked;
     }
 
     m_label = label;
     setDirty();
     emit collectionChanged(this);
-    return NoError;
+    return BackendNoError;
 }
 
 QDateTime KSecretCollection::created() const
@@ -269,7 +269,7 @@ BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
 
     // only works if unlocked
     if(isLocked()) {
-        return BackendReturn<BackendItem*>(0, ErrorIsLocked);
+        return BackendReturn<BackendItem*>(0, BackendErrorIsLocked);
     } else {
         KSecretItem *item = 0;
         bool replacing = false;
@@ -286,7 +286,7 @@ BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
                         replacing = true;
                     } else {
                         // item existing but should not be replaced
-                        return BackendReturn<BackendItem*>(0, ErrorAlreadyExists);
+                        return BackendReturn<BackendItem*>(0, BackendErrorAlreadyExists);
                     }
                     break;
                 }
@@ -506,7 +506,7 @@ BackendReturn<bool> KSecretCollection::lock()
         if (m_dirty) {
             QString errorMessage;
             if(!serialize(errorMessage)) {
-                return BackendReturn<bool>(false, ErrorOther, errorMessage);
+                return BackendReturn<bool>(false, BackendErrorOther, errorMessage);
             }
             m_dirty = false;
         }

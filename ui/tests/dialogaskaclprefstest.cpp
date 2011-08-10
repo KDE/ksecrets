@@ -36,7 +36,7 @@ void DialogAskAclPrefsTest::testDialogAskCreateAclPrefsJob()
     CollectionCreateInfo jobInfo( "TestCollection", peer );
     AbstractAskAclPrefsJob *askJob = fact.createAskAclPrefsJob( jobInfo );
     QEventLoop loop;
-    connect( askJob, SIGNAL(result(QueuedJob*)), &loop, SLOT(quit()) );
+    connect( askJob, SIGNAL(result(KJob*)), &loop, SLOT(quit()) );
     askJob->enqueue();
     loop.exec();
 }

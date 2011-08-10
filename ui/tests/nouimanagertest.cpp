@@ -40,7 +40,7 @@ void NoUiManagerTest::testAskPassword()
     QVERIFY(!job->isImmediate());
 
     QTestEventLoop loop;
-    connect(job, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
     job->enqueue();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
@@ -65,7 +65,7 @@ void NoUiManagerTest::testNewPassword()
     QVERIFY(!job->isImmediate());
 
     QTestEventLoop loop;
-    connect(job, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
     job->enqueue();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
@@ -96,9 +96,9 @@ void NoUiManagerTest::testJobOrder()
     job1->enqueue(true);
 
     QTestEventLoop loop;
-    connect(job1, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
-    connect(job2, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
-    connect(job3, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job1, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
+    connect(job2, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
+    connect(job3, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
 
     // check if jobs are executed in the right order
     // NOTE: once a job is done it will be deleted, so successive tests
@@ -123,7 +123,7 @@ void NoUiManagerTest::testAskPasswordCancelled()
     QVERIFY(!job->isImmediate());
 
     QTestEventLoop loop;
-    connect(job, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
     job->enqueue();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
@@ -149,7 +149,7 @@ void NoUiManagerTest::testNewPasswordCancelled()
     QVERIFY(!job->isImmediate());
 
     QTestEventLoop loop;
-    connect(job, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
     job->enqueue();
     loop.enterLoop(5);
     QVERIFY(!loop.timeout());
@@ -181,9 +181,9 @@ void NoUiManagerTest::testJobOrderCancelled()
     job1->enqueue(true);
 
     QTestEventLoop loop;
-    connect(job1, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
-    connect(job2, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
-    connect(job3, SIGNAL(result(QueuedJob*)), &loop, SLOT(exitLoop()));
+    connect(job1, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
+    connect(job2, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
+    connect(job3, SIGNAL(result(KJob*)), &loop, SLOT(exitLoop()));
 
     // check if jobs are executed in the right order
     // NOTE: once a job is done it will be deleted, so successive tests

@@ -48,8 +48,8 @@ KSecretCollectionManager::~KSecretCollectionManager()
 CreateCollectionJob *KSecretCollectionManager::createCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo)
 {
     KSecretCreateCollectionJob *job = new KSecretCreateCollectionJob(createCollectionInfo, this);
-    connect(job, SIGNAL(result(QueuedJob*)),
-            SLOT(createCollectionJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)),
+            SLOT(createCollectionJobResult(KJob*)));
     return job;
 }
 

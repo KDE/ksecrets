@@ -23,12 +23,23 @@
 #include "backendcollectionmanager.h"
 #include "backendcollection.h"
 #include "backenditem.h"
+#include "backendreturn.h"
 
 #include <klocalizedstring.h>
 
-BackendJob::BackendJob(JobType type, JobQueue *queue)
-    : QueuedJob(queue), m_type(type), m_dismissed(false), m_error(NoError)
+BackendJob::BackendJob(JobType type)
+    : m_type(type), 
+    m_dismissed(false), 
+    m_error(BackendNoError),
+    m_finished(false)
 {
+    connect(this, SIGNAL(finished(KJob*)), this, SLOT(slotJobFinished(KJob*)));
+}
+
+void BackendJob::slotJobFinished(KJob* job)
+{
+    Q_ASSERT(this == job);
+    m_finished = true;
 }
 
 bool BackendJob::isImmediate() const
@@ -44,6 +55,11 @@ BackendJob::JobType BackendJob::type() const
 bool BackendJob::isDismissed() const
 {
     return m_dismissed;
+}
+
+bool BackendJob::isFinished() const
+{
+    return m_finished;
 }
 
 void BackendJob::dismiss()
@@ -68,6 +84,12 @@ void BackendJob::start()
     exec();
 }
 
+bool BackendJob::addSubjob(KJob* job)
+{
+    return KCompositeJob::addSubjob(job);
+}
+
+
 void BackendJob::setError(ErrorType error, const QString &errorMessage)
 {
     m_error = error;
@@ -76,7 +98,7 @@ void BackendJob::setError(ErrorType error, const QString &errorMessage)
 
 CreateCollectionJob::CreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
         BackendCollectionManager *manager)
-    : BackendJob(BackendJob::TypeCreateCollection, manager),
+    : BackendJob(BackendJob::TypeCreateCollection),
       m_createCollectionInfo(createCollectionInfo),
       m_manager(manager), m_collection(0)
 {
@@ -104,7 +126,7 @@ void CreateCollectionJob::setCollection(BackendCollection *collection)
 
 CreateCollectionMasterJob::CreateCollectionMasterJob(const CollectionCreateInfo& createCollectionInfo,
         BackendMaster *master)
-    : BackendJob(BackendJob::TypeCreateCollectionMaster, master),
+    : BackendJob(BackendJob::TypeCreateCollectionMaster),
       m_createCollectionInfo(createCollectionInfo),
       m_master(master), m_subJob(0), m_collection(0)
 {
@@ -130,7 +152,7 @@ bool CreateCollectionMasterJob::isImmediate() const
 void CreateCollectionMasterJob::exec()
 {
     if(m_master->managers().count() == 0) {
-        setError(ErrorOther, i18n("No backend to create the collection was found."));
+        setError(BackendErrorOther, i18n("No backend to create the collection was found."));
         emitResult();
     } else {
         // can't call synchronous if there's a backend.
@@ -141,15 +163,16 @@ void CreateCollectionMasterJob::exec()
 void CreateCollectionMasterJob::start()
 {
     if(m_master->managers().count() == 0) {
-        setError(ErrorOther, i18n("No backend to create the collection was found."));
+        setError(BackendErrorOther, i18n("No backend to create the collection was found."));
         emitResult();
     } else if(m_master->managers().count() == 1) {
-        createSubJob(m_master->managers().first());
-        connect(m_subJob, SIGNAL(result(QueuedJob*)),
-                SLOT(createCollectionJobFinished(QueuedJob*)));
-        m_subJob->enqueue();
+        Q_ASSERT(!m_subJob);
+        m_subJob = m_master->managers().first()->createCreateCollectionJob(m_createCollectionInfo);
+        connect(m_subJob, SIGNAL(result(KJob*)),
+                SLOT(createCollectionJobFinished(KJob*)));
+        
     } else {
-        setError(ErrorOther, i18n("Not implemented."));
+        setError(BackendErrorOther, i18n("Not implemented."));
         emitResult();
     }
 }
@@ -159,13 +182,13 @@ BackendCollection *CreateCollectionMasterJob::collection() const
     return m_collection;
 }
 
-void CreateCollectionMasterJob::createCollectionJobFinished(QueuedJob *subJob)
+void CreateCollectionMasterJob::createCollectionJobFinished(KJob *subJob)
 {
     // copy the subjob's result
     Q_ASSERT(m_subJob == subJob);
     CreateCollectionJob *ccj = qobject_cast<CreateCollectionJob*>(subJob);
     Q_ASSERT(ccj);
-    if(ccj->error() != NoError) {
+    if(ccj->error() != BackendNoError) {
         setError(ccj->error(), ccj->errorMessage());
     } else {
         m_collection = ccj->collection();
@@ -173,14 +196,8 @@ void CreateCollectionMasterJob::createCollectionJobFinished(QueuedJob *subJob)
     emitResult();
 }
 
-void CreateCollectionMasterJob::createSubJob(BackendCollectionManager *manager)
-{
-    Q_ASSERT(!m_subJob);
-    m_subJob = manager->createCreateCollectionJob(m_createCollectionInfo);
-}
-
-BooleanResultJob::BooleanResultJob(BackendJob::JobType type, JobQueue* queue)
-    : BackendJob(type, queue)
+BooleanResultJob::BooleanResultJob(BackendJob::JobType type)
+    : BackendJob(type)
 {
 }
 
@@ -195,7 +212,7 @@ void BooleanResultJob::setResult(bool result)
 }
 
 LockCollectionJob::LockCollectionJob(BackendCollection *collection)
-    : BooleanResultJob(BackendJob::TypeLockCollection, collection),
+    : BooleanResultJob(BackendJob::TypeLockCollection),
       m_collection(collection)
 {
 }
@@ -206,7 +223,7 @@ BackendCollection *LockCollectionJob::collection()
 }
 
 LockItemJob::LockItemJob(BackendItem *item)
-    : BooleanResultJob(BackendJob::TypeLockItem, item), m_item(item)
+    : BooleanResultJob(BackendJob::TypeLockItem), m_item(item)
 {
 }
 
@@ -216,13 +233,13 @@ BackendItem *LockItemJob::item()
 }
 
 UnlockCollectionJob::UnlockCollectionJob(const CollectionUnlockInfo &unlockInfo, BackendCollection *collection)
-    : BooleanResultJob(BackendJob::TypeUnlockCollection, collection),
+    : BooleanResultJob(BackendJob::TypeUnlockCollection),
       m_collection(collection), m_unlockInfo(unlockInfo)
 {
 }
 
 UnlockItemJob::UnlockItemJob(const ItemUnlockInfo& unlockInfo)
-    : BooleanResultJob(BackendJob::TypeUnlockItem, unlockInfo.m_item), m_unlockInfo(unlockInfo)
+    : BooleanResultJob(BackendJob::TypeUnlockItem), m_unlockInfo(unlockInfo)
 {
 }
 
@@ -232,7 +249,7 @@ BackendItem *UnlockItemJob::item()
 }
 
 DeleteCollectionJob::DeleteCollectionJob(const CollectionDeleteInfo& deleteInfo)
-    : BooleanResultJob(BackendJob::TypeDeleteCollection, deleteInfo.m_collection),
+    : BooleanResultJob(BackendJob::TypeDeleteCollection),
       m_deleteInfo(deleteInfo)
 {
 }
@@ -243,7 +260,7 @@ BackendCollection *DeleteCollectionJob::collection()
 }
 
 DeleteItemJob::DeleteItemJob(const ItemDeleteInfo& deleteInfo)
-    : BooleanResultJob(BackendJob::TypeDeleteItem, deleteInfo.m_item), m_deleteInfo(deleteInfo)
+    : BooleanResultJob(BackendJob::TypeDeleteItem), m_deleteInfo(deleteInfo)
 {
 }
 
@@ -253,7 +270,7 @@ BackendItem *DeleteItemJob::item()
 }
 
 ChangeAuthenticationCollectionJob::ChangeAuthenticationCollectionJob(BackendCollection* collection, const Peer& peer)
-    : BooleanResultJob(BackendJob::TypeChangeAuthenticationCollection, collection),
+    : BooleanResultJob(BackendJob::TypeChangeAuthenticationCollection),
       m_collection(collection),
       m_peer(peer)
 {
@@ -270,7 +287,7 @@ const Peer& ChangeAuthenticationCollectionJob::peer() const
 }
 
 ChangeAuthenticationItemJob::ChangeAuthenticationItemJob(BackendItem *item)
-    : BooleanResultJob(BackendJob::TypeChangeAuthenticationItem, item), m_item(item)
+    : BooleanResultJob(BackendJob::TypeChangeAuthenticationItem), m_item(item)
 {
 }
 
@@ -280,7 +297,7 @@ BackendItem *ChangeAuthenticationItemJob::item()
 }
 
 CreateItemJob::CreateItemJob(const ItemCreateInfo& createInfo, BackendCollection *collection)
-    : BackendJob(BackendJob::TypeCreateItem, collection), m_collection(collection),
+    : BackendJob(BackendJob::TypeCreateItem), m_collection(collection),
       m_createInfo(createInfo), m_item(0)
 {
 }

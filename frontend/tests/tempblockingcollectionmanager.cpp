@@ -37,12 +37,12 @@ CreateCollectionJob *TempBlockingCollectionManager::createCreateCollectionJob(co
 {
     TempBlockingCreateCollectionJob *job = new TempBlockingCreateCollectionJob(createCollectionInfo,
             this);
-    connect(job, SIGNAL(result(QueuedJob*)),
-            SLOT(createCollectionJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)),
+            SLOT(createCollectionJobResult(KJob*)));
     return job;
 }
 
-void TempBlockingCollectionManager::createCollectionJobResult(QueuedJob *job)
+void TempBlockingCollectionManager::createCollectionJobResult(KJob *job)
 {
     CreateCollectionJob *ccj = qobject_cast<CreateCollectionJob*>(job);
     Q_ASSERT(ccj);

@@ -24,14 +24,14 @@
 #include <QtCore/QMap>
 #include <qca.h>
 #include <qwindowdefs.h>
-#include "../lib/queuedjob.h"
 #include "../jobinfostructs.h"
 #include "backendreturn.h"
+#include <kcompositejob.h>
 
 /**
  * Queued job for implementing various backend actions which need queueing.
  */
-class BackendJob : public QueuedJob
+class BackendJob : public KCompositeJob
 {
     Q_OBJECT
 
@@ -50,7 +50,8 @@ public:
         TypeDeleteItem,
         TypeLockItem,
         TypeUnlockItem,
-        TypeChangeAuthenticationItem
+        TypeChangeAuthenticationItem,
+        TypeMultiPrompt
     };
 
     /**
@@ -60,7 +61,7 @@ public:
      * @param queue the queue object this call will be enqueued to
      * @todo add WId parameter in a way that makes sense (!)
      */
-    BackendJob(JobType type, JobQueue *queue);
+    BackendJob(JobType type);
 
     /**
      * Default implementation for isImmediate() which unconditionally returns
@@ -85,6 +86,8 @@ public:
      * @return true if this call has been dismissed, false else
      */
     bool isDismissed() const;
+    
+    bool isFinished() const;
 
     /**
      * Dismiss this job.
@@ -105,7 +108,6 @@ public:
      */
     const QString &errorMessage() const;
 
-protected:
     /**
      * Default implementation for start() which just calls exec. This is
      * implemented for convenience reasons as it eases the implementation of
@@ -115,7 +117,13 @@ protected:
      *          always immediate or needs special handling.
      */
     virtual void start();
+    
+    /**
+     * This overrides KCompositeJob::addSubjob only to make it public
+     */
+    bool addSubjob(KJob*);
 
+protected:
     /**
      * Set the job result to be an error.
      *
@@ -124,11 +132,15 @@ protected:
      */
     void setError(ErrorType error, const QString &errorMessage = QString());
 
+private Q_SLOTS:
+    void slotJobFinished(KJob*);
+    
 private:
     JobType m_type;
     bool m_dismissed;
     ErrorType m_error;
     QString m_errorMessage;
+    bool m_finished;
 };
 
 class BackendMaster;
@@ -263,17 +275,13 @@ private Q_SLOTS:
      *
      * @param subJob the sub job that finished
      */
-    void createCollectionJobFinished(QueuedJob *subJob);
+    void createCollectionJobFinished(KJob*);
 
 private:
     CollectionCreateInfo m_createCollectionInfo;
-    BackendMaster *m_master;
-    QueuedJob *m_subJob;
-
-    // create a subjob enqueued at the given manager
-    void createSubJob(BackendCollectionManager *manager);
-
-    BackendCollection *m_collection;
+    BackendMaster       *m_master;
+    KJob                *m_subJob;
+    BackendCollection   *m_collection;
 };
 
 /**
@@ -289,9 +297,8 @@ public:
      * Constructor.
      *
      * @param type concrete type of the job
-     * @param queue JobQueue to perform the action on
      */
-    BooleanResultJob(BackendJob::JobType type, JobQueue *queue);
+    BooleanResultJob(BackendJob::JobType type);
 
     /**
      * Get the boolean result of the job.

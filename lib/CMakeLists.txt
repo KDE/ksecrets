@@ -5,9 +5,8 @@ include_directories(
 
 
 SET( daemonlib_SRCS
-    jobqueue.cpp
-    queuedjob.cpp
     secrettool.cpp
+    daemonjob.cpp
 )
 
 KDE4_ADD_LIBRARY( daemonlib STATIC ${daemonlib_SRCS} )

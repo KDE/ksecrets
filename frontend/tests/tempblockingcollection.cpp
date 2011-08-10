@@ -102,8 +102,8 @@ DeleteCollectionJob *TempBlockingCollection::createDeleteJob(const CollectionDel
 {
     deleteJobInfo.m_collection = this;
     TempBlockingDeleteCollectionJob *job = new TempBlockingDeleteCollectionJob(deleteJobInfo);
-    connect(job, SIGNAL(result(QueuedJob*)),
-            SLOT(deleteCollectionJobResult(QueuedJob*)));
+    connect(job, SIGNAL(result(KJob*)),
+            SLOT(deleteCollectionJobResult(KJob*)));
     return job;
 }
 
@@ -140,7 +140,7 @@ BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &la
                     replacing = true;
                 } else {
                     // item existing but should not be replaced
-                    return BackendReturn<BackendItem*>(0, ErrorAlreadyExists);
+                    return BackendReturn<BackendItem*>(0, BackendErrorAlreadyExists);
                 }
                 break;
             }
@@ -175,7 +175,7 @@ void TempBlockingCollection::slotItemDeleted(BackendItem *item)
     emit itemDeleted(item);
 }
 
-void TempBlockingCollection::deleteCollectionJobResult(QueuedJob *job)
+void TempBlockingCollection::deleteCollectionJobResult(KJob *job)
 {
     TempBlockingDeleteCollectionJob * dcj = qobject_cast<TempBlockingDeleteCollectionJob*>(job);
     Q_ASSERT(dcj);
