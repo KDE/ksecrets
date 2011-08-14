@@ -63,6 +63,7 @@ Secrets::Secrets(const QByteArray& pool, const QByteArray& app):
 
 void Secrets::listDir(const KUrl& url)
 {
+    kDebug() << "Entering listDir " << url.url();
     initClientLib();
     const QString fileName = url.fileName();
     kDebug() << fileName;
@@ -89,6 +90,7 @@ void Secrets::slotCollectionListingDone(KJob* job)
         entry.clear();
         entry.insert( KIO::UDSEntry::UDS_ICON_NAME, "wallet-open" );
         entry.insert( KIO::UDSEntry::UDS_DISPLAY_NAME, collName );
+        entry.insert( KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR );
         // TODO: add access and modification times
         entry.insert( KIO::UDSEntry::UDS_COMMENT, i18n("Secrets collection stored in KSecretsService") );
         listEntry( entry, false );
@@ -100,12 +102,20 @@ void Secrets::slotCollectionListingDone(KJob* job)
 
 void Secrets::get(const KUrl& url)
 {
-    kDebug() << "Entering get " << url.url();
-    error( KIO::ERR_IS_DIRECTORY, url.prettyUrl() );
+    const QString fileName = url.fileName();
+    kDebug() << "Entering get URL=" << url.url() << " FILE=" << fileName;
+    if (fileName.isEmpty()) {
+        error( KIO::ERR_IS_DIRECTORY, url.prettyUrl() );
+    }
+    else {
+        data(QByteArray());
+        finished();
+    }
 }
 
 void Secrets::stat(const KUrl& url)
 {
+    kDebug() << "Entering stat " << url.url();
     initClientLib();
     const QString fileName = url.fileName();
     kDebug() << fileName;
