@@ -24,6 +24,7 @@
 #include <kdebug.h>
 #include <ksecretsservice/ksecretsservicecollection.h>
 #include <ksecretsservice/ksecretsservicecollectionjobs.h>
+#include <QCoreApplication>
 
 using namespace KSecretsService;
 
@@ -32,6 +33,7 @@ extern "C" int KDE_EXPORT kdemain( int argc, char **argv )
     kDebug() << "Entering kio_ksecretsservice";
     
     KComponentData instance( "kio_ksecretsservice" );
+    QCoreApplication app( argc, argv ); // need this for jobs event loop
     
     if ( argc != 4 ) {
         fprintf( stderr, "Usage: kio_ksecretsservice protocol domain-socket1 domain-socket2\n" );
@@ -70,34 +72,31 @@ void Secrets::listDir(const KUrl& url)
 
     int itemCount =0;
     // root dir?
-    if ( url.isEmpty() ) {
+    if ( fileName.isEmpty() ) {
         ListCollectionsJob *listJob = Collection::listCollections();
-        connect( listJob, SIGNAL(finished(KJob*)), this, SLOT(slotCollectionListingDone(KJob*)) );
-        listJob->start();
-        return; // listing will finish when slotCollectionListingDone will get called
+        if (listJob->exec()) {
+            KIO::UDSEntry entry;
+            foreach( const QString &collName, listJob->collections() ) {
+                kDebug() << "collection : " << collName;
+                entry.clear();
+                createDirEntry( entry, collName, "wallet-open" );
+                // TODO: add access and modification times
+                entry.insert( KIO::UDSEntry::UDS_COMMENT, i18n("Secrets collection stored in KSecretsService") );
+                listEntry( entry, false );
+            }
+            totalSize( listJob->collections().count() );
+            entry.clear();
+            listEntry( entry, true ); // finished enumerating, we're ready
+            finished();
+        }
+        else {
+            kDebug() << "Cannot list collections : " << listJob->errorString();
+            error( KIO::ERR_COULD_NOT_CONNECT, i18n("Could not connect to KSecretsService daemon") );
+        }
     }
-
-    totalSize(0);
-    finished();
-}
-
-void Secrets::slotCollectionListingDone(KJob* job)
-{
-    ListCollectionsJob *listJob = qobject_cast<ListCollectionsJob*>(job);
-    Q_ASSERT(job != 0);
-    KIO::UDSEntry entry;
-    foreach( const QString &collName, listJob->collections() ) {
-        entry.clear();
-        entry.insert( KIO::UDSEntry::UDS_ICON_NAME, "wallet-open" );
-        entry.insert( KIO::UDSEntry::UDS_DISPLAY_NAME, collName );
-        entry.insert( KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR );
-        // TODO: add access and modification times
-        entry.insert( KIO::UDSEntry::UDS_COMMENT, i18n("Secrets collection stored in KSecretsService") );
-        listEntry( entry, false );
+    else {
+        error( KIO::ERR_DOES_NOT_EXIST, url.prettyUrl() );
     }
-    listEntry( entry, true ); // finished enumerating, we're ready
-    totalSize( listJob->collections().count() );
-    finished();
 }
 
 void Secrets::get(const KUrl& url)

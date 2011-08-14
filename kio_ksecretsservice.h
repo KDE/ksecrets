@@ -36,8 +36,6 @@ public:
 private:
     void initClientLib();
     
-private Q_SLOTS:
-    void slotCollectionListingDone(KJob*);
 };
 
 } // namespace
