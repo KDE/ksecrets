@@ -22,8 +22,8 @@
 
 #include <kcomponentdata.h>
 #include <kdebug.h>
-#include <ksecretsservice/ksecretsservicecollection.h>
-#include <ksecretsservice/ksecretsservicecollectionjobs.h>
+#include "client/ksecretsservicecollection.h"
+#include "client/ksecretsservicecollectionjobs.h"
 #include <QCoreApplication>
 
 using namespace KSecretsService;
