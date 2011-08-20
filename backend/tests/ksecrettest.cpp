@@ -86,7 +86,7 @@ void KSecretTest::testCreateCollectionAsync()
     QStringList entries = QDir(KGlobal::dirs()->saveLocation("ksecret")).entryList(
         QStringList("*.ksecret"), QDir::Files);
     QCOMPARE(entries.count(), 1);
-    QCOMPARE(entries.at(0), createColl->collection()->id() + ".ksecret");
+    QCOMPARE(entries.at(0), QString(createColl->collection()->id() + QLatin1String(".ksecret")));
 
     // remember the collection
     m_collection = createColl->collection();
