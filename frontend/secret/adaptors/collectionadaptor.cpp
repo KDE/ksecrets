@@ -29,12 +29,12 @@ CollectionAdaptor::CollectionAdaptor(Collection *collection)
 {
     Q_ASSERT(collection);
 
-    connect(m_collection, SIGNAL(itemCreated(const QDBusObjectPath &)),
-            SIGNAL(ItemCreated(const QDBusObjectPath &)));
-    connect(m_collection, SIGNAL(itemDeleted(const QDBusObjectPath &)),
-            SIGNAL(ItemDeleted(const QDBusObjectPath &)));
-    connect(m_collection, SIGNAL(itemChanged(const QDBusObjectPath &)),
-            SIGNAL(ItemChanged(const QDBusObjectPath &)));
+    connect(m_collection, SIGNAL(itemCreated(QDBusObjectPath)),
+            SIGNAL(ItemCreated(QDBusObjectPath)));
+    connect(m_collection, SIGNAL(itemDeleted(QDBusObjectPath)),
+            SIGNAL(ItemDeleted(QDBusObjectPath)));
+    connect(m_collection, SIGNAL(itemChanged(QDBusObjectPath)),
+            SIGNAL(ItemChanged(QDBusObjectPath)));
 }
 
 const QList<QDBusObjectPath> &CollectionAdaptor::items() const

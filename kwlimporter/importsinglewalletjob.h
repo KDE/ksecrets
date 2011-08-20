@@ -28,14 +28,12 @@
 
 #include <QtDBus/QDBusObjectPath>
 
-class OrgFreedesktopSecretCollectionInterface;
 namespace KWallet
 {
 class Backend;
 }
 
 class Service;
-class QDBusInterface;
 class KSecretServiceCollection;
 
 class ImportSingleWalletJob : public KJob

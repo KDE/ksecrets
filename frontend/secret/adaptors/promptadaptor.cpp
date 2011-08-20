@@ -29,7 +29,7 @@ PromptAdaptor::PromptAdaptor(PromptBase *prompt)
 {
     Q_ASSERT(prompt);
 
-    connect(prompt, SIGNAL(completed(bool, QVariant)), SLOT(slotCompleted(bool, QVariant)));
+    connect(prompt, SIGNAL(completed(bool,QVariant)), SLOT(slotCompleted(bool,QVariant)));
 }
 
 void PromptAdaptor::Prompt(const QString &windowId)

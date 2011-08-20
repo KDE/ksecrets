@@ -684,8 +684,8 @@ ClientPrompt::ClientPrompt(QDBusObjectPath promptPath)
       m_interface(DBUS_SERVICE, promptPath.path())
 {
     Q_ASSERT(m_interface.isValid());
-    connect(&m_interface, SIGNAL(Completed(bool, QDBusVariant)),
-            SLOT(slotCompleted(bool, QDBusVariant)));
+    connect(&m_interface, SIGNAL(Completed(bool,QDBusVariant)),
+            SLOT(slotCompleted(bool,QDBusVariant)));
 }
 
 void ClientPrompt::promptAndWait(int time)

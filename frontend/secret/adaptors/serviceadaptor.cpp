@@ -33,12 +33,12 @@ ServiceAdaptor::ServiceAdaptor(Service *service)
     // register all types needed for the D-Bus interface
     registerDBusTypes();
 
-    connect(service, SIGNAL(collectionCreated(const QDBusObjectPath&)),
-            SIGNAL(CollectionCreated(const QDBusObjectPath&)));
-    connect(service, SIGNAL(collectionDeleted(const QDBusObjectPath&)),
-            SIGNAL(CollectionDeleted(const QDBusObjectPath&)));
-    connect(service, SIGNAL(collectionChanged(const QDBusObjectPath&)),
-            SIGNAL(CollectionChanged(const QDBusObjectPath&)));
+    connect(service, SIGNAL(collectionCreated(QDBusObjectPath)),
+            SIGNAL(CollectionCreated(QDBusObjectPath)));
+    connect(service, SIGNAL(collectionDeleted(QDBusObjectPath)),
+            SIGNAL(CollectionDeleted(QDBusObjectPath)));
+    connect(service, SIGNAL(collectionChanged(QDBusObjectPath)),
+            SIGNAL(CollectionChanged(QDBusObjectPath)));
 }
 
 const QList<QDBusObjectPath> &ServiceAdaptor::collections() const
