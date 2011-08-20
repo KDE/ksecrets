@@ -29,7 +29,7 @@ AddComputerDialog::AddComputerDialog(QWidget* parent, Qt::WFlags flags):
     setButtons( KDialog::Ok | KDialog::Cancel );
     _widget = new AddComputerDialogWidget(this);
     setMainWidget( _widget );
-    connect( _widget->_computerName, SIGNAL(textChanged(const QString&)), SLOT(computerNameChanged(const QString&)) );
+    connect( _widget->_computerName, SIGNAL(textChanged(QString)), SLOT(computerNameChanged(QString)) );
     enableButtonOk(false);
     _widget->setFocus();
     // TODO: add more port validation to this dialog to complete the existing input mask validation

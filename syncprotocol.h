@@ -23,10 +23,7 @@
 #include <QString>
 #include <QMetaType>
 
-class OrgFreedesktopSecretServiceInterface;
 class SyncLogger;
-class QDBusConnectionInterface;
-class OrgFreedesktopSecretSessionInterface;
 
 /**
  * @class SyncProtocol

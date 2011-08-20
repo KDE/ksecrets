@@ -34,10 +34,10 @@ SyncServerJob::SyncServerJob(SyncDaemon* daemon, QTcpSocket* sshSocket) :
 {
     Q_ASSERT( _daemon != NULL );
     Q_ASSERT( _syncSocket != NULL );
-    connect( _syncSocket, SIGNAL( stateChanged(QAbstractSocket::SocketState)) , SLOT( onSocketStateChanged(QAbstractSocket::SocketState) ) );
-/*    connect( _syncSocket, SIGNAL( readyRead() ), SLOT( onSocketReadyRead() ) );
-    connect( _syncSocket, SIGNAL( bytesWritten(qint64) ), SLOT( onSocketBytesWritten(qint64) ) );
-    connect( _syncSocket, SIGNAL( error(QAbstractSocket::SocketError)), SLOT( onSocketError(QAbstractSocket::SocketError) ) );*/
+    connect( _syncSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)) , SLOT(onSocketStateChanged(QAbstractSocket::SocketState)) );
+/*    connect( _syncSocket, SIGNAL(readyRead()), SLOT(onSocketReadyRead()) );
+    connect( _syncSocket, SIGNAL(bytesWritten(qint64)), SLOT(onSocketBytesWritten(qint64)) );
+    connect( _syncSocket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(onSocketError(QAbstractSocket::SocketError)) );*/
 }
 
 SyncServerJob::~SyncServerJob()

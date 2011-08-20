@@ -100,7 +100,7 @@ void SyncDaemon::doSync()
 
 void SyncDaemon::startListening()
 {
-    connect(this, SIGNAL( newConnection() ), SLOT( onNewConnection() ) );
+    connect(this, SIGNAL(newConnection()), SLOT(onNewConnection()) );
     
     // TODO: implement listening host address specifying here, e.g. allow user specify which card to bind to
     if ( listen( QHostAddress::Any, KSecretSyncCfg::listeningPort() ) ) {
