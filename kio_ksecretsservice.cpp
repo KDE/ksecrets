@@ -19,12 +19,14 @@
  */
 
 #include "kio_ksecretsservice.h"
+#include <ksecretsservice/ksecretsservicecollection.h>
+#include <ksecretsservice/ksecretsservicecollectionjobs.h>
 
 #include <kcomponentdata.h>
 #include <kdebug.h>
+#include <QCoreApplication>
 #include "client/ksecretsservicecollection.h"
 #include "client/ksecretsservicecollectionjobs.h"
-#include <QCoreApplication>
 
 using namespace KSecretsService;
 
@@ -93,10 +95,12 @@ void Secrets::listDir(const KUrl& url)
             kDebug() << "Cannot list collections : " << listJob->errorString();
             error( KIO::ERR_COULD_NOT_CONNECT, i18n("Could not connect to KSecretsService daemon") );
         }
+        return;
     }
-    else {
-        error( KIO::ERR_DOES_NOT_EXIST, url.prettyUrl() );
-    }
+    
+    // 
+    Collection *coll = Collection::findCollection( fileName, Collection::OpenOnly );
+    
 }
 
 void Secrets::get(const KUrl& url)
