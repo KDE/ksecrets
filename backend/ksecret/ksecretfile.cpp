@@ -22,8 +22,8 @@
 
 #include <QtCore/QtEndian>
 
-#define KSECRET_MAGIC "KSECRET\n\r\0\r\n"
-#define KSECRET_MAGIC_LEN 12
+#define KSECRET_MAGIC "KSECRET\n\r\r\n"
+#define KSECRET_MAGIC_LEN 11
 
 // FIXME: currently the daemon could be tricked into reading a large portion of a forged
 //        ksecret file wasting a lot of memory and making the pc unusable.
@@ -72,7 +72,8 @@ bool KSecretFile::readMagic()
         m_valid = false;
         return false;
     }
-    return m_readBuffer == KSECRET_MAGIC;
+    QString strMagic( m_readBuffer );
+    return strMagic == KSECRET_MAGIC;
 }
 
 bool KSecretFile::writeMagic()

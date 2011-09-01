@@ -1,5 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
+ * Copyright 2011, Valentin Rusu <kde@rusu.info>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -31,8 +32,20 @@
 #include "backend/ksecret/ksecretcollectionmanager.h"
 #include "frontend/secret/service.h"
 #include "ui/dialoguimanager.h"
-#include "kwlimporter/kwlimporterjob.h"
 #include "../client/version.h"
+#include <QProcess>
+#include <QDir>
+#include <kstandarddirs.h>
+
+static bool userHasWallets() 
+{
+    QDir dir(KGlobal::dirs()->saveLocation("data", "kwallet", false), "*.kwl");
+    QStringList wallets;
+
+    dir.setFilter(QDir::Files | QDir::Hidden);
+
+    return dir.entryInfoList().count() >0;
+}
 
 int main(int argc, char **argv)
 {
@@ -69,11 +82,14 @@ int main(int argc, char **argv)
     master->addManager( new KSecretCollectionManager( "share/apps/ksecretsservice", master ) );
     Service service( BackendMaster::instance() ); // NOTE: this will also initialize QCA
     
-    if ( KwlImporterJob::userHasWallets() ) {
+    if ( userHasWallets() ) {
         KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
         if ( args->isSet("kwl") ) {
-            KwlImporterJob *importJob = new KwlImporterJob( &service );
-            importJob->start();
+            QProcess kwl2kss;
+            kwl2kss.start("kwl2kss");
+            if (!kwl2kss.waitForStarted()) {
+                std::cout << qPrintable( ki18n( "ERROR when executing kwl2kss program" ).toString() ) << std::endl;
+            }
         }
         else {
             std::cout << qPrintable( ki18n( "WARNING: found KWallet files but the -kwl option was not given, so ignoring them").toString() ) << std::endl;

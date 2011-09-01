@@ -67,7 +67,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
     Q_FOREACH(const QString & file, entries) {
         if(!m_collections.contains(file)) {
             QString errorMessage;
-            KSecretCollection *coll = KSecretCollection::deserialize(file, this, errorMessage);
+            KSecretCollection *coll = KSecretCollection::deserialize( dir.filePath(file), this, errorMessage);
             if(coll) {
                 addCollection(coll);
             }

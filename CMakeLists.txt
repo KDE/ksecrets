@@ -18,7 +18,6 @@ ADD_SUBDIRECTORY (lib)
 ADD_SUBDIRECTORY (ui)
 ADD_SUBDIRECTORY (backend)
 ADD_SUBDIRECTORY (frontend)
-ADD_SUBDIRECTORY (kwlimporter)
 
 #
 # ksecretserviced
@@ -35,7 +34,6 @@ TARGET_LINK_LIBRARIES (ksecretsserviced
     ksecretsservicelib
     ksecretserviceui
     ksecretsserviceclient
-    kwl_importer
     ${KDE4_KDEUI_LIBS}
 )
 
