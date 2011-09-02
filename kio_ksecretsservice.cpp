@@ -19,8 +19,6 @@
  */
 
 #include "kio_ksecretsservice.h"
-#include <ksecretsservice/ksecretsservicecollection.h>
-#include <ksecretsservice/ksecretsservicecollectionjobs.h>
 
 #include <kcomponentdata.h>
 #include <kdebug.h>
