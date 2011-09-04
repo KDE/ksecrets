@@ -29,7 +29,9 @@
 #include <QtCrypto/QtCrypto>
 
 #include "ksecretdbuscontext.h"
-#include <secretcodec.h>
+#include <ksecretsservicecodec.h>
+
+using namespace KSecretsService;
 
 class Service;
 class Peer;

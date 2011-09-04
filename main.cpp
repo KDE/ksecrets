@@ -32,7 +32,6 @@
 #include "backend/ksecret/ksecretcollectionmanager.h"
 #include "frontend/secret/service.h"
 #include "ui/dialoguimanager.h"
-#include "../client/version.h"
 #include <QProcess>
 #include <QDir>
 #include <kstandarddirs.h>
@@ -49,8 +48,9 @@ static bool userHasWallets()
 
 int main(int argc, char **argv)
 {
+    // FIXME: what version should we put here?
     KAboutData aboutdata("ksecretsservice", 0, ki18n("KDE DaemonSecret Service"),
-                         ksecretsserviceclient_version, // please note that client version always match daemon version
+                         "0.1",
                          ki18n("KDE DaemonSecret Service"),
                          KAboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
