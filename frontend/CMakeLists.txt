@@ -25,7 +25,6 @@ SET (ksecretservice_frontend_SRCS
 
 KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})
 TARGET_LINK_LIBRARIES (ksecretservicefrontend 
-    ksecretsservicelib
     ${KDE4_KDECORE_LIBS} 
     ${QCA2_LIBRARIES}
 )

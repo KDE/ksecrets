@@ -31,9 +31,7 @@ KDE4_ADD_EXECUTABLE (ksecretsserviced
 TARGET_LINK_LIBRARIES (ksecretsserviced
     ksecretservicebackend
     ksecretservicefrontend
-    ksecretsservicelib
     ksecretserviceui
-    ksecretsserviceclient
     ${KDE4_KDEUI_LIBS}
 )
 
