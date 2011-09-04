@@ -30,10 +30,11 @@
 #include <KDebug>
 #include <QFileInfo>
 
+#include <ksecretsservicecollection.h>
+#include <ksecretsservicecollectionjobs.h>
+#include <ksecretsserviceitem.h>
+
 #include "importsinglewalletjob.h"
-#include "../client/ksecretsservicecollection.h"
-#include "../client/ksecretsservicecollectionjobs.h"
-#include "../client/ksecretsserviceitem.h"
 #include "kwalletbackend/kwalletentry.h"
 #include "kwalletbackend/kwalletbackend.h"
 
@@ -172,60 +173,65 @@ void ImportSingleWalletJob::run()
     m_wallet = new KWallet::Backend(m_walletPath, true);
 
     int rc = 1;
-    KPasswordDialog *passDdlg = 0;
-    do {
-        rc = m_wallet->open(QByteArray());
-        if ( rc != 0 ) {
-            passDdlg = new KPasswordDialog();
-            passDdlg->setPrompt( i18n("<qt>The kwl2kss utility requests access to the wallet '<b>%1</b>'. Please enter the password for this wallet below.</qt>",
-                Qt::escape( m_walletName ) ) );
-            // don't use KStdGuiItem::open() here which has trailing ellipsis!
-            passDdlg->setButtonGuiItem(KDialog::Ok,KGuiItem( i18n( "&Open" ), "wallet-open"));
-            passDdlg->setCaption(i18n("KDE Wallet Service"));
-            passDdlg->setPixmap(KIcon("ksecretsservice").pixmap(KIconLoader::SizeHuge));
+    rc = m_wallet->open(QByteArray());
+    if ( rc != 0 ) {
+        m_passDlg = new KPasswordDialog();
+        m_passDlg->setPrompt( i18n("<qt>The kwl2kss utility requests access to the wallet '<b>%1</b>'. Please enter the password for this wallet below.</qt>",
+            Qt::escape( m_walletName ) ) );
+        // don't use KStdGuiItem::open() here which has trailing ellipsis!
+        m_passDlg->setButtonGuiItem(KDialog::Ok,KGuiItem( i18n( "&Open" ), "wallet-open"));
+        m_passDlg->setCaption(i18n("KDE Wallet Service"));
+        m_passDlg->setPixmap(KIcon("ksecretsservice").pixmap(KIconLoader::SizeHuge));
 
-            // FIXME: activate notification if no window is visible like the commented code below
+        // FIXME: activate notification if no window is visible like the commented code below
 /*            if (w != KWindowSystem::activeWindow() && w != 0L) {
-                // If the dialog is modal to a minimized window it might not be visible
-                // (but still blocking the calling application). Notify the user about
-                // the request to open the wallet.
-                KNotification *notification = new KNotification("needsPassword", kpd,
-                                                                KNotification::Persistent |
-                                                                KNotification::CloseWhenWidgetActivated);
-                QStringList actions(i18nc("Text of a button to ignore the open-wallet notification", "Ignore"));
-                if (appid.isEmpty()) {
-                    notification->setText(i18n("<b>KDE</b> has requested to open a wallet (%1).",
-                                                Qt::escape(wallet)));
-                    actions.append(i18nc("Text of a button for switching to the (unnamed) application "
-                                            "requesting a password", "Switch there"));
-                } else {
-                    notification->setText(i18n("<b>%1</b> has requested to open a wallet (%2).",
-                                                Qt::escape(appid), Qt::escape(wallet)));
-                    actions.append(i18nc("Text of a button for switching to the application requesting "
-                                            "a password", "Switch to %1", Qt::escape(appid)));
-                }
-                notification->setActions(actions);
-                connect(notification, SIGNAL(action1Activated()),
-                        notification, SLOT(close()));
-                connect(notification, SIGNAL(action2Activated()),
-                        this, SLOT(activatePasswordDialog()));
-                notification->sendEvent();
-            }*/
-            
-            if ( passDdlg->exec() == KDialog::Accepted ) {
-                rc = m_wallet->open( passDdlg->password().toUtf8() );
+            // If the dialog is modal to a minimized window it might not be visible
+            // (but still blocking the calling application). Notify the user about
+            // the request to open the wallet.
+            KNotification *notification = new KNotification("needsPassword", kpd,
+                                                            KNotification::Persistent |
+                                                            KNotification::CloseWhenWidgetActivated);
+            QStringList actions(i18nc("Text of a button to ignore the open-wallet notification", "Ignore"));
+            if (appid.isEmpty()) {
+                notification->setText(i18n("<b>KDE</b> has requested to open a wallet (%1).",
+                                            Qt::escape(wallet)));
+                actions.append(i18nc("Text of a button for switching to the (unnamed) application "
+                                        "requesting a password", "Switch there"));
+            } else {
+                notification->setText(i18n("<b>%1</b> has requested to open a wallet (%2).",
+                                            Qt::escape(appid), Qt::escape(wallet)));
+                actions.append(i18nc("Text of a button for switching to the application requesting "
+                                        "a password", "Switch to %1", Qt::escape(appid)));
             }
-            else {
-                break;
-            }
-        }
-    } while ( ! m_wallet->isOpen() );
+            notification->setActions(actions);
+            connect(notification, SIGNAL(action1Activated()),
+                    notification, SLOT(close()));
+            connect(notification, SIGNAL(action2Activated()),
+                    this, SLOT(activatePasswordDialog()));
+            notification->sendEvent();
+        }*/
 
-    delete passDdlg;
-    
-    kDebug() << "KWallet::open returned " << rc;
-    // Be async
-    QMetaObject::invokeMethod(this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
+        connect( m_passDlg, SIGNAL(gotPassword(QString,bool)), this, SLOT(onGotWalletPassword(QString,bool)) );
+        connect( m_passDlg, SIGNAL(cancelClicked()), this, SLOT(doKill()) );
+        
+        m_passDlg->open();
+    }
+    else {
+        QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
+    }
+}
+
+void ImportSingleWalletJob::onGotWalletPassword(QString pwd, bool )
+{
+    int rc = m_wallet->open( pwd.toUtf8() );
+    if ( m_wallet->isOpen() ) {
+        QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
+        m_passDlg->deleteLater();
+    }
+    else {
+        // ask user to retry the password
+        m_passDlg->open();
+    }
 }
 
 void ImportSingleWalletJob::onWalletOpened(bool success)
@@ -246,7 +252,8 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
     m_currentFolder = m_folderList.takeFirst(); // the first folder is the wallet's current folder and it'll be imported right away
 
     // Check in the root folder first, one never knows
-    QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);
+    //QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);
+    processCurrentFolder();
 }
 
 void ImportSingleWalletJob::processCurrentFolder()
@@ -316,13 +323,6 @@ void ImportSingleWalletJob::processNextEntry()
     Secret secret;
     secret.setValue( walletEntry->value(), "kwallet/value" );
     
-    if(walletEntry->type() != KWallet::Entry::Map) {
-        // Read the entry
-        secret.setValue(walletEntry->value());
-    } else {
-        secret.setValue(QByteArray());
-    }
-
     CreateCollectionItemJob *createItemJob = m_collection->createItem(entry, attrs, secret, true);
     if ( addSubjob( createItemJob ) ) {
         connect( createItemJob, SIGNAL(finished(KJob*)), this, SLOT(createItemFinished(KJob*)) );

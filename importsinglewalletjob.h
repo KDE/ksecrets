@@ -29,6 +29,7 @@
 
 #include "../client/ksecretsservicecollection.h"
 
+class KPasswordDialog;
 namespace KWallet
 {
 class Backend;
@@ -65,6 +66,7 @@ private Q_SLOTS:
     void checkImportNeededItems(KJob*);
     void checkImportNeededSecret(KJob*);
     void run();
+    void onGotWalletPassword(QString, bool);
     void onWalletOpened(bool);
     void processCurrentFolder();
     void processNextEntry();
@@ -87,6 +89,7 @@ private:
 
     Collection *m_collection;
     Collection *m_checkCollection;
+    KPasswordDialog *m_passDlg;
 
     Status m_status;
 };

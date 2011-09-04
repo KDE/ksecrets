@@ -53,14 +53,8 @@ int main(int argc, char **argv)
     }
 
     if ( KwlImporterJob::userHasWallets() ) {
-        KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
-        if ( args->isSet("kwl") ) {
-            KwlImporterJob *importJob = new KwlImporterJob(&app);
-            importJob->start();
-        }
-        else {
-            std::cout << qPrintable( ki18n( "WARNING: found KWallet files but the -kwl option was not given, so ignoring them").toString() ) << std::endl;
-        }
+        KwlImporterJob *importJob = new KwlImporterJob(&app);
+        importJob->start();
     }
 
     kDebug() << "ksecretsserviced ready";

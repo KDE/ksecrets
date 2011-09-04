@@ -21,7 +21,6 @@ INCLUDE_DIRECTORIES (
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}/kwalletbackend/
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../lib
 )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
@@ -43,7 +42,6 @@ KDE4_ADD_EXECUTABLE (kwl2kss
 )
 
 TARGET_LINK_LIBRARIES (kwl2kss
-    ksecretsserviceclient
     ${KDE4_KDEUI_LIBS}
 )
 

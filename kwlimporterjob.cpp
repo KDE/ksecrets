@@ -23,8 +23,9 @@
 #include "kwlimporterjob.h"
 
 #include "importsinglewalletjob.h"
-#include "../client/ksecretsservicecollection.h"
-#include "../client/ksecretsservicecollectionjobs.h"
+
+#include <ksecretsservicecollection.h>
+#include <ksecretsservicecollectionjobs.h>
 
 #include <KDebug>
 #include <kuiserverjobtracker.h>
