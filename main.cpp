@@ -25,14 +25,13 @@
 #include <iostream>
 #include <QString>
 
-#include "../client/version.h"
 #include "kwlimporterjob.h"
 
 
 int main(int argc, char **argv)
 {
     KAboutData aboutdata("kwl2kss", 0, ki18n("KWallet to KSecretsService import utility"),
-                         ksecretsserviceclient_version, // please note that client version always match our version
+                         "0.1",
                          ki18n("KWallet to KSecretsService import utility"),
                          KAboutData::License_GPL, ki18n("(C) 2011 Valentin Rusu"));
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
