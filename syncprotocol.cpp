@@ -21,8 +21,8 @@
 #include "syncprotocol.h"
 #include "ksecretsynccfg.h"
 #include "synclogger.h"
-#include "../daemon/frontend/secret/adaptors/dbustypes.h"
-#include "../client/ksecretsservicecollection.h"
+#include <ksecretsservicedbustypes.h>
+#include <ksecretsservicecollection.h>
 #include "service_interface.h"
 #include "session_interface.h"
 
