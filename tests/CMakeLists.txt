@@ -37,7 +37,7 @@ kde4_add_kcfg_files(ksecretsync_protocol_test_SRCS
      ../kcm/ksecretsynccfg.kcfgc
 )
 
-qt4_add_dbus_interface(ksecretsync_protocol_test_SRCS  ${CMAKE_SOURCE_DIR}/client/org.freedesktop.Secret.Session.xml session_interface )
+QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml session_interface )
 
 KDE4_ADD_EXECUTABLE (ksecretsync_protocol_test ${ksecretsync_protocol_test_SRCS})
 
