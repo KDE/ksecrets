@@ -37,6 +37,7 @@
 #include "importsinglewalletjob.h"
 #include "kwalletbackend/kwalletentry.h"
 #include "kwalletbackend/kwalletbackend.h"
+#include <QTimer>
 
 using namespace KSecretsService;
 
@@ -46,16 +47,27 @@ ImportSingleWalletJob::ImportSingleWalletJob(const QString& walletPath, QObject*
     m_isSuspended(false), 
     m_hasKillRequest(false),
     m_collection(0),
-    m_checkCollection(0)
+    m_checkCollection(0),
+    m_wallet(0)
 {
     QFileInfo fileInfo( m_walletPath );
     m_walletName = fileInfo.baseName();
+    
+    m_passDlg = new KPasswordDialog();
+    // don't use KStdGuiItem::open() here which has trailing ellipsis!
+    m_passDlg->setButtonGuiItem(KDialog::Ok,KGuiItem( i18n( "&Open" ), "wallet-open"));
+    m_passDlg->setCaption(i18n("KDE Wallet Service"));
+    m_passDlg->setPixmap(KIcon("ksecretsservice").pixmap(KIconLoader::SizeHuge));
+
+    connect( m_passDlg, SIGNAL(gotPassword(QString,bool)), this, SLOT(onGotWalletPassword(QString,bool)) );
+    connect( m_passDlg, SIGNAL(cancelClicked()), this, SLOT(doKill()) );
 }
 
 ImportSingleWalletJob::~ImportSingleWalletJob()
 {
     delete m_checkCollection;
     delete m_collection;
+    delete m_passDlg;
 }
 
 void ImportSingleWalletJob::start()
@@ -161,49 +173,38 @@ void ImportSingleWalletJob::checkImportNeededSecret(KJob *job)
             }
         }
     }
+    
     // once here, we need to do the actual import
+    delete m_checkCollection;
+    m_checkCollection = 0;
+    
     QMetaObject::invokeMethod(this, "run", Qt::QueuedConnection);
 }
 
 void ImportSingleWalletJob::run()
 {
-    delete m_checkCollection;
-    m_checkCollection = 0;
+    if ( m_wallet == 0 ) {
+        m_wallet = new KWallet::Backend(m_walletPath, true);
+    }
     
-    m_wallet = new KWallet::Backend(m_walletPath, true);
-
     int rc = 1;
     rc = m_wallet->open(QByteArray());
-    if ( rc != 0 ) {
-        m_passDlg = new KPasswordDialog();
+    while ( rc != 0 ) {
         m_passDlg->setPrompt( i18n("<qt>The kwl2kss utility requests access to the wallet '<b>%1</b>'. Please enter the password for this wallet below.</qt>",
             Qt::escape( m_walletName ) ) );
-        // don't use KStdGuiItem::open() here which has trailing ellipsis!
-        m_passDlg->setButtonGuiItem(KDialog::Ok,KGuiItem( i18n( "&Open" ), "wallet-open"));
-        m_passDlg->setCaption(i18n("KDE Wallet Service"));
-        m_passDlg->setPixmap(KIcon("ksecretsservice").pixmap(KIconLoader::SizeHuge));
-
-        connect( m_passDlg, SIGNAL(gotPassword(QString,bool)), this, SLOT(onGotWalletPassword(QString,bool)) );
-        connect( m_passDlg, SIGNAL(cancelClicked()), this, SLOT(doKill()) );
-        
-        m_passDlg->open();
+        if ( m_passDlg->exec() == QDialog::Rejected ) {
+            setError(1);
+            setErrorText( i18n("Job cancelled") );
+            emitResult();
+            return;
+        }
+        rc = m_wallet->open( m_passDlg->password().toUtf8() );
+        if ( rc != 0 ) {
+            // ask user to retry the password
+            m_passDlg->showErrorMessage( i18n("Open request failed, please try again") );
+        }
     }
-    else {
-        QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
-    }
-}
-
-void ImportSingleWalletJob::onGotWalletPassword(QString pwd, bool )
-{
-    int rc = m_wallet->open( pwd.toUtf8() );
-    if ( m_wallet->isOpen() ) {
-        QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
-        m_passDlg->deleteLater();
-    }
-    else {
-        // ask user to retry the password
-        m_passDlg->open();
-    }
+    QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
 }
 
 void ImportSingleWalletJob::onWalletOpened(bool success)

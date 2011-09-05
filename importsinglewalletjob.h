@@ -66,7 +66,6 @@ private Q_SLOTS:
     void checkImportNeededItems(KJob*);
     void checkImportNeededSecret(KJob*);
     void run();
-    void onGotWalletPassword(QString, bool);
     void onWalletOpened(bool);
     void processCurrentFolder();
     void processNextEntry();
