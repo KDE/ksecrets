@@ -65,6 +65,12 @@ public:
      *             if false it should be unlocked
      */
     virtual CreateCollectionJob *createCreateCollectionJob(const CollectionCreateInfo& createCollectionInfo) = 0;
+    
+    /**
+     * This is called by the collection creation job to notify this manager that
+     * actual collection creation will start
+     */
+    virtual void creatingCollection( const QString& collId );
 
 Q_SIGNALS:
     /**
@@ -91,6 +97,9 @@ Q_SIGNALS:
      * @param collection collection that changed
      */
     void collectionChanged(BackendCollection *collection);
+    
+protected:
+    QString     m_creatingCollectionId; // id 
 };
 
 #endif

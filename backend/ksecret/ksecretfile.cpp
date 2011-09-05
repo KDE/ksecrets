@@ -21,6 +21,7 @@
 #include "ksecretfile.h"
 
 #include <QtCore/QtEndian>
+#include <kdebug.h>
 
 #define KSECRET_MAGIC "KSECRET\n\r\r\n"
 #define KSECRET_MAGIC_LEN 11
@@ -224,6 +225,7 @@ bool KSecretFile::readSecret(QCA::SecureArray *value)
     Q_ASSERT(value);
     Q_ASSERT(m_mode == Read);
 
+    kDebug() << "pos = " << pos();
     if(!m_valid) {
         return false;
     }
@@ -246,13 +248,18 @@ bool KSecretFile::writeSecret(const QCA::SecureArray &value)
 {
     Q_ASSERT(m_mode == Write);
 
+    kDebug() << "pos = " << pos();
     if(!m_valid) {
         return false;
     }
 
-    if(!writeUint(value.size()) ||
-            m_device->write(value.constData(), value.size()) != value.size()) {
+    if(!writeUint(value.size())) {
         m_valid = false;
+    }
+    else {
+        if (m_device->write(value.constData(), value.size()) != value.size()) {
+            m_valid = false;
+        }
     }
     return m_valid;
 }

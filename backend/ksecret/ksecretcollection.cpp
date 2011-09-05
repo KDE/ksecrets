@@ -588,17 +588,28 @@ bool KSecretCollection::deserializeHeader(KSecretFile &file, QString &errorMessa
     }
 
     // algorithms
-    if(!file.readUint(&m_algoHash) || !file.readUint(&m_algoCipher)) {
+    if(!file.readUint(&m_algoHash)) {
         errorMessage = genericLoadingErrorMessage();
         return false;
     }
+
+    if (!file.readUint(&m_algoCipher)) {
+        errorMessage = genericLoadingErrorMessage();
+        return false;
+    }
+
     if(!setupAlgorithms(errorMessage)) {
         // TODO: error message
         return false;
     }
 
     // verifier
-    if(!file.readSecret(&m_verInitVector) || !file.readSecret(&m_verEncryptedRandom)) {
+    if(!file.readSecret(&m_verInitVector)) {
+        errorMessage = genericLoadingErrorMessage();
+        return false;
+    }
+    
+    if(!file.readSecret(&m_verEncryptedRandom)) {
         errorMessage = genericLoadingErrorMessage();
         return false;
     }
@@ -1003,12 +1014,19 @@ bool KSecretCollection::serializeHeader(KSecretFile &file) const
     }
 
     // algorithms
-    if(!file.writeUint(m_algoHash) && !file.writeUint(m_algoCipher)) {
+    if(!file.writeUint(m_algoHash)) {
         return false;
     }
 
-    // verifier
-    if(!file.writeSecret(m_verInitVector) && !file.writeSecret(m_verEncryptedRandom)) {
+    if (!file.writeUint(m_algoCipher)) {
+        return false;
+    }
+
+    if(!file.writeSecret(m_verInitVector)) {
+        return false;
+    }
+    
+    if(!file.writeSecret(m_verEncryptedRandom)) {
         return false;
     }
 

@@ -30,4 +30,9 @@ BackendCollectionManager::~BackendCollectionManager()
 {
 }
 
+void BackendCollectionManager::creatingCollection(const QString& collId)
+{
+    m_creatingCollectionId = collId;
+}
+
 #include "backendcollectionmanager.moc"

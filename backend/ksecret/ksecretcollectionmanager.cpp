@@ -25,6 +25,7 @@
 #include "../lib/secrettool.h"
 #include <kglobal.h>
 #include <kstandarddirs.h>
+#include <kdebug.h>
 
 #include <QtCore/QTimer>
 #include <QtCore/QDir>
@@ -56,6 +57,7 @@ CreateCollectionJob *KSecretCollectionManager::createCreateCollectionJob(const C
 void KSecretCollectionManager::addCollection(KSecretCollection *collection)
 {
     m_collections.insert(collection->path(), collection);
+    m_creatingCollectionId = "";
 }
 
 void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
@@ -65,11 +67,17 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
     QDir dir(path);
     QStringList entries = dir.entryList(QStringList("*.ksecret"), QDir::Files);
     Q_FOREACH(const QString & file, entries) {
-        if(!m_collections.contains(file)) {
+        QFileInfo fi( dir.filePath( file ) );
+        // avoid double inclusion and also avoid trying to read collections that are in the process of serialization
+        if(!m_collections.contains(file) && !(m_creatingCollectionId == fi.baseName() ) ) {
+            kDebug() << "FILE: " << file << " deserializing...";
             QString errorMessage;
             KSecretCollection *coll = KSecretCollection::deserialize( dir.filePath(file), this, errorMessage);
             if(coll) {
                 addCollection(coll);
+            }
+            else {
+                kDebug() << " ERROR: " << errorMessage;
             }
         }
     }
@@ -77,6 +85,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
 
 void KSecretCollectionManager::slotStartupDiscovery()
 {
+    kDebug() << "Discovering collections...";
     slotDirectoryChanged(KGlobal::dirs()->saveLocation("ksecret"));
 }
 

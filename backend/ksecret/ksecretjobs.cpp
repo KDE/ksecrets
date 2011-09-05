@@ -69,7 +69,9 @@ void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
 
     // TODO: collection needs authentication methods, filenames, ...
     QString errorMessage;
-    KSecretCollection *coll = KSecretCollection::create(createId(), npj->password(),
+    QString collId = createId();
+    manager()->creatingCollection( collId );
+    KSecretCollection *coll = KSecretCollection::create(collId, npj->password(),
                               manager(), errorMessage);
     if(!coll) {
         setCollection(0);
