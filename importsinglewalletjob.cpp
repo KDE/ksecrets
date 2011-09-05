@@ -183,34 +183,6 @@ void ImportSingleWalletJob::run()
         m_passDlg->setCaption(i18n("KDE Wallet Service"));
         m_passDlg->setPixmap(KIcon("ksecretsservice").pixmap(KIconLoader::SizeHuge));
 
-        // FIXME: activate notification if no window is visible like the commented code below
-/*            if (w != KWindowSystem::activeWindow() && w != 0L) {
-            // If the dialog is modal to a minimized window it might not be visible
-            // (but still blocking the calling application). Notify the user about
-            // the request to open the wallet.
-            KNotification *notification = new KNotification("needsPassword", kpd,
-                                                            KNotification::Persistent |
-                                                            KNotification::CloseWhenWidgetActivated);
-            QStringList actions(i18nc("Text of a button to ignore the open-wallet notification", "Ignore"));
-            if (appid.isEmpty()) {
-                notification->setText(i18n("<b>KDE</b> has requested to open a wallet (%1).",
-                                            Qt::escape(wallet)));
-                actions.append(i18nc("Text of a button for switching to the (unnamed) application "
-                                        "requesting a password", "Switch there"));
-            } else {
-                notification->setText(i18n("<b>%1</b> has requested to open a wallet (%2).",
-                                            Qt::escape(appid), Qt::escape(wallet)));
-                actions.append(i18nc("Text of a button for switching to the application requesting "
-                                        "a password", "Switch to %1", Qt::escape(appid)));
-            }
-            notification->setActions(actions);
-            connect(notification, SIGNAL(action1Activated()),
-                    notification, SLOT(close()));
-            connect(notification, SIGNAL(action2Activated()),
-                    this, SLOT(activatePasswordDialog()));
-            notification->sendEvent();
-        }*/
-
         connect( m_passDlg, SIGNAL(gotPassword(QString,bool)), this, SLOT(onGotWalletPassword(QString,bool)) );
         connect( m_passDlg, SIGNAL(cancelClicked()), this, SLOT(doKill()) );
         
