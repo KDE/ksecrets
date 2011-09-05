@@ -44,11 +44,11 @@ using namespace KSecretsService;
 ImportSingleWalletJob::ImportSingleWalletJob(const QString& walletPath, QObject* parent)
     : KCompositeJob(parent), 
     m_walletPath(walletPath), 
+    m_wallet(0),
     m_isSuspended(false), 
     m_hasKillRequest(false),
     m_collection(0),
-    m_checkCollection(0),
-    m_wallet(0)
+    m_checkCollection(0)
 {
     QFileInfo fileInfo( m_walletPath );
     m_walletName = fileInfo.baseName();
@@ -96,15 +96,9 @@ void ImportSingleWalletJob::checkImportNeeded()
     StringStringMap attrs;
     attrs.insert( "creator", "kwl2kss" );
     SearchCollectionItemsJob *searchItemsJob = m_checkCollection->searchItems( attrs );
-    if ( addSubjob( searchItemsJob ) ) {
-        connect( searchItemsJob, SIGNAL(finished(KJob*)), this, SLOT(checkImportNeededItems(KJob*)) );
-        searchItemsJob->start();
-    }
-    else {
-        kDebug() << "Cannot add searchItems subjob";
-        setError(1);
-        emitResult();
-    }
+    searchItemsJob->setUiDelegate(0); // we don't need notifications for this job
+    connect( searchItemsJob, SIGNAL(finished(KJob*)), this, SLOT(checkImportNeededItems(KJob*)) );
+    searchItemsJob->start();
 }
 
 void ImportSingleWalletJob::checkImportNeededItems(KJob *job)
@@ -119,10 +113,9 @@ void ImportSingleWalletJob::checkImportNeededItems(KJob *job)
         if ( searchItemsJob->items().count() >0 ) {
             SecretItem *item = searchItemsJob->items().first().data();
             GetSecretItemSecretJob *readSecretJob = item->getSecret();
-            if ( addSubjob( readSecretJob ) ) {
-                connect( readSecretJob, SIGNAL(finished(KJob*)), this, SLOT(checkImportNeededSecret(KJob*)) );
-                readSecretJob->start();
-            }
+            readSecretJob->setUiDelegate(0); // no notifications from this job needed
+            connect( readSecretJob, SIGNAL(finished(KJob*)), this, SLOT(checkImportNeededSecret(KJob*)) );
+            readSecretJob->start();
         }
         else {
             shouldImport = true;
@@ -184,7 +177,7 @@ void ImportSingleWalletJob::checkImportNeededSecret(KJob *job)
 void ImportSingleWalletJob::run()
 {
     if ( m_wallet == 0 ) {
-        m_wallet = new KWallet::Backend(m_walletPath, true);
+         m_wallet = new KWallet::Backend(m_walletPath, true);
     }
     
     int rc = 1;
@@ -204,7 +197,7 @@ void ImportSingleWalletJob::run()
             m_passDlg->showErrorMessage( i18n("Open request failed, please try again") );
         }
     }
-    QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
+   QMetaObject::invokeMethod( this, "onWalletOpened", Qt::QueuedConnection, Q_ARG(bool, m_wallet->isOpen()) );
 }
 
 void ImportSingleWalletJob::onWalletOpened(bool success)
@@ -222,11 +215,19 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
     
     // Gather the folder list
     m_folderList = m_wallet->folderList();
+    
+    // count the entries in this wallet, for progress bar needs
+    uint amount =0;
+    foreach( const QString folder, m_folderList ) {
+        m_wallet->setFolder( folder );
+        amount += m_wallet->entryList().count();
+    }
+    setTotalAmount( Files, amount );
+    setProcessedAmount( Files, 0 );
+    
     m_currentFolder = m_folderList.takeFirst(); // the first folder is the wallet's current folder and it'll be imported right away
 
-    // Check in the root folder first, one never knows
-    //QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);
-    processCurrentFolder();
+    QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);
 }
 
 void ImportSingleWalletJob::processCurrentFolder()
@@ -235,6 +236,7 @@ void ImportSingleWalletJob::processCurrentFolder()
         return;
     }
 
+    kDebug() << "FOLDER: " << m_currentFolder;
     m_wallet->setFolder( m_currentFolder );
     m_currentEntryList = m_wallet->entryList();
 
@@ -276,6 +278,7 @@ void ImportSingleWalletJob::processNextEntry()
     }
 
     QString entry = m_currentEntryList.takeFirst();
+    kDebug() << "  ENTRY: " << entry;
 
     // Read the entry
     KWallet::Entry *walletEntry = m_wallet->readEntry(entry);
@@ -297,16 +300,9 @@ void ImportSingleWalletJob::processNextEntry()
     secret.setValue( walletEntry->value(), "kwallet/value" );
     
     CreateCollectionItemJob *createItemJob = m_collection->createItem(entry, attrs, secret, true);
-    if ( addSubjob( createItemJob ) ) {
-        connect( createItemJob, SIGNAL(finished(KJob*)), this, SLOT(createItemFinished(KJob*)) );
-        createItemJob->start();
-    }
-    else {
-        createItemJob->deleteLater();
-        setErrorText( i18n("Cannot import entry %1 from wallet %2", entry, m_walletName ) );
-        emitResult();
-    }
-
+    createItemJob->setUiDelegate(0); // no notification needed from this job
+    connect( createItemJob, SIGNAL(finished(KJob*)), this, SLOT(createItemFinished(KJob*)) );
+    createItemJob->start();
 }
 
 void ImportSingleWalletJob::createItemFinished(KJob* job)
@@ -315,8 +311,10 @@ void ImportSingleWalletJob::createItemFinished(KJob* job)
     if ( createItemJob->error() == 0 ) {
         // Recurse asynchronously
         QMetaObject::invokeMethod(this, "processNextEntry", Qt::QueuedConnection);
+        setProcessedAmount( Files, processedAmount( Files) + 1 );
     }
     else {
+        setError(1);
         setErrorText( createItemJob->errorText() );
         emitResult();
     }

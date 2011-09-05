@@ -80,17 +80,16 @@ void KwlImporterJob::run()
 
     dir.setFilter(QDir::Files | QDir::Hidden);
 
+    uint amount = 0;
     foreach(const QFileInfo & fi, dir.entryInfoList()) {
-//         QString fn = fi.fileName();
-//         if(fn.endsWith(QLatin1String(".kwl"))) {
-//             fn.truncate(fn.length() - 4);
-//         }
         KJob *importJob = new ImportSingleWalletJob( fi.absoluteFilePath(), this);
         if ( !addSubjob( importJob ) ) {
             kDebug() << "Cannot add import subjob";
         }
         importJob->start();
+        amount++;
     }
+    setTotalAmount( Files, amount );
 }
 
 bool KwlImporterJob::userHasWallets() 
@@ -106,6 +105,7 @@ bool KwlImporterJob::userHasWallets()
 void KwlImporterJob::slotResult(KJob* job)
 {
     KCompositeJob::slotResult(job);
+    setProcessedAmount( Files, processedAmount(Files) + 1 );
 }
 
 bool KwlImporterJob::doKill()
