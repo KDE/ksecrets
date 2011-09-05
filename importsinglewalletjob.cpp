@@ -173,7 +173,7 @@ void ImportSingleWalletJob::run()
     m_wallet = new KWallet::Backend(m_walletPath, true);
 
     int rc = 1;
-    rc = m_wallet->open(QString("bnel7v").toUtf8());
+    rc = m_wallet->open(QByteArray());
     if ( rc != 0 ) {
         m_passDlg = new KPasswordDialog();
         m_passDlg->setPrompt( i18n("<qt>The kwl2kss utility requests access to the wallet '<b>%1</b>'. Please enter the password for this wallet below.</qt>",
