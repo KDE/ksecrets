@@ -189,7 +189,8 @@ bool KSecretFile::writeBytearray(const QByteArray &value)
         return false;
     }
 
-    if(!writeUint(value.size()) || m_device->write(value) != value.size()) {
+    if(!writeUint(value.size()) || 
+        m_device->write(value) != value.size()) {
         m_valid = false;
     }
     return m_valid;

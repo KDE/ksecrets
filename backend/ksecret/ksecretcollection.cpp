@@ -707,9 +707,18 @@ bool KSecretCollection::deserializePartCollProps(const QByteArray &partContents)
     }
 
     QByteArray partProps;
-    if(!file.readBytearray(&partProps) || !file.readBytearray(&m_propertiesMac)) {
+    QCA::SecureArray propsHash;
+    if(!file.readBytearray(&partProps) || 
+        !file.readSecret(&propsHash)) {
         return false;
     }
+    // TODO: debug this MAC validation sequence
+//     m_mac->clear();
+//     m_mac->update( QCA::SecureArray( partProps ) );
+//     if ( m_mac->final().toByteArray() == propsHash.toByteArray() ) {
+//         kDebug() << "MAC failed on collection properties block";
+//         return false;
+//     }
 
     QBuffer propsBuffer(&partProps);
     KSecretFile propsFile(&propsBuffer, KSecretFile::Read);
@@ -717,8 +726,10 @@ bool KSecretCollection::deserializePartCollProps(const QByteArray &partContents)
         return false;
     }
 
-    if(!propsFile.readString(&m_id) || !propsFile.readString(&m_label) ||
-            !propsFile.readDatetime(&m_created) || !propsFile.readDatetime(&m_modified)) {
+    if( !propsFile.readString(&m_id) || 
+        !propsFile.readString(&m_label) ||
+        !propsFile.readDatetime(&m_created) || 
+        !propsFile.readDatetime(&m_modified)) {
         return false;
     }
 
@@ -795,18 +806,17 @@ bool KSecretCollection::deserializePartAcls(const QByteArray &partContents)
     }
 
     QByteArray partAcls;
-    if(!file.readBytearray(&partAcls) || !file.readBytearray(&m_aclsMac)) {
+    if( !file.readBytearray(&partAcls) || 
+        !file.readBytearray(&m_aclsMac)) {
         return false;
     }
 
     QBuffer aclsBuffer(&partAcls);
     KSecretFile aclsFile(&aclsBuffer, KSecretFile::Read);
 
-    if (!aclsFile.readString( &m_creatorApplication ))
-        return false;
-    
     quint32 numAcls;
-    if(!aclsFile.isValid() || !aclsFile.readUint(&numAcls)) {
+    if( !aclsFile.isValid() || 
+        !aclsFile.readUint(&numAcls)) {
         return false;
     }
 
@@ -841,6 +851,9 @@ bool KSecretCollection::deserializePartAcls(const QByteArray &partContents)
         m_acls.insert(path, perm);
     }
 
+    if (!aclsFile.readString( &m_creatorApplication ))
+        return false;
+    
     return true;
 }
 
@@ -1059,6 +1072,7 @@ bool KSecretCollection::serializeParts(KSecretFile &file) const
     if(!serializePropertiesPart(file, filePartEntries[curFilePartEntry])) {
         return false;
     }
+    curFilePartEntry++;
 
     // config part
     if(!serializeConfigPart(file, filePartEntries[curFilePartEntry])) {
@@ -1153,7 +1167,8 @@ bool KSecretCollection::serializeAclsPart(KSecretFile &file, FilePartEntry &entr
     QHash<QString, ApplicationPermission>::const_iterator it = m_acls.constBegin();
     QHash<QString, ApplicationPermission>::const_iterator end = m_acls.constEnd();
     for(; it != end; ++it) {
-        if(!tempFile.writeString(it.key()) || !tempFile.writeUint((quint32)it.value())) {
+        if( !tempFile.writeString(it.key()) || 
+            !tempFile.writeUint((quint32)it.value())) {
             return false;
         }
     }
@@ -1161,7 +1176,8 @@ bool KSecretCollection::serializeAclsPart(KSecretFile &file, FilePartEntry &entr
     QMap<QString, int>::const_iterator it2 = m_unknownAcls.constBegin();
     QMap<QString, int>::const_iterator end2 = m_unknownAcls.constEnd();
     for(; it2 != end2; ++it2) {
-        if(!tempFile.writeString(it2.key()) || !tempFile.writeUint(it2.value())) {
+        if( !tempFile.writeString(it2.key()) || 
+            !tempFile.writeUint(it2.value())) {
             return false;
         }
     }
@@ -1185,8 +1201,10 @@ bool KSecretCollection::serializePropertiesPart(KSecretFile &file, FilePartEntry
     QBuffer propsBuffer;
     KSecretFile tempFile(&propsBuffer, KSecretFile::Write);
 
-    if(!tempFile.writeString(m_id) || !tempFile.writeString(m_label) ||
-            !tempFile.writeDatetime(m_created) || !tempFile.writeDatetime(m_modified)) {
+    if( !tempFile.writeString(m_id) || 
+        !tempFile.writeString(m_label) ||
+        !tempFile.writeDatetime(m_created) || 
+        !tempFile.writeDatetime(m_modified)) {
         return false;
     }
 
@@ -1357,7 +1375,7 @@ bool KSecretCollection::serializeAuthenticated(const QByteArray &data, KSecretFi
     Q_ASSERT(m_mac);
 
     // write actual data first
-    if(!file.writeUint(data.size()) || !file.writeBytearray(data)) {
+    if(!file.writeBytearray(data)) {
         return false;
     }
 
