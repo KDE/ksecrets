@@ -23,7 +23,6 @@
 
 #include "../backendcollection.h"
 #include "ksecretitem.h"
-#include "ksecretfile.h"
 
 #include <QtCore/QTimer>
 #include "ksecretstream.h"
@@ -317,76 +316,6 @@ private:
      */
     BackendReturn<bool> tryUnlock();
 
-
-    /**
-     * Deserialize the parts inside the ksecret file.
-     *
-     * @param file ksecret file to read from
-     * @param errorMessage set if there's an error
-     * @return true on success, false in case of an error
-     */
-    bool deserializeParts(KSecretFile &file, QString &errorMessage);
-
-    /**
-     * Deserialize the collection property part inside a ksecret file.
-     *
-     * @param partContents contents of the part to deserialize
-     * @return true on success, false in case of an error
-     */
-    bool deserializePartCollProps(const QByteArray &partContents);
-
-    /**
-     * Deserialize an item hashes part inside a ksecret file.
-     *
-     * @param partContents contents of the part to deserialize
-     * @return true on success, false in case of an error
-     */
-    bool deserializePartItemHashes(const QByteArray &partContents);
-
-    /**
-     * Deserialize a symmetric key part inside a ksecret file.
-     *
-     * @param partContents contents of the part to deserialize
-     * @return true on success, false in case of an error
-     */
-    bool deserializePartSymKey(const QByteArray &partContents);
-
-    /**
-     * Deserialize an acl part inside a ksecret file.
-     *
-     * @param partContents contents of the part to deserialize
-     * @return true on success, false in case of an error
-     */
-    bool deserializePartAcls(const QByteArray &partContents);
-
-    /**
-     * Deserialize a config part inside a ksecret file.
-     *
-     * @param partContents contents of the part to deserialize
-     * @return true on success, false in case of an error
-     */
-    bool deserializePartConfig(const QByteArray &partContents);
-
-    /**
-     * Deserialize the unlocked items part contained in file.
-     *
-     * @param file File to read the unlocked items from
-     * @return true if reading the items was successful, false else
-     * @remarks if the return value of this method is false, some of the
-     *          items might already have been overwritten. So in this case
-     *          it's wise to clear the items' data and re-lock them.
-     */
-    bool deserializeItemsUnlocked(KSecretFile &file);
-
-    /**
-     * Deserialize the contents of an encrypted part.
-     *
-     * @param partContents the contents of the part
-     * @param decryptedPart the decrypted part contents
-     * @return true if decrypting and deserializing was successful, false else
-     */
-    bool deserializePartEncrypted(const QByteArray &partContents, QCA::SecureArray &decryptedPart);
-
     /**
      * Serialize this ksecret collection back to a KSecretFile.
      *
@@ -395,76 +324,6 @@ private:
      */
     bool serialize(QString &errorMessage) const;
 
-    /**
-     * Serialize a collection's parts to a ksecret file.
-     *
-     * @param file ksecret file to write to
-     * @return true if serialization was successful, false else
-     */
-    bool serializeParts(KSecretFile &file) const;
-
-    /**
-     * Serialize a collection's properties to a ksecret file.
-     *
-     * @param file ksecret file to serialize the properties to
-     * @param entry file part descriptor to put part information to
-     * @return true if serialization was successful, false else
-     */
-    bool serializePropertiesPart(KSecretFile &file, FilePartEntry &entry) const;
-
-    /**
-     * Serialize a collection's configuration to a ksecret file.
-     *
-     * @param file ksecret file to serialize the configuration values to
-     * @param entry file part descriptor to put part information to
-     * @return true if serialization was successful, false else
-     */
-    bool serializeConfigPart(KSecretFile &file, FilePartEntry &entry) const;
-
-    /**
-     * Serialize a collection's acls to a ksecret file.
-     *
-     * @param file ksecret file to serialize the acls to
-     * @param entry file part descriptor to put part information to
-     * @return true if serialization was successful, false else
-     */
-    bool serializeAclsPart(KSecretFile &file, FilePartEntry &entry) const;
-
-    /**
-     * Serialize the item hashes of this collection to the ksecret file.
-     *
-     * @param file ksecret file to write to
-     * @return true on success, false in case of an error
-     */
-    bool serializeItemHashes(KSecretFile &file, FilePartEntry &entry) const;
-
-    /**
-     * Serialize the unlocked items of this collection to the ksecret file.
-     *
-     * @param file ksecret file to write to
-     * @return true on success, false in case of an error
-     */
-    bool serializeItems(KSecretFile &file, FilePartEntry &entry) const;
-
-    /**
-     * Write an encrypted part.
-     *
-     * @param data data to be encrypted and written
-     * @param file ksecret file to write to
-     * @param true on success, false in case of an error
-     */
-    bool serializeEncrypted(const QCA::SecureArray &data, KSecretFile &file) const;
-
-    /**
-     * Serialize a file part by writing it to the ksecret file and appending a hash mac
-     * to sign its contents.
-     *
-     * @param data data to write to the partreplace
-     * @param file ksecret file to write the data to
-     * @return true if serializing was successful, false else
-     */
-    bool serializeAuthenticated(const QByteArray &data, KSecretFile &file) const;
-    
     /**
      * Set or unset the dirty flag. When setting the flag, the syncTimer will be started
      * but only of the collection is in the unlocked state

@@ -21,8 +21,9 @@
 #ifndef KSECRETSTREAM_H
 #define KSECRETSTREAM_H
 
-#include "ksecretfile.h"
 #include "acl.h"
+#include <qdatastream.h>
+#include <qca_core.h>
 
 class KSecretEncryptionFilter;
 class KSecretItem;

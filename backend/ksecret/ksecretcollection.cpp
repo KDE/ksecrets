@@ -22,7 +22,6 @@
 #include "ksecretcollection.h"
 #include "ksecretcollectionmanager.h"
 #include "ksecretjobs.h"
-#include "ksecretfile.h"
 #include "../securebuffer.h"
 #include "../lib/secrettool.h"
 #include "ksecretencryptionfilter.h"

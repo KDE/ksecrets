@@ -20,7 +20,6 @@
  */
 
 #include "ksecretencryptionfilter.h"
-#include "ksecretfile.h"
 
 #include <klocalizedstring.h>
 #include <kdebug.h>

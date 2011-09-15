@@ -22,7 +22,6 @@
 #define KSECRETITEM_H
 
 #include "../backenditem.h"
-#include "ksecretfile.h"
 
 #include <QtCore/QSet>
 
@@ -152,21 +151,6 @@ public:
     bool matches(const QMap<QString, QString> &attributes);
 
 protected:
-    /**
-     * Fill this item using the values contained in the unlocked file.
-     *
-     * @param file the file to read the values from
-     * @return true on success, false on error
-     */
-    bool deserializeUnlocked(KSecretFile &file);
-
-    /**
-     * Serialize this item's unlocked contents to the file given.
-     *
-     * @param file the file to write the values to
-     * @return true on success, false on error
-     */
-    bool serializeUnlocked(KSecretFile &file);
 
     /**
      * Create a list of hashes out of this item's attributes.
