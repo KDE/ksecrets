@@ -1,5 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
+ * Copyright 2011, Valentin Rusu <kde@rusu.info>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -21,18 +22,22 @@
 #ifndef KSECRETFILE_H
 #define KSECRETFILE_H
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 1
-
 #include <QtCore/QIODevice>
 #include <QtCore/QDateTime>
 #include <QtCrypto>
+#include <qca_core.h>
+#include <qca_basic.h>
 
 /**
  * Encapsulates reading from and writing to a ksecret file.
+ * @note KSecretFile cannot directly inherit from QFile as write
+ * operations are done through a KSaveFile and read operations
+ * are done through a plain QFile. 
  */
 class KSecretFile
 {
+    static const quint32 FILE_FORMAT_VERSION;
+    
 public:
     /**
      * Modes for opening the ksecret file.
@@ -40,40 +45,6 @@ public:
     enum OpenMode {
         Read,  /// Open file for reading
         Write  /// Open file for writing
-    };
-
-    /**
-     * Known hashing and MAC algorithms.
-     */
-    enum AlgorithmHash {
-        SHA256 = 0 /// SHA256
-    };
-
-    /**
-     * Known encryption algorithms.
-     */
-    enum AlgorithmEncryption {
-        AES256 = 0 /// AES256 using CBC and default padding
-    };
-
-    /**
-     * Known types of parts in the ksecret file.
-     */
-    enum PartType {
-        PartItemHashes = 0,  /// Attribute hashes for item lookup
-        PartSymKey = 1,      /// Encrypted symmetric master-key
-        PartItems = 2,       /// Encrypted items
-        PartAcls = 3,        /// Signed ACLs
-        PartConfig = 4,      /// Signed collection configuration
-        PartCollProps = 5    /// Signed collection properties
-    };
-
-    /**
-     * Known encryption types for the symmetric key.
-     */
-    enum KeyType {
-        KeyPassword = 0,     /// Key encrypted using a password
-        KeyBogus = 666       /// TODO: remove this once other keys are implemented
     };
 
     /**
@@ -97,6 +68,8 @@ public:
      *         error occurred during opening or reading/writing data.
      */
     bool isValid() const;
+    
+    OpenMode mode() const;
 
     /**
      * Close this ksecret file.
@@ -118,20 +91,6 @@ public:
      */
     bool seek(qint64 pos);
 
-    /**
-     * Read the ksecret file's magic value.
-     *
-     * @return true if the magic indicates this file is a ksecret file,
-     *         false else
-     */
-    bool readMagic();
-
-    /**
-     * Write the ksecret file's magic value.
-     *
-     * @return true if the magic was written successful, false else
-     */
-    bool writeMagic();
 
     /**
      * Read a UINT from the file.
@@ -215,21 +174,18 @@ public:
      */
     bool writeSecret(const QCA::SecureArray &value);
 
-    /**
-     * Read an entire part of the ksecret file.
-     *
-     * @param value pointer to the bytearray that should be filled
-     * @param position position inside the ksecret file
-     * @param length length of the part to read
-     */
-    bool readPart(QByteArray *value, quint32 position, quint32 length);
+    KSecretFile & operator << ( const QCA::SecureArray & );
 
+   
 private:
-    QIODevice *m_device;
-    OpenMode m_mode;
-    bool m_valid;
+    bool writeHeader();
+    bool readHeader();
+    
+    QIODevice           *m_device;
+    OpenMode            m_mode;
+    bool                m_valid;
 
-    QByteArray m_readBuffer;
+    QByteArray          m_readBuffer;
 };
 
 #endif

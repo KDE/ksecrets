@@ -44,7 +44,7 @@ QString TempBlockingCollection::id() const
 
 BackendReturn<QString> TempBlockingCollection::label() const
 {
-    return m_label;
+    return BackendReturn<QString>( m_label );
 }
 
 BackendReturn<void> TempBlockingCollection::setLabel(const QString &label)
@@ -71,7 +71,7 @@ bool TempBlockingCollection::isLocked() const
 
 BackendReturn<QList<BackendItem*> > TempBlockingCollection::items() const
 {
-    return m_items;
+    return BackendReturn<QList<BackendItem*> >( m_items );
 }
 
 BackendReturn<QList<BackendItem*> > TempBlockingCollection::searchItems(
@@ -85,7 +85,7 @@ BackendReturn<QList<BackendItem*> > TempBlockingCollection::searchItems(
             foundItems.append(item);
         }
     }
-    return foundItems;
+    return BackendReturn<QList<BackendItem*> >( foundItems );
 }
 
 UnlockCollectionJob *TempBlockingCollection::createUnlockJob(const CollectionUnlockInfo &unlockInfo)
@@ -166,7 +166,7 @@ BackendReturn<BackendItem*> TempBlockingCollection::createItem(const QString &la
         emit itemCreated(item);
     }
 
-    return item;
+    return BackendReturn<BackendItem*>( item );
 }
 
 void TempBlockingCollection::slotItemDeleted(BackendItem *item)

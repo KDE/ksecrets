@@ -26,10 +26,20 @@
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
 
+KSecretItem::KSecretItem() :
+    BackendItem( 0 ),
+    m_collection( 0 )
+{
+    m_created = QDateTime::currentDateTimeUtc();
+    m_modified = m_created;
+}
+
 KSecretItem::KSecretItem(const QString &id, KSecretCollection *parent)
     : BackendItem(parent), m_collection(parent), m_id(id)
 {
     Q_ASSERT(parent);
+    m_created = QDateTime::currentDateTimeUtc();
+    m_modified = m_created;
 }
 
 KSecretItem::~KSecretItem()
@@ -47,7 +57,7 @@ BackendReturn<QString> KSecretItem::label() const
         return BackendReturn<QString>(QString(), BackendErrorIsLocked);
     } else {
         markAsUsed();
-        return m_label;
+        return BackendReturn<QString>( m_label );
     }
 }
 
@@ -68,7 +78,7 @@ BackendReturn<QCA::SecureArray> KSecretItem::secret() const
         return BackendReturn<QCA::SecureArray>(QCA::SecureArray(), BackendErrorIsLocked);
     } else {
         markAsUsed();
-        return m_secret;
+        return BackendReturn<QCA::SecureArray>( m_secret );
     }
 }
 
@@ -90,7 +100,7 @@ BackendReturn< QString > KSecretItem::contentType() const
     }
     else {
         markAsUsed();
-        return m_contentType;
+        return BackendReturn< QString >( m_contentType );
     }
 }
 
@@ -111,7 +121,7 @@ BackendReturn<QMap<QString, QString> > KSecretItem::attributes() const
         return BackendReturn<QMap<QString, QString> >(QMap<QString, QString>(), BackendErrorIsLocked);
     } else {
         markAsUsed();
-        return m_attributes;
+        return BackendReturn<QMap<QString, QString> >( m_attributes );
     }
 }
 
@@ -168,7 +178,7 @@ BackendReturn<bool> KSecretItem::deleteItem()
 {
     emit itemDeleted(this);
     deleteLater();
-    return true;
+    return BackendReturn<bool>( true );
 }
 
 ChangeAuthenticationItemJob *KSecretItem::createChangeAuthenticationJob()
@@ -185,103 +195,6 @@ bool KSecretItem::matches(const QMap<QString, QString> &attributes)
                 m_attributes.value(it.key()) != it.value()) {
             return false;
         }
-    }
-    return true;
-}
-
-bool KSecretItem::deserializeUnlocked(KSecretFile &file)
-{
-    Q_ASSERT(file.isValid());
-
-    // deserialize everything to temporary variables/objects and write it
-    // into the members in one go once everything could be read successfully.
-
-    // file currently points at item-label
-    QString itemLabel;
-    QDateTime itemCreated;
-    QDateTime itemModified;
-    quint32 numAttribs;
-    if(!file.readString(&itemLabel) || !file.readDatetime(&itemCreated) ||
-            !file.readDatetime(&itemModified) || !file.readUint(&numAttribs)) {
-        return false;
-    }
-
-    // read the attributes
-    QMap<QString, QString> attributes;
-    for(quint32 i = 0; i < numAttribs; ++i) {
-        QString attribKey;
-        QString attribValue;
-        if(!file.readString(&attribKey) || !file.readString(&attribValue)) {
-            return false;
-        }
-        attributes.insert(attribKey, attribValue);
-    }
-
-    // read the secret
-    QCA::SecureArray secret;
-    if(!file.readSecret(&secret)) {
-        return false;
-    }
-    
-    // read content type
-    QString *contentType =0;
-    if (!file.readString(contentType)) {
-        return false;
-    }
-    Q_ASSERT(contentType!=0);
-
-    m_label = itemLabel;
-    m_created = itemCreated;
-    m_modified = itemModified;
-    m_attributes = attributes;
-    m_secret = secret;
-    m_contentType = *contentType;
-
-    return true;
-}
-
-bool KSecretItem::serializeUnlocked(KSecretFile &file)
-{
-    Q_ASSERT(file.isValid());
-
-    if(!file.writeString(m_id)) {
-        return false;
-    }
-
-    // serialize data to a temporary array
-    SecureBuffer device;
-    KSecretFile tempFile(&device, KSecretFile::Write);
-    if(!tempFile.isValid()) {
-        return false;
-    }
-
-    if(!tempFile.writeString(m_label) || !tempFile.writeDatetime(m_created) ||
-            !tempFile.writeDatetime(m_modified) || !tempFile.writeUint(m_attributes.size())) {
-        return false;
-    }
-
-    // serialize attributes
-    QMap<QString, QString>::const_iterator it = m_attributes.constBegin();
-    const QMap<QString, QString>::const_iterator end = m_attributes.constEnd();
-    for(; it != end; ++it) {
-        if(!tempFile.writeString(it.key()) || !tempFile.writeString(it.value())) {
-            return false;
-        }
-    }
-
-    // serialize secret
-    if(!tempFile.writeSecret(m_secret)) {
-        return false;
-    }
-    
-    // serialize contentType
-    if(!tempFile.writeString(m_contentType)) {
-        return false;
-    }
-
-    // now take the tempFile and write its contents to the actual file
-    if(!file.writeSecret(device.buffer())) {
-        return false;
     }
     return true;
 }
@@ -320,6 +233,31 @@ void KSecretItem::markAsUsed() const
 {
     // TODO: figure out what to do. this method exists so a "close-if-unused" timer
     //       can be implemented.
+}
+
+KSecretStream& operator<<(KSecretStream& out, KSecretItem* item )
+{
+    out << item->m_id;
+    out << item->m_label;
+    out << item->m_created;
+    out << item->m_modified;
+    out << item->m_attributes;
+    out << item->m_secret;
+    out << item->m_contentType;
+    return out;
+}
+
+KSecretStream& operator>>(KSecretStream& in, KSecretItem* &item )
+{
+    item = new KSecretItem();
+    in >> item->m_id;
+    in >> item->m_label;
+    in >> item->m_created;
+    in >> item->m_modified;
+    in >> item->m_attributes;
+    in >> item->m_secret;
+    in >> item->m_contentType;
+    return in;
 }
 
 #include "ksecretitem.moc"

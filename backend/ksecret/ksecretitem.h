@@ -26,6 +26,7 @@
 
 #include <QtCore/QSet>
 
+class KSecretStream;
 class KSecretCollection;
 class KSecretDeleteItemJob;
 
@@ -36,6 +37,8 @@ class KSecretItem : public BackendItem
 {
     Q_OBJECT
 
+    KSecretItem();
+    
 public:
     /**
      * Constructor.
@@ -213,6 +216,9 @@ Q_SIGNALS:
 private:
     friend class KSecretCollection;
     friend class KSecretDeleteItemJob;
+    
+    friend KSecretStream& operator << ( KSecretStream &out, KSecretItem* );
+    friend KSecretStream& operator >> ( KSecretStream &in, KSecretItem*& );
 
     /**
      * Mark this item as modified and emit the \sa itemChanged signal.
@@ -235,5 +241,9 @@ private:
     QCA::SecureArray m_secret;
     QString m_contentType;
 };
+
+KSecretStream& operator << ( KSecretStream &out, KSecretItem* );
+KSecretStream& operator >> ( KSecretStream &in, KSecretItem*& );
+
 
 #endif

@@ -50,9 +50,16 @@ void KSecretCreateCollectionJob::start()
     // start a job for getting a new password for the collection from the user.
     AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
     AbstractNewPasswordJob *subJob = uiManager->createNewPasswordJob(label());
-    connect(subJob, SIGNAL(result(KJob*)),
-            SLOT(newPasswordJobResult(KJob*)));
-    subJob->start();
+    if ( addSubjob( subJob ) ) {
+        connect(subJob, SIGNAL(result(KJob*)),
+                SLOT(newPasswordJobResult(KJob*)));
+        subJob->start();
+    }
+    else {
+        kDebug() << "Cannot start subJob";
+        setErrorText( i18n("Cannot start password job") );
+        emitResult();
+    }
 }
 
 void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
@@ -95,9 +102,16 @@ void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
     // let the ACL dialog to pop before 
     AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
     AbstractAskAclPrefsJob *aclSubjob = uiManager->createAskAclPrefsJob(createCollectionInfo());
-    connect(aclSubjob, SIGNAL(result(KJob*)),
-            SLOT(askAclPrefsJobResult(KJob*)));
-    aclSubjob->start();
+    if ( addSubjob( aclSubjob ) ) {
+        connect(aclSubjob, SIGNAL(result(KJob*)),
+                SLOT(askAclPrefsJobResult(KJob*)));
+        aclSubjob->start();
+    }
+    else {
+        kDebug() << "Cannot add aclSubjob";
+        setErrorText( i18n("Cannot launch ACL preferences job") );
+        emitResult();
+    }
 }
 
 void KSecretCreateCollectionJob::askAclPrefsJobResult(KJob* job)
@@ -120,7 +134,10 @@ void KSecretCreateCollectionJob::askAclPrefsJobResult(KJob* job)
 
 KSecretUnlockCollectionJob::KSecretUnlockCollectionJob(const CollectionUnlockInfo &unlockInfo,
         KSecretCollection *coll)
-    : UnlockCollectionJob(unlockInfo, coll), m_firstTry(true)
+    : UnlockCollectionJob(unlockInfo, coll), 
+    m_firstTry(true), 
+    m_passwordAsked(false), 
+    m_collectionPerm(PermissionUndefined)
 {
 }
 
@@ -157,7 +174,7 @@ void KSecretUnlockCollectionJob::start()
             break;
         case PermissionAllow: {
                 KSecretCollection *ksecretColl = dynamic_cast< KSecretCollection* >(collection());
-                if ( !ksecretColl->tryUnlock() ) {
+                if ( ksecretColl->tryUnlock().isError() ) {
                     createAskPasswordJob();
                 }
                 else {
@@ -185,15 +202,24 @@ void KSecretUnlockCollectionJob::start()
 
 void KSecretUnlockCollectionJob::createAskPasswordJob()
 {
-    AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
-    // start a job for getting the password for the collection from the user.
-    AbstractAskPasswordJob *subJob = uiManager->createAskPasswordJob(collection()->label().value(),
-                                     !m_firstTry);
-    connect(subJob, SIGNAL(result(KJob*)), SLOT(askPasswordJobResult(KJob*)));
+    if ( !m_passwordAsked ) {
+        AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
+        // start a job for getting the password for the collection from the user.
+        AbstractAskPasswordJob *subJob = uiManager->createAskPasswordJob(collection()->label().value(),
+                                        !m_firstTry);
+        if ( addSubjob( subJob ) ) {
+            connect(subJob, SIGNAL(result(KJob*)), SLOT(askPasswordJobResult(KJob*)));
 
-    // TODO: handle severaly retries
-    subJob->start();
-    m_firstTry = false;
+            // TODO: handle severaly retries
+            subJob->start();
+            m_firstTry = false;
+        }
+        else {
+            kDebug() << "Cannot add subJob";
+            setErrorText(i18n("Cannot launch asking password job"));
+            emitResult();
+        }
+    }
 }
 
 void KSecretUnlockCollectionJob::askAclPrefsJobResult(KJob *job)
@@ -221,7 +247,13 @@ void KSecretUnlockCollectionJob::askAclPrefsJobResult(KJob *job)
             emitResult();
         }
         else {
-            createAskPasswordJob();
+            if ( !m_passwordAsked ) {
+                createAskPasswordJob();
+            }
+            else {
+                setResult(true);
+                emitResult();
+            }
         }
     }
 }
@@ -248,12 +280,20 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(KJob *job)
         // try again the password
         createAskPasswordJob();
     } else {
+        m_passwordAsked = true;
+    
         if ( m_collectionPerm == PermissionUndefined ) {
             // ask for the ACL preference if the application is unknown by this collection
             AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();
             AbstractAskAclPrefsJob* askAclPrefsJob = uiManager->createAskAclPrefsJob(unlockInfo());
             connect(askAclPrefsJob, SIGNAL(result(KJob*)), SLOT(askAclPrefsJobResult(KJob*)));
-            askAclPrefsJob->start();        
+            if ( addSubjob( askAclPrefsJob ) ) {
+                askAclPrefsJob->start();        
+            }
+            else {
+                setResult(false);
+                emitResult();
+            }
         }
         else {
             setResult(true);
@@ -446,9 +486,10 @@ bool KSecretLockItemJob::isImmediate() const
 
 void KSecretLockItemJob::start()
 {
-    connect(m_subJob, SIGNAL(result(KJob*)),
-            SLOT(handleSubJobResult(KJob*)));
     if (addSubjob(m_subJob)) {
+        connect(m_subJob, SIGNAL(result(KJob*)),
+                SLOT(handleSubJobResult(KJob*)));
+        m_subJob->start();
     }
     else {
         setError(BackendErrorOther);

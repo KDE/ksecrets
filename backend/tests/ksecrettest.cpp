@@ -189,7 +189,7 @@ void KSecretTest::testCreateItemAsync()
 void KSecretTest::testCheckItem()
 {
     // check attributes
-    QVERIFY(!m_item->isLocked());
+    QVERIFY(m_item && !m_item->isLocked());
     QVERIFY(!m_item->id().isEmpty());
     BackendReturn<QString> ret1 = m_item->label();
     QVERIFY(!ret1.isError());
@@ -234,6 +234,7 @@ void KSecretTest::testSearchItem()
 
 void KSecretTest::testChangeItem()
 {
+    QVERIFY(m_item != 0);
     QDateTime start = QDateTime::currentDateTime();
     
     // change the item we created earlier
@@ -337,6 +338,8 @@ void KSecretTest::testDoNotReplaceItemAsync()
 
 void KSecretTest::testDeleteItemAsync()
 {
+    QVERIFY(m_collection != 0);
+    QVERIFY(m_collection->items().value().count() >0);
     BackendItem *item = m_collection->items().value().first();
     ItemDeleteInfo deleteInfo = ItemDeleteInfo(Peer());
     DeleteItemJob *deleteItem = item->createDeleteJob(deleteInfo);

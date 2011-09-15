@@ -47,7 +47,7 @@ public:
     virtual ApplicationPermission applicationPermission(const QString& path) const;
     virtual bool setApplicationPermission(const QString& path, ApplicationPermission perm);
     virtual bool setCreatorApplication(QString exePath);
-    virtual const QString &creatorApplication() const {
+    virtual QString creatorApplication() const {
         return m_creator;
     }
 

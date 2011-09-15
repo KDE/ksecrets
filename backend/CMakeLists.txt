@@ -15,11 +15,12 @@ SET (ksecretservice_backend_SRCS
     temporary/temporarycollectionmanager.cpp
     temporary/temporaryitem.cpp
     temporary/temporaryjobs.cpp
-    ksecret/ksecretfile.cpp
     ksecret/ksecretcollectionmanager.cpp
     ksecret/ksecretcollection.cpp
     ksecret/ksecretitem.cpp
     ksecret/ksecretjobs.cpp
+    ksecret/ksecretencryptionfilter.cpp
+    ksecret/ksecretstream.cpp
     ../peer.cpp
 )
 

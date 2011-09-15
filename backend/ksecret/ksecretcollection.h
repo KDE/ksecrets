@@ -26,7 +26,9 @@
 #include "ksecretfile.h"
 
 #include <QtCore/QTimer>
+#include "ksecretstream.h"
 
+class KSecretEncryptionFilter;
 class KSecretCollectionManager;
 class KSecretUnlockCollectionJob;
 class KSecretLockCollectionJob;
@@ -41,17 +43,6 @@ class KSecretCreateItemJob;
 struct UnknownFilePart {
     quint32 m_type;
     QByteArray m_contents;
-};
-
-/**
- * Represents an encrypted key as stored inside the ksecret file. The key
- * type is stored as unsigned integer as the key type might not be known
- * to this version of ksecretsservice.
- */
-struct EncryptedKey {
-    quint32 m_type;
-    QByteArray m_key;
-    QByteArray m_iv;
 };
 
 /**
@@ -91,6 +82,15 @@ public:
      */
     static KSecretCollection *create(const QString &id, const QCA::SecureArray &password,
                                      BackendCollectionManager *parent, QString &errorMessage);
+
+    /**
+     * This method inspects the given file and creates a collection if it
+     * seems containing a valid collection. Note that the contents of the
+     * file is not thouroughly checked. This will be done when unlocking
+     * the collection is requested
+     * 
+     */
+    static KSecretCollection *createFromFile( const QString& path, BackendCollectionManager *manager, QString &errorMessage );
 
     /**
      * Destructor
@@ -209,11 +209,14 @@ public:
      * This method returns the executable path of the application which originally
      * created this collection.
      */
-    const QString &creatorApplication() const {
-        return m_creatorApplication;
+    QString creatorApplication() const {
+        if ( isLocked() )
+            return m_d->m_creatorApplication;
+        else 
+            return "";
     }
 
-    private Q_SLOTS:
+private Q_SLOTS:
     /**
      * Remove an item from our list of known items.
      *
@@ -236,6 +239,8 @@ public:
      */
     void startSyncTimer();
     
+    void slotItemChanged(BackendItem *item);
+    
     /**
      * This slot is called by the sync timer to sync the collection
      * on changes.
@@ -243,17 +248,6 @@ public:
     void sync();
     
 public:
-    /**
-     * Deserialize a ksecret collection from a KSecretFile.
-     *
-     * @param path Path to load the collection from
-     * @param parent parent collection manager
-     * @param errorMessage set if there's an error
-     * @return the KSecretCollection on success, 0 in case of an error
-     */
-    static KSecretCollection *deserialize(const QString &path, KSecretCollectionManager *parent,
-                                          QString &errorMessage);
-
     /**
      * This methode get the application permission set by the user and stored into the 
      * backend file, or PermissionUndefined if the application is not found in the stored list
@@ -321,36 +315,8 @@ private:
      * @return true if unlocking succeeded, false if it failed
      * @remarks this is used by KSecretUnlockCollectionJob
      */
-    bool tryUnlock();
+    BackendReturn<bool> tryUnlock();
 
-    /**
-     * Set-up the encryption to be used by the secret collection.
-     * This creates hash and cipher functors as configured.
-     *
-     * @param errorMessage set in case of an error
-     * @return true if setting up the encryption worked, false if
-     *         there were errors (ie. unsupported encryption methods.
-     */
-    bool setupAlgorithms(QString &errorMessage);
-
-    /**
-     * Deserialize the ksecret file header.
-     *
-     * @param file ksecret file to read from
-     * @param errorMessage set if there's an error
-     * @return true on success, false in case of an error
-     */
-    bool deserializeHeader(KSecretFile &file, QString &errorMessage);
-
-    /**
-     * Deserialize the algorithms used by a collection and check whether they
-     * are supported.
-     *
-     * @param file ksecret file to read from
-     * @param errorMessage set if there's an error
-     * @return true on success, false in case of an error
-     */
-    bool deserializeAlgorithms(KSecretFile &file, QString &errorMessage);
 
     /**
      * Deserialize the parts inside the ksecret file.
@@ -430,14 +396,6 @@ private:
     bool serialize(QString &errorMessage) const;
 
     /**
-     * Serialize a ksecret file's headers.
-     *
-     * @param file ksecret file to write to
-     * @return true if serialization was successful, false else
-     */
-    bool serializeHeader(KSecretFile &file) const;
-
-    /**
      * Serialize a collection's parts to a ksecret file.
      *
      * @param file ksecret file to write to
@@ -514,65 +472,56 @@ private:
      */
     void setDirty( bool dirty = true );
 
+    // flag that's set when the collection is locked
+    QString m_path; // path of the ksecret file on disk
+    bool m_locked;
+    KSecretEncryptionFilter *m_encryptionFilter;
+    
     // flag which is set when the collection was changed and which
     // denotes that the collection should be synced back to disk.
-    bool m_dirty;
+    mutable bool m_dirty;
     // timer for syncing the collection on changes
     QTimer m_syncTimer;
+
+    // this is the data that's goes in the storage
+    // it's trouped alltogether to ease handling 
+    // this gets loaded when unlocking the collection
+    struct Data {
+        Data();
+        virtual ~Data();
+        
+        QString m_id;
+        QString m_label;
+        QDateTime m_created;
+        QDateTime m_modified;
+
+        // configuration values
+        bool m_cfgCloseScreensaver;     // close when the screensaver starts
+        bool m_cfgCloseIfUnused;        // close when the last application stops using it
+        quint32 m_cfgCloseUnusedTimeout; // timeout the collection will be closed after if unused (secs)
+
+        // the acls message authentication code
+        QHash<QString, ApplicationPermission> m_acls;
+        QString m_creatorApplication;
+        
+        // maps lookup attribute hashes to items
+        QMultiHash<QByteArray, KSecretItem*> m_itemHashes;
+        // maps item ids to their hashes for changing/removal
+        QHash<KSecretItem*, QSet<QByteArray> > m_reverseItemHashes;
+
+        // maps item identifiers to items
+        QHash<QString, KSecretItem*> m_items;
+        
+    };
     
-    QString m_id;
-    QString m_label;
-    QDateTime m_created;
-    QDateTime m_modified;
-    QMap<QString, QByteArray> m_propUnknownKeys; // unknown collection properties
-
-    QString m_path; // path of the ksecret file on disk
-
-    // verifier
-    QCA::InitializationVector m_verInitVector; // initialization vector of the verifier
-    QCA::SecureArray m_verEncryptedRandom; // encrypted random data of the verifier
-
-    // configuration values
-    bool m_cfgCloseScreensaver;     // close when the screensaver starts
-    bool m_cfgCloseIfUnused;        // close when the last application stops using it
-    quint32 m_cfgCloseUnusedTimeout; // timeout the collection will be closed after if unused (secs)
-    QMap<QString, QByteArray> m_cfgUnknownKeys; // unknown configuration keys
-
-    quint32 m_algoHash;             // hashing/mac algorithm identifier
-    QCA::Hash *m_hash;              // hashing algorithm
-    QCA::MessageAuthenticationCode *m_mac; // message authentication code algorithm
-    quint32 m_algoCipher;           // encryption algorithm identifier
-    QCA::Cipher *m_cipher;          // encryption algorithm
-
-    QCA::SymmetricKey *m_symmetricKey; // the symmetric key used for encryption/decryption
-
-    // the configuration values message authentication code
-    QByteArray m_configValuesMac;
-    // the properties message authentication code
-    QByteArray m_propertiesMac;
-
-    // the acls message authentication code
-    QHash<QString, ApplicationPermission> m_acls;
-    QMap<QString, int> m_unknownAcls;
-    QByteArray m_aclsMac;
-    QString m_creatorApplication;
+    friend KSecretStream& operator << ( KSecretStream&, Data* );
+    friend KSecretStream& operator >> ( KSecretStream&, Data* );
     
-    // unknown file parts stored as-is
-    QList<UnknownFilePart*> m_unknownParts;
-
-    // contains the encrypted item parts
-    QList<QByteArray> m_encryptedItemParts;
-
-    // contains the encrypted symmetric keys
-    QList<EncryptedKey*> m_encryptedSymKeys;
-
-    // maps lookup attribute hashes to items
-    QMultiHash<QByteArray, KSecretItem*> m_itemHashes;
-    // maps item ids to their hashes for changing/removal
-    QHash<KSecretItem*, QSet<QByteArray> > m_reverseItemHashes;
-
-    // maps item identifiers to items
-    QHash<QString, KSecretItem*> m_items;
+    Data    *m_d;
 };
+
+KSecretStream & operator << ( KSecretStream& out, KSecretCollection::Data *data );
+KSecretStream & operator >> ( KSecretStream& in, KSecretCollection::Data *data );
+
 
 #endif

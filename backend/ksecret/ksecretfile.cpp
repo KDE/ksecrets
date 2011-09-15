@@ -22,22 +22,58 @@
 
 #include <QtCore/QtEndian>
 #include <kdebug.h>
+#include <klocalizedstring.h>
 
-#define KSECRET_MAGIC "KSECRET\n\r\r\n"
-#define KSECRET_MAGIC_LEN 11
 
 // FIXME: currently the daemon could be tricked into reading a large portion of a forged
 //        ksecret file wasting a lot of memory and making the pc unusable.
 
-KSecretFile::KSecretFile(QIODevice *device, OpenMode mode)
-    : m_device(device), m_mode(mode)
+KSecretFile::KSecretFile(QIODevice *device, OpenMode mode) : 
+    m_device(device), 
+    m_mode(mode)
 {
     m_valid = m_device->open((mode == Read) ? QIODevice::ReadOnly : QIODevice::WriteOnly);
+
+    if ( m_valid ) {
+        if ( mode == Write ) {
+            m_valid &= writeHeader();
+        }
+        else {
+            m_valid &= readHeader();
+        }
+    }
 }
 
 KSecretFile::~KSecretFile()
 {
     m_device->close();
+    // TODO: delete items?
+    // TODO: make sure there's nothing else to delete
+}
+
+KSecretFile::OpenMode KSecretFile::mode() const
+{
+    return m_mode;
+}
+
+bool KSecretFile::writeHeader()
+{
+    // write the ksecret file header
+    return 
+        writeMagic() && 
+        writeUint( FILE_FORMAT_VERSION );
+}
+
+
+bool KSecretFile::readHeader()
+{
+    quint32 fileVersion;
+    bool result = 
+        readMagic() &&
+        readUint( &fileVersion );
+    
+    result &= ( fileVersion <= CURRENT_FILE_VERSION );
+    return result;
 }
 
 void KSecretFile::close()
@@ -60,35 +96,15 @@ bool KSecretFile::seek(qint64 pos)
     return m_device->seek(pos);
 }
 
-bool KSecretFile::readMagic()
+
+bool KSecretFile::isAtDataStart() const
 {
-    Q_ASSERT(m_mode == Read);
-
-    if(!m_valid) {
-        return false;
-    }
-
-    m_readBuffer.resize(KSECRET_MAGIC_LEN);
-    if(m_device->read(m_readBuffer.data(), KSECRET_MAGIC_LEN) != KSECRET_MAGIC_LEN) {
-        m_valid = false;
-        return false;
-    }
-    QString strMagic( m_readBuffer );
-    return strMagic == KSECRET_MAGIC;
+    return m_dataPos == m_device->pos();
 }
 
-bool KSecretFile::writeMagic()
+bool KSecretFile::seekDataStart()
 {
-    Q_ASSERT(m_mode == Write);
-
-    if(!m_valid) {
-        return false;
-    }
-
-    if(m_device->write(KSECRET_MAGIC, KSECRET_MAGIC_LEN) != KSECRET_MAGIC_LEN) {
-        m_valid = false;
-    }
-    return m_valid;
+    return m_device->seek( m_dataPos );
 }
 
 bool KSecretFile::readUint(quint32 *value)
@@ -226,7 +242,7 @@ bool KSecretFile::readSecret(QCA::SecureArray *value)
     Q_ASSERT(value);
     Q_ASSERT(m_mode == Read);
 
-    kDebug() << "pos = " << pos();
+//    kDebug() << "pos = " << pos();
     if(!m_valid) {
         return false;
     }
@@ -249,7 +265,7 @@ bool KSecretFile::writeSecret(const QCA::SecureArray &value)
 {
     Q_ASSERT(m_mode == Write);
 
-    kDebug() << "pos = " << pos();
+//    kDebug() << "pos = " << pos();
     if(!m_valid) {
         return false;
     }
@@ -265,31 +281,3 @@ bool KSecretFile::writeSecret(const QCA::SecureArray &value)
     return m_valid;
 }
 
-bool KSecretFile::readPart(QByteArray *value, quint32 position, quint32 length)
-{
-    Q_ASSERT(value);
-    Q_ASSERT(m_mode == Read);
-
-    if(!m_valid) {
-        return false;
-    }
-
-    // remember current position
-    qint64 oldPos = m_device->pos();
-
-    bool rc = true;
-
-    // seek new position
-    if(m_device->seek(position)) {
-        value->resize(length);
-        if(m_device->read(value->data(), length) != length) {
-            rc = false;
-        }
-    } else {
-        rc = false;
-    }
-
-    m_device->seek(oldPos);
-    m_valid = rc;
-    return rc;
-}

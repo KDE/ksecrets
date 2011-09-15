@@ -48,7 +48,7 @@ QString TemporaryCollection::id() const
 
 BackendReturn<QString> TemporaryCollection::label() const
 {
-    return m_label;
+    return BackendReturn< QString >( m_label );
 }
 
 BackendReturn<void> TemporaryCollection::setLabel(const QString &label)
@@ -76,7 +76,7 @@ bool TemporaryCollection::isLocked() const
 
 BackendReturn<QList<BackendItem*> > TemporaryCollection::items() const
 {
-    return m_items;
+    return BackendReturn<QList<BackendItem*> >( m_items );
 }
 
 BackendReturn<QList<BackendItem*> > TemporaryCollection::searchItems(
@@ -90,7 +90,7 @@ BackendReturn<QList<BackendItem*> > TemporaryCollection::searchItems(
             foundItems.append(item);
         }
     }
-    return foundItems;
+    return BackendReturn<QList<BackendItem*> >( foundItems );
 }
 
 UnlockCollectionJob *TemporaryCollection::createUnlockJob(const CollectionUnlockInfo &unlockInfo)
@@ -168,7 +168,7 @@ BackendReturn<BackendItem*> TemporaryCollection::createItem(const QString &label
         emit itemCreated(item);
     }
 
-    return item;
+    return BackendReturn<BackendItem*>( item );
 }
 
 ChangeAuthenticationCollectionJob *TemporaryCollection::createChangeAuthenticationJob( const Peer& peer )

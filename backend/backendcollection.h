@@ -189,7 +189,7 @@ public:
      * This method returns the executable path of the application which originally
      * created this collection.
      */
-    virtual const QString &creatorApplication() const =0;
+    virtual QString creatorApplication() const =0;
 
 protected:
     /**

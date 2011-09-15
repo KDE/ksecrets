@@ -75,8 +75,10 @@ private Q_SLOTS:
 private:
     void createAskPasswordJob();
 
-    bool m_firstTry;
-    ApplicationPermission m_collectionPerm;
+    bool    m_firstTry;
+    bool    m_passwordAsked;
+    ApplicationPermission   
+            m_collectionPerm;
 };
 
 /**

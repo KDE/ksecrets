@@ -50,6 +50,7 @@ void KSecretUiTest::initTestCase()
         QVERIFY(dir.remove(file));
     }
     master->addManager(m_manager);
+    m_collection = 0;
 }
 
 void KSecretUiTest::testCreateCollectionAsync()

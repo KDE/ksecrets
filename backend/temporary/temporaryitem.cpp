@@ -43,7 +43,7 @@ QString TemporaryItem::id() const
 
 BackendReturn<QString> TemporaryItem::label() const
 {
-    return m_label;
+    return BackendReturn<QString>(m_label);
 }
 
 BackendReturn<void> TemporaryItem::setLabel(const QString &label)
@@ -55,7 +55,7 @@ BackendReturn<void> TemporaryItem::setLabel(const QString &label)
 
 BackendReturn<QCA::SecureArray> TemporaryItem::secret() const
 {
-    return m_secret;
+    return BackendReturn<QCA::SecureArray>(m_secret);
 }
 
 BackendReturn<void> TemporaryItem::setSecret(const QCA::SecureArray &secret)
@@ -67,7 +67,7 @@ BackendReturn<void> TemporaryItem::setSecret(const QCA::SecureArray &secret)
 
 BackendReturn< QString > TemporaryItem::contentType() const
 {
-    return m_contentType;
+    return BackendReturn< QString >( m_contentType );
 }
 
 BackendReturn< void > TemporaryItem::setContentType(const QString& contentType)
@@ -79,7 +79,7 @@ BackendReturn< void > TemporaryItem::setContentType(const QString& contentType)
 
 BackendReturn<QMap<QString, QString> > TemporaryItem::attributes() const
 {
-    return m_attributes;
+    return BackendReturn<QMap<QString, QString> >( m_attributes );
 }
 
 BackendReturn<void> TemporaryItem::setAttributes(const QMap<QString, QString> &attributes)

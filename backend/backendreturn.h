@@ -49,10 +49,14 @@ template <typename T>
 class BackendReturn
 {
 public:
+    BackendReturn() :
+        m_error( BackendNoError ) {
+    }
+    
     /**
      * Constructor.
      */
-    BackendReturn(const T &value, ErrorType error = BackendNoError,
+    explicit BackendReturn(const T &value, ErrorType error = BackendNoError,
                   const QString &errorMessage = QString())
         : m_value(value), m_error(error), m_errorMessage(errorMessage) {
     }

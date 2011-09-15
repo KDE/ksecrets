@@ -41,7 +41,7 @@ QString TempBlockingItem::id() const
 
 BackendReturn<QString> TempBlockingItem::label() const
 {
-    return m_label;
+    return BackendReturn<QString>( m_label );
 }
 
 BackendReturn<void> TempBlockingItem::setLabel(const QString &label)
@@ -53,7 +53,7 @@ BackendReturn<void> TempBlockingItem::setLabel(const QString &label)
 
 BackendReturn<QCA::SecureArray> TempBlockingItem::secret() const
 {
-    return m_secret;
+    return BackendReturn<QCA::SecureArray>( m_secret );
 }
 
 BackendReturn<void> TempBlockingItem::setSecret(const QCA::SecureArray &secret)
@@ -65,7 +65,7 @@ BackendReturn<void> TempBlockingItem::setSecret(const QCA::SecureArray &secret)
 
 BackendReturn< QString > TempBlockingItem::contentType() const
 {
-    return m_contentType;
+    return BackendReturn< QString >( m_contentType );
 }
 
 BackendReturn< void > TempBlockingItem::setContentType(const QString& contentType)
@@ -78,7 +78,7 @@ BackendReturn< void > TempBlockingItem::setContentType(const QString& contentTyp
 
 BackendReturn<QMap<QString, QString> > TempBlockingItem::attributes() const
 {
-    return m_attributes;
+    return BackendReturn<QMap<QString, QString> >( m_attributes );
 }
 
 BackendReturn<void> TempBlockingItem::setAttributes(const QMap<QString, QString> &attributes)

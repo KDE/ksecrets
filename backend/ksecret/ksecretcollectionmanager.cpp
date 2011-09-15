@@ -34,9 +34,10 @@ KSecretCollectionManager::KSecretCollectionManager(const QString &path, QObject 
     : BackendCollectionManager(parent), m_watcher(this)
 {
     KGlobal::dirs()->addResourceType("ksecret", 0, path);
-    m_watcher.addDir(KGlobal::dirs()->saveLocation("ksecret"));
-    connect(&m_watcher, SIGNAL(dirty(QString)), SLOT(slotDirectoryChanged(QString)));
-    m_watcher.startScan();
+    // FIXME: what is this watcher's utility indeed? who's intended to created collections under our back?
+//     m_watcher.addDir(KGlobal::dirs()->saveLocation("ksecret"));
+//     connect(&m_watcher, SIGNAL(dirty(QString)), SLOT(slotDirectoryChanged(QString)));
+//     m_watcher.startScan();
     // list directory contents to discover existing collections on startup
     QTimer::singleShot(0, this, SLOT(slotStartupDiscovery()));
 }
@@ -72,7 +73,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
         if(!m_collections.contains(file) && !(m_creatingCollectionId == fi.baseName() ) ) {
             kDebug() << "FILE: " << file << " deserializing...";
             QString errorMessage;
-            KSecretCollection *coll = KSecretCollection::deserialize( dir.filePath(file), this, errorMessage);
+            KSecretCollection *coll = KSecretCollection::createFromFile( dir.filePath(file), this, errorMessage);
             if(coll) {
                 addCollection(coll);
             }

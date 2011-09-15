@@ -147,6 +147,10 @@ public:
         return m_collection;
     }
     
+    void setCollection( BackendCollection* parent ) {
+        m_collection = parent;
+    }
+    
     virtual BackendReturn<QString> contentType() const =0;
     virtual BackendReturn<void> setContentType(const QString&) =0;
 

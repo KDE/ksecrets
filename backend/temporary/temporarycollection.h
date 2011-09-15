@@ -166,7 +166,7 @@ public:
      * This method returns the executable path of the application which originally
      * created this collection.
      */
-    virtual const QString &creatorApplication() const {
+    virtual QString creatorApplication() const {
         return m_creator;
     }
 
