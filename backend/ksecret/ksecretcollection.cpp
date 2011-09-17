@@ -38,18 +38,6 @@
 #include <QtCore/QTimer>
 #include <kdebug.h>
 
-static const QString genericLoadingErrorMessage()
-{
-    return i18nc("Error message: Generic error loading the ksecret file",
-                 "There was an error reading the ksecret file.");
-}
-
-static const QString genericSavingErrorMessage()
-{
-    return i18nc("Error message: Generic error saving the ksecret file",
-                 "There was an error writing the ksecret file.");
-}
-
 KSecretCollection *KSecretCollection::create(const QString &id, const QCA::SecureArray &password,
         BackendCollectionManager *parent, QString &errorMessage)
 {

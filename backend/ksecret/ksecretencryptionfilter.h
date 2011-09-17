@@ -26,27 +26,9 @@
 #include <qca_basic.h>
 
 class QIODevice;
-/**
- * Represents an encrypted key as stored inside the ksecret file. The key
- * type is stored as unsigned integer as the key type might not be known
- * to this version of ksecretsservice.
- */
-struct EncryptedKey {
-    quint32 m_type;
-    QByteArray m_key;
-    QByteArray m_iv;
-};
-
 
 class KSecretEncryptionFilter {
 public:
-    /**
-     * Known encryption types for the symmetric key.
-     */
-    enum KeyType {
-        KeyPassword = 0,     /// Key encrypted using a password
-        KeyBogus = 666       /// TODO: remove this once other keys are implemented
-    };
     /**
      * Known hashing and MAC algorithms.
      */
@@ -70,7 +52,7 @@ public:
     
     QCA::Hash *hash() const { return m_hash; }
 
-    QByteArray encryptData( const char *data, qint64 size );
+    QCA::SecureArray encryptData( const QByteArray & );
     
     QByteArray decryptData( QByteArray );
     
@@ -87,24 +69,19 @@ private:
     bool setupForReading();
     bool setupForWriting();
     
-    QCA::SymmetricKey   m_keyUnlockKey;
     QCA::Hash           *m_hash;                // hashing algorithm
     quint32             m_algoHash;             // hashing/mac algorithm identifier
     quint32             m_algoCipher;           // encryption algorithm identifier
+    QCA::SymmetricKey   m_cryptKey;            // key derived from the password
     QCA::InitializationVector   
-                        m_verInitVector;        // initialization vector of the verifier
+                        m_initVector;           // initialization vector of the verifier
     QCA::SecureArray    m_verEncryptedRandom;   // encrypted random data of the verifier
     QCA::MessageAuthenticationCode 
                         *m_mac;                 // message authentication code algorithm
     QCA::Cipher         *m_cipher;              // encryption algorithm
-    QCA::SymmetricKey   *m_symmetricKey;        // the symmetric key used for encryption/decryption
-    
-    // contains the encrypted symmetric keys
-    QList<EncryptedKey*> m_encryptedSymKeys;
     
     QIODevice           *m_file;
     QString             m_errorMessage;
 };
-
 
 #endif // KSECRETENCRYPTIONFILTER_H

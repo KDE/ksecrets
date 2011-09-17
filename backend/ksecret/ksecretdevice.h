@@ -46,21 +46,34 @@ class KSecretDevice : public B
     * @see CURRENT_FILE_VERSION
     */
     static const quint32 FILE_FORMAT_VERSION = 1; 
+    /**
+     * While writing, this device accumulates cunks of data before sending
+     * them to the encryption filter. This constant adjusts the minimum size
+     * of these chunks
+     */
+    static const int BUFFER_CHUNK_SIZE = 128;
     
 public:
     KSecretDevice( const QString &path, KSecretEncryptionFilter *encryptionFilter ) :
         B( path ),
         m_encryptionFilter( encryptionFilter ),
         m_valid( false ),
-        m_insideHeader( false )
+        m_insideHeader( false ),
+        m_bufferPos( 0 ),
+        m_closing( false )
     {
     }
     virtual ~KSecretDevice() {}
 
+    
     virtual bool open( QIODevice::OpenMode flags ) {
         // NOTE: this device is not designed to work in buffered mode so we'll add here the unbuffered mode
-        flags |= QIODevice::Unbuffered; 
-        
+        flags |= QIODevice::Unbuffered;
+
+        m_buffer.clear();
+        m_bufferPos = 0;
+        m_closing = false;
+
         bool result = B::open( flags );
         if ( result ) {
             m_valid = true;
@@ -71,10 +84,15 @@ public:
             else {
                 result = readMagic();
             }
+            
+            if ( result ) {
+                result = m_encryptionFilter->attachFile( this );
+            }
             m_insideHeader = false;
         }
         return result;
     }
+    
     bool isAtDataStart() const;
     bool seekDataStart();
     
@@ -98,14 +116,20 @@ private:
         qint64 result = -1;
         static bool readingChunk = false;
         if ( !readingChunk && !m_insideHeader ) {
-            QByteArray chunk;
-            QDataStream stream( this );
-            readingChunk = true;
-            stream >> chunk; // do recursion
-            readingChunk = false;
-            QByteArray decrypted = m_encryptionFilter->decryptData( chunk );
-            result = std::min( (qint64)decrypted.length(), maxSize );
-            memcpy( data, decrypted.constData(), decrypted.length() );
+            if ( (m_buffer.size() - m_bufferPos) < maxSize ) {
+                QDataStream stream( this );
+                readingChunk = true;
+                QByteArray chunk;
+                stream >> chunk; // do recursion
+                readingChunk = false;
+                
+                m_buffer = m_encryptionFilter->decryptData( chunk );
+                m_bufferPos = 0;
+            }
+            
+            result = std::min( (qint64)( m_buffer.size() - m_bufferPos ), maxSize );
+            memcpy( data, m_buffer.constData() + m_bufferPos, maxSize );
+            m_bufferPos += maxSize;
         }
         else {
             result = B::readData( data, maxSize );
@@ -117,12 +141,18 @@ private:
     virtual qint64  writeData ( const char * data, qint64 maxSize ) {
         qint64 result = -1;
         static bool writingChunk = false;
-        if ( !writingChunk && !m_insideHeader ) {
-            QByteArray chunk = m_encryptionFilter->encryptData( data, maxSize );
-            QDataStream stream( this );
-            writingChunk = true;
-            stream << chunk; // do recursion
-            writingChunk = false;
+        if ( !writingChunk && !m_insideHeader && !m_closing ) {
+            m_buffer.append( data, maxSize );
+            if ( m_buffer.size() >= BUFFER_CHUNK_SIZE ) {
+                QCA::SecureArray arr = m_encryptionFilter->encryptData( m_buffer );
+                QByteArray chunk = arr.toByteArray();
+                kDebug() << "buffer size " << m_buffer.size() << " encrypted chunk size " << arr.size();
+                m_buffer.clear();
+                QDataStream stream( this );
+                writingChunk = true;
+                stream << chunk; // do recursion
+                writingChunk = false;
+            }
             result = maxSize;
         }
         else {
@@ -131,6 +161,26 @@ private:
         
         return result; // take care not to return chunk.lenght here 
     }
+
+public:
+    virtual void close() {
+        Q_ASSERT( !m_closing );
+        // write remaining data before closing
+        if ( !m_buffer.isEmpty() ) {
+            if ( m_buffer.size() < 16 ) {
+                // ensure QCA has the minimal amount of data to do the encryption
+                m_buffer.append("randomDataToMakeQCAHappy");
+            }
+            QByteArray chunk = m_encryptionFilter->encryptData( m_buffer ).toByteArray();
+            m_buffer.clear();
+            QDataStream stream( this );
+            m_closing = true;
+            stream << chunk; // do recursion
+        }
+        
+        B::close();
+    }
+    
     
 private:
     KSecretEncryptionFilter *
@@ -139,6 +189,9 @@ private:
     QByteArray      m_readBuffer;
     bool            m_valid;
     bool            m_insideHeader;
+    QByteArray      m_buffer;
+    int             m_bufferPos;
+    bool            m_closing;
 };
 
 // template <class B>

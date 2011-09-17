@@ -45,11 +45,12 @@ static QCA::SymmetricKey createKeyFromPassword(const QCA::SecureArray &password,
 
 
 KSecretEncryptionFilter::KSecretEncryptionFilter( const QCA::SecureArray &password ) :
-        m_hash(0), m_mac(0), m_cipher(0), m_symmetricKey(0), m_file(0)
+        m_hash(0), m_mac(0), m_cipher(0), m_file(0)
 {
     m_algoHash = SHA256;
     m_algoCipher = AES256;
     setupAlgorithms();
+    m_initVector.resize( m_cipher->keyLength().minimum() );
     setPassword( password );
 }
 
@@ -58,8 +59,6 @@ KSecretEncryptionFilter::~KSecretEncryptionFilter()
     delete m_hash;
     delete m_cipher;
     delete m_mac;
-    delete m_symmetricKey;
-    qDeleteAll(m_encryptedSymKeys);
 }
 
 bool KSecretEncryptionFilter::setupAlgorithms()
@@ -100,8 +99,6 @@ bool KSecretEncryptionFilter::setupAlgorithms()
         return false;
     }
 
-    m_symmetricKey = new QCA::SymmetricKey(m_cipher->keyLength().minimum());
-    
     return true;
 }
 
@@ -109,13 +106,10 @@ bool KSecretEncryptionFilter::setupAlgorithms()
 bool KSecretEncryptionFilter::setPassword(const QCA::SecureArray& password)
 {
     bool result = true;
-    // create a new symmetric key
-    // TODO: is minimum() right in all cases?
-    m_symmetricKey = new QCA::SymmetricKey(m_cipher->keyLength().minimum());
     int keyLength = m_cipher->keyLength().minimum();
-    m_keyUnlockKey = createKeyFromPassword(password, keyLength);
-    if ( m_keyUnlockKey.isEmpty() ) {
-        kDebug() << "Cannot create unlock key";
+    m_cryptKey = createKeyFromPassword(password, keyLength);
+    if ( m_cryptKey.isEmpty() ) {
+        kDebug() << "Cannot create key";
         result = false;
     }
     return result;
@@ -134,109 +128,57 @@ bool KSecretEncryptionFilter::attachFile(QIODevice* file)
 
 bool KSecretEncryptionFilter::setupForWriting()
 {
-//    Q_ASSERT( m_file && m_file->isAtDataStart() );
-    
-    qDeleteAll( m_encryptedSymKeys );
-    
-    QCA::InitializationVector iv = QCA::InitializationVector(m_cipher->keyLength().minimum());
-    EncryptedKey *key = new EncryptedKey;
-    key->m_type = KeyPassword;
-    key->m_iv = iv.toByteArray();
-    m_cipher->setup(QCA::Encode, m_keyUnlockKey, iv);
-    key->m_key.append(m_cipher->update(*m_symmetricKey).toByteArray());
-    key->m_key.append(m_cipher->final().toByteArray());
-    m_encryptedSymKeys.append(key);
-
-    // build the verifier
-    m_verInitVector = QCA::InitializationVector(m_cipher->blockSize());
-    // get random data and compute its hash
-    QCA::SecureArray randomData = QCA::Random::randomArray(VERIFIER_LENGTH);
-    m_hash->clear();
-    m_hash->update(randomData);
-    randomData.append(m_hash->final());
-    // now encrypt randomData
-    m_cipher->setup(QCA::Encode, *m_symmetricKey, m_verInitVector);
-    m_verEncryptedRandom = m_cipher->update(randomData);
-    m_verEncryptedRandom.append(m_cipher->final());
-    
     KSecretStream stream( m_file );
     stream.setVersion( QDataStream::Qt_4_7 );
-    stream  << m_algoHash 
-            << m_algoCipher 
-            << m_verInitVector 
-            << m_verEncryptedRandom;
+    (QDataStream&)stream  
+            << m_algoHash 
+            << m_algoCipher;
+            
+    stream << m_initVector;
+            
+    Q_ASSERT( !m_cryptKey.isEmpty() );
     return stream.status() == QDataStream::Ok;
 }
 
 bool KSecretEncryptionFilter::setupForReading() {
-//    Q_ASSERT( m_file && m_file->isAtDataStart() );
-    // before actually trying to unlock, check if the key matches by decrypting
-    // the verifier.
-    if ( m_symmetricKey == 0) {
-        return false;
-    }
-
     KSecretStream stream( m_file );
-    (QDataStream&)stream  >> m_algoHash 
+    (QDataStream&)stream  
+            >> m_algoHash 
             >> m_algoCipher;
+            
+    stream >> m_initVector;
+    
     if ( stream.status() != QDataStream::Ok ) {
         kDebug() << "Cannot read algo setup";
         return false;
     }
             
-    setupAlgorithms();
-    
-    stream  >> m_verInitVector
-            >> m_verEncryptedRandom;
-    if ( stream.status() != QDataStream::Ok ) {
-        kDebug() << "Cannot read init vectors";
-        return false;
-    }
-
-    m_cipher->setup(QCA::Decode, *m_symmetricKey, m_verInitVector);
-    QCA::SecureArray verifier = m_cipher->update(m_verEncryptedRandom);
-    verifier.append(m_cipher->final());
-    QCA::SecureArray randomData(VERIFIER_LENGTH);
-    QCA::SecureArray verifierHash(verifier.size() - VERIFIER_LENGTH);
-    int i = 0;
-    for(; i < VERIFIER_LENGTH; ++i) {
-        randomData[i] = verifier[i];
-    }
-    for(; i < verifier.size(); ++i) {
-        verifierHash[i - VERIFIER_LENGTH] = verifier[i];
-    }
-    // rebuild the hash and compare to the decrypted one
-    m_hash->clear();
-    m_hash->update(randomData);
-    if(verifierHash != m_hash->final()) {
-        // hashes don't match, the master key is wrong.
-        kDebug() << "Hashes do not match!";
-        return false;
-    }
-    
-    /**
-     * Code from tryUnlockPassword
-     */
-    // try decrypting any of the symmetric keys using the m_keyUnlockKey
-    Q_FOREACH(EncryptedKey * key, m_encryptedSymKeys) {
-        if(key->m_type == KeyPassword) {
-            m_cipher->setup(QCA::Decode, m_keyUnlockKey, key->m_iv);
-            QCA::SecureArray unlockedKey = m_cipher->update(key->m_key);
-            unlockedKey.append(m_cipher->final());
-            m_symmetricKey = new QCA::SymmetricKey(unlockedKey);
-        }
-    }
-    return true;
+    return setupAlgorithms();
 }
 
-QByteArray KSecretEncryptionFilter::encryptData(const char* data, qint64 size)
+QCA::SecureArray KSecretEncryptionFilter::encryptData( const QByteArray & data)
 {
-    // FIXME: implement this (this is a NOOP for the moment)
-    return QByteArray( data, size );
+    Q_ASSERT( !m_cryptKey.isEmpty() );
+    m_cipher->setup( QCA::Encode, m_cryptKey, m_initVector );
+    QCA::SecureArray result = m_cipher->update( QCA::SecureArray( data ) );
+    if ( !m_cipher->ok() ) {
+        kDebug() << "Cannot encrypt data!";
+    }
+    result.append( m_cipher->final() );
+    if ( !m_cipher->ok() ) {
+        kDebug() << "Cannot encrypt: final failed!";
+    }
+    kDebug() << "Encryted size " << result.size();
+    return result;
 }
 
 QByteArray KSecretEncryptionFilter::decryptData(QByteArray encrypted)
 {
-    // FIXME: implement this (this is a NOOP for the moment)
-    return encrypted;
+    m_cipher->setup( QCA::Decode, m_cryptKey, m_initVector );
+    QCA::MemoryRegion result = m_cipher->process( encrypted );
+    if ( !m_cipher->ok() ) {
+        kDebug() << "Cannot decrypt data!";
+    }
+    return result.toByteArray();
 }
+

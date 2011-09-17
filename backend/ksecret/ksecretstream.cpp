@@ -51,7 +51,7 @@ KSecretStream &KSecretStream::operator >> ( bool& b )
 KSecretStream &KSecretStream::operator << ( const QHash<QString, ApplicationPermission>& perms )
 {
     quint64 size = perms.size();
-    *this << size;
+    (QDataStream&)*this << size;
     QHashIterator< QString, ApplicationPermission > it( perms );
     while ( it.hasNext() ) {
         it.next();
@@ -122,23 +122,32 @@ KSecretStream &KSecretStream::operator >> ( QHash<QString, KSecretItem*> & items
     return *this;
 }
 
-KSecretStream& KSecretStream::operator<<(const QCA::InitializationVector& )
+KSecretStream& KSecretStream::operator<<(const QCA::InitializationVector& vector)
 {
-    Q_ASSERT(0); // implement this
+    (QDataStream&)*this << vector.toByteArray();
     return *this;
 }
-KSecretStream& KSecretStream::operator>>(QCA::InitializationVector& )
+
+KSecretStream& KSecretStream::operator>>(QCA::InitializationVector& vector)
 {
-    Q_ASSERT(0); // implement this
+    QByteArray arr;
+    (QDataStream&)*this >> arr;
+    if ( status() == QDataStream::Ok ) {
+        vector = QCA::InitializationVector( arr );
+    }
     return *this;
 }
-KSecretStream& KSecretStream::operator<<(const QCA::SecureArray& )
+KSecretStream& KSecretStream::operator<<(const QCA::SecureArray& arr)
 {
-    Q_ASSERT(0); // implement this
+    (QDataStream&)*this << arr.toByteArray();
     return *this;
 }
-KSecretStream& KSecretStream::operator>>(QCA::SecureArray& )
+KSecretStream& KSecretStream::operator>>(QCA::SecureArray& arr)
 {
-    Q_ASSERT(0); // implement this
+    QByteArray ba;
+    (QDataStream&)*this >> ba;
+    if ( status() == QDataStream::Ok ) {
+        arr = QCA::SecureArray( ba );
+    }
     return *this;
 }
