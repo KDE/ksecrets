@@ -58,6 +58,7 @@ CreateCollectionJob *KSecretCollectionManager::createCreateCollectionJob(const C
 void KSecretCollectionManager::addCollection(KSecretCollection *collection)
 {
     m_collections.insert(collection->path(), collection);
+    emit collectionCreated( collection );
     m_creatingCollectionId = "";
 }
 
@@ -76,6 +77,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
             KSecretCollection *coll = KSecretCollection::createFromFile( dir.filePath(file), this, errorMessage);
             if(coll) {
                 addCollection(coll);
+                kDebug() << "   ...DONE";
             }
             else {
                 kDebug() << " ERROR: " << errorMessage;
@@ -100,7 +102,6 @@ void KSecretCollectionManager::createCollectionJobResult(KJob *job)
                 SIGNAL(collectionDeleted(BackendCollection*)));
         connect(ccj->collection(), SIGNAL(collectionChanged(BackendCollection*)),
                 SIGNAL(collectionChanged(BackendCollection*)));
-        emit collectionCreated(ccj->collection());
     }
     else {
         // FIXME: what should we do here, when job is dismissed by the user via the cancel button ?

@@ -37,19 +37,27 @@
 #include <QtCore/QSet>
 #include <QtCore/QTimer>
 #include <kdebug.h>
+#include <QFileInfo>
+
+static QCA::SecureArray replaceWithDefaultIfEmpty( const QCA::SecureArray &password ) 
+{
+    if ( password.isEmpty() ) {
+        return QCA::SecureArray( "ksecretdefaultpwd" );
+    }
+    else {
+        return password;
+    }
+}
 
 KSecretCollection *KSecretCollection::create(const QString &id, const QCA::SecureArray &password,
         BackendCollectionManager *parent, QString &errorMessage)
 {
     KSecretCollection *coll = new KSecretCollection(parent);
     coll->m_path = KGlobal::dirs()->saveLocation("ksecret") + '/' + id + ".ksecret";
-    coll->m_encryptionFilter = new KSecretEncryptionFilter( password );
+    coll->m_encryptionFilter = new KSecretEncryptionFilter( replaceWithDefaultIfEmpty( password ) );
     
-    KSecretCollection::Data *d = new KSecretCollection::Data();
-    d->m_id = id;
+    coll->m_pub.m_id = id;
 
-    coll->m_d = d;
-    
     // write new collection to disk to get a final validation
     coll->m_dirty = true;
     if ( !coll->serialize(errorMessage) ) {
@@ -61,7 +69,7 @@ KSecretCollection *KSecretCollection::create(const QString &id, const QCA::Secur
 }
 
 KSecretCollection::KSecretCollection(BackendCollectionManager *parent)
-    : BackendCollection(parent), m_locked(), m_encryptionFilter(0), m_dirty(true), m_d(0)
+    : BackendCollection(parent), m_locked(), m_encryptionFilter(0), m_dirty(true)
 {
     m_syncTimer.setSingleShot(true);
     connect(&m_syncTimer, SIGNAL(timeout()), SLOT(sync()));
@@ -74,12 +82,12 @@ KSecretCollection::~KSecretCollection()
 
 QString KSecretCollection::id() const
 {
-    return m_d->m_id;
+    return m_pub.m_id;
 }
 
 BackendReturn<QString> KSecretCollection::label() const
 {
-    return BackendReturn<QString>( m_d->m_label );
+    return BackendReturn<QString>( m_pub.m_label );
 }
 
 BackendReturn<void> KSecretCollection::setLabel(const QString &label)
@@ -89,7 +97,7 @@ BackendReturn<void> KSecretCollection::setLabel(const QString &label)
         return BackendErrorIsLocked;
     }
     
-    m_d->m_label = label;
+    m_pub.m_label = label;
     setDirty();
     emit collectionChanged(this);
     return BackendReturn<void>( BackendNoError );
@@ -97,12 +105,12 @@ BackendReturn<void> KSecretCollection::setLabel(const QString &label)
 
 QDateTime KSecretCollection::created() const
 {
-    return m_d->m_created;
+    return m_secret.m_created;
 }
 
 QDateTime KSecretCollection::modified() const
 {
-    return m_d->m_modified;
+    return m_secret.m_modified;
 }
 
 bool KSecretCollection::isLocked() const
@@ -118,8 +126,8 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::items() const
     }
     else {
         QList<BackendItem*> itemList;
-        QHash<QString, KSecretItem*>::const_iterator it = m_d->m_items.constBegin();
-        QHash<QString, KSecretItem*>::const_iterator end = m_d->m_items.constEnd();
+        QHash<QString, KSecretItem*>::const_iterator it = m_secret.m_items.constBegin();
+        QHash<QString, KSecretItem*>::const_iterator end = m_secret.m_items.constEnd();
         for(; it != end; ++it) {
             itemList.append(it.value());
         }
@@ -146,8 +154,8 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
         } else {
             // use the first attribute hash to build an initial list of items matching
             QHash<QByteArray, KSecretItem*>::const_iterator resit =
-                m_d->m_itemHashes.constFind(*attributeHashes.constBegin());
-            QHash<QByteArray, KSecretItem*>::const_iterator resend = m_d->m_itemHashes.constEnd();
+                m_secret.m_itemHashes.constFind(*attributeHashes.constBegin());
+            QHash<QByteArray, KSecretItem*>::const_iterator resend = m_secret.m_itemHashes.constEnd();
             // now check which of the items in resit match the remainder of the attributes
             // to do this the actual attributes are used instead of the hashes
             for(; resit != resend; ++resit) {
@@ -258,7 +266,7 @@ BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
         if(replacing) {
             emit itemChanged(item);
         } else {
-            m_d->m_items.insert(item->id(), item);
+            m_secret.m_items.insert(item->id(), item);
             // new item, signals need to be wired
             connect(item, SIGNAL(itemDeleted(BackendItem*)), SLOT(slotItemDeleted(BackendItem*)));
             connect(item, SIGNAL(itemChanged(BackendItem*)), SLOT(slotItemChanged(BackendItem*)));
@@ -266,7 +274,7 @@ BackendReturn<BackendItem*> KSecretCollection::createItem(const QString &label,
         }
         
         // mark the modification date of the collection.
-        m_d->m_modified = QDateTime::currentDateTime();
+        m_secret.m_modified = QDateTime::currentDateTime();
         
         // sync
         setDirty();
@@ -292,13 +300,13 @@ void KSecretCollection::slotItemDeleted(BackendItem *item)
     Q_ASSERT(kitem);
 
     // remove the item as well as item hashes
-    if(m_d->m_reverseItemHashes.contains(kitem)) {
-        Q_FOREACH(const QByteArray & hash, m_d->m_reverseItemHashes.value(kitem)) {
-            m_d->m_itemHashes.remove(hash);
+    if(m_secret.m_reverseItemHashes.contains(kitem)) {
+        Q_FOREACH(const QByteArray & hash, m_secret.m_reverseItemHashes.value(kitem)) {
+            m_secret.m_itemHashes.remove(hash);
         }
-        m_d->m_reverseItemHashes.remove(kitem);
+        m_secret.m_reverseItemHashes.remove(kitem);
     }
-    m_d->m_items.remove(kitem->id());
+    m_secret.m_items.remove(kitem->id());
     
     // sync
     setDirty();
@@ -311,19 +319,19 @@ void KSecretCollection::changeAttributeHashes(KSecretItem *item)
     Q_ASSERT(item);
 
     // remove previous item hashes
-    if(m_d->m_reverseItemHashes.contains(item)) {
-        QSet<QByteArray> oldHashes = m_d->m_reverseItemHashes.value(item);
+    if(m_secret.m_reverseItemHashes.contains(item)) {
+        QSet<QByteArray> oldHashes = m_secret.m_reverseItemHashes.value(item);
         Q_FOREACH(const QByteArray & hash, oldHashes) {
-            m_d->m_itemHashes.remove(hash, item);
+            m_secret.m_itemHashes.remove(hash, item);
         }
     }
 
     // insert new hashes
     QSet<QByteArray> attributeHashes = item->createAttributeHashes( m_encryptionFilter->hash() );
     Q_FOREACH(const QByteArray & hash, attributeHashes) {
-        m_d->m_itemHashes.insert(hash, item);
+        m_secret.m_itemHashes.insert(hash, item);
     }
-    m_d->m_reverseItemHashes.insert(item, attributeHashes);
+    m_secret.m_reverseItemHashes.insert(item, attributeHashes);
 }
 
 void KSecretCollection::startSyncTimer()
@@ -351,15 +359,15 @@ void KSecretCollection::sync()
 
 KSecretCollection* KSecretCollection::createFromFile(const QString& path, BackendCollectionManager* manager, QString& errorMessage)
 {
-//     QFile device(path);
-//     KSecretFile file(&device, KSecretFile::Read);
-//     if(!file.isValid()) {
-//         errorMessage = i18nc("Error message: collection file to be opened does not exist",
-//                              "Collection does not exist.");
-//         return 0;
-//     }
+    KSecretCollection *coll = new KSecretCollection( manager );
+    coll->m_path = path;
 
-    KSecretDevice< QFile > device( path, 0 );
+    // NOTE: when deserializing on startup (for exeample) we don't yet havec the password
+    // so we'll give an empty one. The first unlock attempt would fail so the unlock job
+    // will prompt the user for the password
+    coll->m_encryptionFilter = new KSecretEncryptionFilter( replaceWithDefaultIfEmpty("") );
+    
+    KSecretDevice< QFile > device( path, coll->m_encryptionFilter );
     if ( !device.open( QIODevice::ReadOnly ) ) {
         errorMessage = i18nc("Error message: collection file to be opened does not exist or is not a KSecretsService file",
                              "Collection does not exist.");
@@ -373,8 +381,8 @@ KSecretCollection* KSecretCollection::createFromFile(const QString& path, Backen
         return 0;
     }
     
-    KSecretCollection *coll = new KSecretCollection( manager );
-    coll->m_path = path;
+    stream >> coll->m_pub;
+    
     // the rest of the file will be deserialized upon collection unlock as we need the password for that
     return coll;
 }
@@ -392,21 +400,18 @@ BackendReturn<bool> KSecretCollection::tryUnlock()
     }
     KSecretStream stream( &device );
 
-    if ( m_d == 0 ) {
-        m_d = new Data;
-    }
-    stream >> m_d;
+    stream >> m_pub;
+    stream >> m_secret;
     
     if ( !stream.isValid() ) {
         kDebug() << "collection serialization failed";
-        delete m_d;
         return BackendReturn<bool>( false );
     }
     
     // collection is now correctly loaded and unlocked
     m_locked = false;
 
-    foreach( KSecretItem *item, m_d->m_items ) {
+    foreach( KSecretItem *item, m_secret.m_items ) {
         item->setCollection( this );
         connect(item, SIGNAL(attributesChanged(KSecretItem*)),
                 SLOT(changeAttributeHashes(KSecretItem*)));
@@ -424,7 +429,7 @@ BackendReturn<bool> KSecretCollection::tryUnlockPassword(const QCA::SecureArray 
     // TODO: reference/open counting?
 
     return BackendReturn<bool> (
-        m_encryptionFilter->setPassword( password ) && 
+        m_encryptionFilter->setPassword( replaceWithDefaultIfEmpty( password ) ) && 
         tryUnlock().value() );
 }
 
@@ -446,8 +451,8 @@ BackendReturn<bool> KSecretCollection::lock()
         }
 
         // remove individual item secrets
-        qDeleteAll( m_d->m_items );
-        m_d->m_items.empty();
+        qDeleteAll( m_secret.m_items );
+        m_secret.m_items.empty();
         
         m_locked = true;
         emit collectionChanged(this);
@@ -460,8 +465,8 @@ ApplicationPermission KSecretCollection::applicationPermission(const QString& pa
 {
     ApplicationPermission result = PermissionUndefined;
     if ( !isLocked() ) {
-        if ( m_d->m_acls.contains(  path ) )
-            result = m_d->m_acls[path];
+        if ( m_secret.m_acls.contains(  path ) )
+            result = m_secret.m_acls[path];
     }
     return result;
 }
@@ -472,7 +477,7 @@ bool KSecretCollection::setApplicationPermission(const QString& path, Applicatio
 //     Q_ASSERT( !isLocked() );
     if ( !isLocked() ) {
         if ( !path.isEmpty() && QFile::exists( path ) ) {
-            m_d->m_acls[ path ] = perm;
+            m_secret.m_acls[ path ] = perm;
             
             // sync
             setDirty();
@@ -487,8 +492,8 @@ bool KSecretCollection::setCreatorApplication(QString exePath)
 {
     bool result = false;
     if ( !isLocked() ) {
-        if ( !m_d->m_creatorApplication.isEmpty() && !exePath.isEmpty() ) {
-            m_d->m_creatorApplication = exePath;
+        if ( !m_secret.m_creatorApplication.isEmpty() && !exePath.isEmpty() ) {
+            m_secret.m_creatorApplication = exePath;
             result = true;
         }
     }
@@ -503,7 +508,7 @@ void KSecretCollection::setDirty(bool dirty)
         if ( !isLocked() ) {
             m_dirty = dirty;
             if ( dirty ) {
-                m_d->m_modified = QDateTime::currentDateTimeUtc();
+                m_secret.m_modified = QDateTime::currentDateTimeUtc();
                 startSyncTimer();
             }
         }
@@ -515,7 +520,6 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     if ( !m_dirty )
         return true;
     
-    Q_ASSERT( m_d != 0 );
     Q_ASSERT( m_encryptionFilter != 0 );
 
     KSecretDevice< KSaveFile > device( m_path, m_encryptionFilter );
@@ -526,7 +530,8 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     }
     
     KSecretStream ostream( &device );
-    ostream << m_d;
+    ostream << m_pub;
+    ostream << m_secret;
     
     if ( !ostream.isValid() ) {
         errorMessage = i18nc("Error message: collection contents could not be written to disk",
@@ -545,7 +550,7 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     return true;
 }
 
-KSecretCollection::Data::Data() :
+KSecretCollection::SecretData::SecretData() :
     m_cfgCloseScreensaver(false),
     m_cfgCloseIfUnused(false),
     m_cfgCloseUnusedTimeout(0)
@@ -554,39 +559,50 @@ KSecretCollection::Data::Data() :
     m_modified = m_created;
 }
 
-KSecretCollection::Data::~Data()
+KSecretCollection::SecretData::~SecretData()
 {
     qDeleteAll( m_items );
 }
 
-KSecretStream& operator << ( KSecretStream& stream, KSecretCollection::Data *d )
+KSecretStream& operator<<(KSecretStream& stream, const KSecretCollection::PublicData& d)
 {
-    stream << d->m_id;
-    stream << d->m_label;
-    stream << d->m_created;
-    stream << d->m_modified;
-    stream << d->m_cfgCloseScreensaver;
-    stream << d->m_cfgCloseIfUnused;
-    (QDataStream&)stream << d->m_cfgCloseUnusedTimeout;
-    stream << d->m_acls;
-    stream << d->m_creatorApplication;
-    stream << d->m_items;
+    stream << d.m_id;
+    stream << d.m_label;
+    return stream;
+}
+
+KSecretStream& operator>>(KSecretStream& stream, KSecretCollection::PublicData& d)
+{
+    stream >> d.m_id;
+    stream >> d.m_label;
+    return stream;
+}
+
+
+KSecretStream& operator << ( KSecretStream& stream, const KSecretCollection::SecretData &d )
+{
+    stream << d.m_created;
+    stream << d.m_modified;
+    stream << d.m_cfgCloseScreensaver;
+    stream << d.m_cfgCloseIfUnused;
+    (QDataStream&)stream << d.m_cfgCloseUnusedTimeout;
+    stream << d.m_acls;
+    stream << d.m_creatorApplication;
+    stream << d.m_items;
     // FIXME: should we also serialize hashes? My opinion is "No"
     return stream;
 }
 
-KSecretStream& operator >> ( KSecretStream &stream, KSecretCollection::Data *d )
+KSecretStream& operator >> ( KSecretStream &stream, KSecretCollection::SecretData &d )
 {
-    stream >> d->m_id;
-    stream >> d->m_label;
-    stream >> d->m_created;
-    stream >> d->m_modified;
-    stream >> d->m_cfgCloseScreensaver;
-    stream >> d->m_cfgCloseIfUnused;
-    (QDataStream&)stream >> d->m_cfgCloseUnusedTimeout;
-    stream >> d->m_acls;
-    stream >> d->m_creatorApplication;
-    stream >> d->m_items;
+    stream >> d.m_created;
+    stream >> d.m_modified;
+    stream >> d.m_cfgCloseScreensaver;
+    stream >> d.m_cfgCloseIfUnused;
+    (QDataStream&)stream >> d.m_cfgCloseUnusedTimeout;
+    stream >> d.m_acls;
+    stream >> d.m_creatorApplication;
+    stream >> d.m_items;
     return stream;
 }
 

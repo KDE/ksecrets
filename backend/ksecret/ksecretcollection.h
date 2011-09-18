@@ -210,7 +210,7 @@ public:
      */
     QString creatorApplication() const {
         if ( isLocked() )
-            return m_d->m_creatorApplication;
+            return m_secret.m_creatorApplication;
         else 
             return "";
     }
@@ -342,15 +342,19 @@ private:
     // timer for syncing the collection on changes
     QTimer m_syncTimer;
 
-    // this is the data that's goes in the storage
-    // it's trouped alltogether to ease handling 
-    // this gets loaded when unlocking the collection
-    struct Data {
-        Data();
-        virtual ~Data();
-        
+    // structure holding the public data serialized when collection
+    // file is first loaded
+    struct PublicData {
         QString m_id;
         QString m_label;
+    };
+    
+    // this is the secret data that's goes in the storage
+    // this gets loaded when unlocking the collection
+    struct SecretData {
+        SecretData();
+        virtual ~SecretData();
+        
         QDateTime m_created;
         QDateTime m_modified;
 
@@ -373,14 +377,19 @@ private:
         
     };
     
-    friend KSecretStream& operator << ( KSecretStream&, Data* );
-    friend KSecretStream& operator >> ( KSecretStream&, Data* );
+    friend KSecretStream& operator << ( KSecretStream&, const PublicData& );
+    friend KSecretStream& operator >> ( KSecretStream&, PublicData& );
+    friend KSecretStream& operator << ( KSecretStream&, const SecretData& );
+    friend KSecretStream& operator >> ( KSecretStream&, SecretData& );
     
-    Data    *m_d;
+    PublicData  m_pub;
+    SecretData  m_secret;
 };
 
-KSecretStream & operator << ( KSecretStream& out, KSecretCollection::Data *data );
-KSecretStream & operator >> ( KSecretStream& in, KSecretCollection::Data *data );
+KSecretStream & operator << ( KSecretStream& out, const KSecretCollection::PublicData &data );
+KSecretStream & operator >> ( KSecretStream& in, KSecretCollection::PublicData &data );
+KSecretStream & operator << ( KSecretStream& out, const KSecretCollection::SecretData &data );
+KSecretStream & operator >> ( KSecretStream& in, KSecretCollection::SecretData &data );
 
 
 #endif

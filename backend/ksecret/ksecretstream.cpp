@@ -88,6 +88,7 @@ KSecretStream& KSecretStream::operator>>(ApplicationPermission& perm)
 {
     qint32 value;
     (QDataStream&)*this >> value;
+    perm = (ApplicationPermission)value;
     return *this;
 }
 
@@ -137,11 +138,13 @@ KSecretStream& KSecretStream::operator>>(QCA::InitializationVector& vector)
     }
     return *this;
 }
+
 KSecretStream& KSecretStream::operator<<(const QCA::SecureArray& arr)
 {
     (QDataStream&)*this << arr.toByteArray();
     return *this;
 }
+
 KSecretStream& KSecretStream::operator>>(QCA::SecureArray& arr)
 {
     QByteArray ba;

@@ -146,7 +146,7 @@ private:
             if ( m_buffer.size() >= BUFFER_CHUNK_SIZE ) {
                 QCA::SecureArray arr = m_encryptionFilter->encryptData( m_buffer );
                 QByteArray chunk = arr.toByteArray();
-                kDebug() << "buffer size " << m_buffer.size() << " encrypted chunk size " << arr.size();
+//                 kDebug() << "buffer size " << m_buffer.size() << " encrypted chunk size " << arr.size();
                 m_buffer.clear();
                 QDataStream stream( this );
                 writingChunk = true;

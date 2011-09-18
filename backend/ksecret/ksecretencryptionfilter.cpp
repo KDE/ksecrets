@@ -35,9 +35,9 @@
 static QCA::SymmetricKey createKeyFromPassword(const QCA::SecureArray &password,
         int keyLength)
 {
-    if(!QCA::isSupported("sha1")) {
-        return QCA::SymmetricKey();
-    }
+//     if(!QCA::isSupported("sha1")) {
+//         return QCA::SymmetricKey();
+//     }
 
     QCA::PBKDF2 deriv("sha1");
     return deriv.makeKey(password, QCA::InitializationVector(), keyLength, 10000);
@@ -109,7 +109,7 @@ bool KSecretEncryptionFilter::setPassword(const QCA::SecureArray& password)
     int keyLength = m_cipher->keyLength().minimum();
     m_cryptKey = createKeyFromPassword(password, keyLength);
     if ( m_cryptKey.isEmpty() ) {
-        kDebug() << "Cannot create key";
+//         kDebug() << "Cannot create key";
         result = false;
     }
     return result;
@@ -168,7 +168,7 @@ QCA::SecureArray KSecretEncryptionFilter::encryptData( const QByteArray & data)
     if ( !m_cipher->ok() ) {
         kDebug() << "Cannot encrypt: final failed!";
     }
-    kDebug() << "Encryted size " << result.size();
+//     kDebug() << "Encryted size " << result.size();
     return result;
 }
 

@@ -203,7 +203,7 @@ void KSecretTest::testCheckItem()
     QCOMPARE(ret3.value().value("mainattr"), QLatin1String("haha"));
     
     // check timestamps
-    QDateTime cur = QDateTime::currentDateTime();
+    QDateTime cur = QDateTime::currentDateTimeUtc();
     QVERIFY(m_item->created() >= m_collCreated);
     QVERIFY(cur >= m_item->created());
     QVERIFY(m_item->modified() >= m_collCreated);
@@ -235,7 +235,7 @@ void KSecretTest::testSearchItem()
 void KSecretTest::testChangeItem()
 {
     QVERIFY(m_item != 0);
-    QDateTime start = QDateTime::currentDateTime();
+    QDateTime start = QDateTime::currentDateTimeUtc();
     
     // change the item we created earlier
     BackendReturn<void> ret1 = m_item->setLabel("itemtest");
@@ -260,7 +260,7 @@ void KSecretTest::testChangeItem()
     QCOMPARE(ret6.value().value("mainattr"), QString("huhu"));
     QCOMPARE(ret6.value().value("secoattr"), QString("hihi"));
     
-    QDateTime end = QDateTime::currentDateTime();
+    QDateTime end = QDateTime::currentDateTimeUtc();
     
     // make sure the item's creation time didn't change and the modification
     // time changed.
