@@ -531,6 +531,7 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     
     KSecretStream ostream( &device );
     ostream << m_pub;
+    device.startEncrypting();
     ostream << m_secret;
     
     if ( !ostream.isValid() ) {

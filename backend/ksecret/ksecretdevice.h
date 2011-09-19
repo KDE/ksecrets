@@ -58,9 +58,9 @@ public:
         B( path ),
         m_encryptionFilter( encryptionFilter ),
         m_valid( false ),
-        m_insideHeader( false ),
         m_bufferPos( 0 ),
-        m_closing( false )
+        m_closing( false ),
+        m_encrypting( false )
     {
     }
     virtual ~KSecretDevice() {}
@@ -77,7 +77,6 @@ public:
         bool result = B::open( flags );
         if ( result ) {
             m_valid = true;
-            m_insideHeader = true;
             if ( flags & QIODevice::WriteOnly ) {
                 result = writeMagic();
             }
@@ -88,13 +87,16 @@ public:
             if ( result ) {
                 result = m_encryptionFilter->attachFile( this );
             }
-            m_insideHeader = false;
         }
         return result;
     }
     
     bool isAtDataStart() const;
     bool seekDataStart();
+    
+    void startEncrypting() {
+        m_encrypting = true;
+    }
     
 private:
     /**
@@ -115,7 +117,7 @@ private:
     virtual qint64  readData ( char * data, qint64 maxSize ) {
         qint64 result = -1;
         static bool readingChunk = false;
-        if ( !readingChunk && !m_insideHeader ) {
+        if ( !readingChunk && m_encrypting ) {
             if ( (m_buffer.size() - m_bufferPos) < maxSize ) {
                 QDataStream stream( this );
                 readingChunk = true;
@@ -141,7 +143,7 @@ private:
     virtual qint64  writeData ( const char * data, qint64 maxSize ) {
         qint64 result = -1;
         static bool writingChunk = false;
-        if ( !writingChunk && !m_insideHeader && !m_closing ) {
+        if ( !writingChunk && m_encrypting && !m_closing ) {
             m_buffer.append( data, maxSize );
             if ( m_buffer.size() >= BUFFER_CHUNK_SIZE ) {
                 QCA::SecureArray arr = m_encryptionFilter->encryptData( m_buffer );
@@ -188,10 +190,10 @@ private:
     qint64          m_dataPos;
     QByteArray      m_readBuffer;
     bool            m_valid;
-    bool            m_insideHeader;
     QByteArray      m_buffer;
     int             m_bufferPos;
     bool            m_closing;
+    bool            m_encrypting;
 };
 
 // template <class B>
