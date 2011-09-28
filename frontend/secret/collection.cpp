@@ -56,7 +56,7 @@ const QDBusObjectPath &Collection::objectPath() const
 
 const QList<QDBusObjectPath> &Collection::items() const
 {
-    return m_items;
+    return m_itemPaths;
 }
 
 void Collection::setLabel(const QString &label)
@@ -189,15 +189,17 @@ void Collection::slotItemCreated(BackendItem *item)
 {
     Q_ASSERT(item);
     Item *itm = new Item(item, this);
-    m_items.append(itm->objectPath());
+    m_itemPaths.append(itm->objectPath());
+    m_items.insert( itm->objectPath(), itm );
     emit itemCreated(itm->objectPath());
 }
 
 void Collection::slotItemDeleted(BackendItem *item)
 {
     Q_ASSERT(item);
-    QDBusObjectPath itmPath(m_objectPath.path() + '/' + item->id());
-    m_items.removeAll(itmPath);
+    QDBusObjectPath itmPath( m_objectPath.path() + '/' + item->id() );
+    m_itemPaths.removeAll( itmPath );
+    m_items.take( itmPath );
     emit itemDeleted(itmPath);
 }
 
@@ -205,6 +207,10 @@ void Collection::slotItemChanged(BackendItem *item)
 {
     Q_ASSERT(item);
     QDBusObjectPath itmPath(m_objectPath.path() + '/' + item->id());
+    if ( !m_itemPaths.contains( itmPath ) ) {
+        m_itemPaths.append( itmPath );
+        m_items.insert( itmPath, new Item( item, this ) );
+    }
     emit itemChanged(itmPath);
 }
 

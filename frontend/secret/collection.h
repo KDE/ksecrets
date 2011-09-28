@@ -176,7 +176,8 @@ private:
     Service *m_service; // parent service
     BackendCollection *m_collection;
     QDBusObjectPath m_objectPath;
-    QList<QDBusObjectPath> m_items; // cache for items' object paths
+    QList<QDBusObjectPath> m_itemPaths; // cache for items' object paths
+    QMap< QDBusObjectPath, Item*>   m_items;
 };
 
 #endif

@@ -182,3 +182,19 @@ QByteArray KSecretEncryptionFilter::decryptData(QByteArray encrypted)
     return result.toByteArray();
 }
 
+QSet<QByteArray> KSecretEncryptionFilter::createHashes(const QMap<QString, QString> &attributes)
+{
+    Q_ASSERT(m_hash);
+
+    QSet<QByteArray> hashSet;
+    QMap<QString, QString>::const_iterator it = attributes.constBegin();
+    QMap<QString, QString>::const_iterator end = attributes.constEnd();
+    for(; it != end; ++it) {
+        m_hash->clear();
+        m_hash->update(it.key().toUtf8());
+        m_hash->update(it.value().toUtf8());
+        hashSet.insert(m_hash->final().toByteArray());
+    }
+
+    return hashSet;
+}

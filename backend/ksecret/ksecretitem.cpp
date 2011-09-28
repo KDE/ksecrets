@@ -27,15 +27,14 @@
 #include <QtCore/QTimer>
 
 KSecretItem::KSecretItem() :
-    BackendItem( 0 ),
-    m_collection( 0 )
+    BackendItem( 0 )
 {
     m_created = QDateTime::currentDateTimeUtc();
     m_modified = m_created;
 }
 
 KSecretItem::KSecretItem(const QString &id, KSecretCollection *parent)
-    : BackendItem(parent), m_collection(parent), m_id(id)
+    : BackendItem(parent), m_id(id)
 {
     Q_ASSERT(parent);
     m_created = QDateTime::currentDateTimeUtc();
@@ -159,13 +158,13 @@ UnlockItemJob *KSecretItem::createUnlockJob(const ItemUnlockInfo& unlockInfo)
     Q_ASSERT(m_collection);
     Q_ASSERT(unlockInfo.m_item == 0); // FIXME: what to do when item information is already present ?
     unlockInfo.m_item = this;
-    return new KSecretUnlockItemJob(unlockInfo, m_collection);
+    return new KSecretUnlockItemJob(unlockInfo, qobject_cast< KSecretCollection* >( m_collection ) );
 }
 
 LockItemJob *KSecretItem::createLockJob()
 {
     Q_ASSERT(m_collection);
-    return new KSecretLockItemJob(this, m_collection);
+    return new KSecretLockItemJob(this, qobject_cast< KSecretCollection* >( m_collection) );
 }
 
 DeleteItemJob *KSecretItem::createDeleteJob(const ItemDeleteInfo& deleteJobInfo)
@@ -197,29 +196,6 @@ bool KSecretItem::matches(const QMap<QString, QString> &attributes)
         }
     }
     return true;
-}
-
-QSet<QByteArray> KSecretItem::createHashes(const QMap<QString, QString> &attributes,
-        QCA::Hash *hash)
-{
-    Q_ASSERT(hash);
-
-    QSet<QByteArray> hashSet;
-    QMap<QString, QString>::const_iterator it = attributes.constBegin();
-    QMap<QString, QString>::const_iterator end = attributes.constEnd();
-    for(; it != end; ++it) {
-        hash->clear();
-        hash->update(it.key().toUtf8());
-        hash->update(it.value().toUtf8());
-        hashSet.insert(hash->final().toByteArray());
-    }
-
-    return hashSet;
-}
-
-QSet<QByteArray> KSecretItem::createAttributeHashes(QCA::Hash *hash) const
-{
-    return createHashes(m_attributes, hash);
 }
 
 void KSecretItem::markAsModified()

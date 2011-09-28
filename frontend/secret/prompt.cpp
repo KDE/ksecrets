@@ -212,6 +212,9 @@ void ServiceMultiPrompt::prompt(const QString &windowId)
             emitCompleted(true, qVariantFromValue(m_result));
             break;
         }
+        else {
+            job->start();
+        }
     }
 }
 

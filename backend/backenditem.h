@@ -173,7 +173,7 @@ Q_SIGNALS:
      */
     void itemChanged(BackendItem *item);
 
-private:
+protected:
     BackendCollection *m_collection;
 };
 

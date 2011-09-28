@@ -153,25 +153,6 @@ public:
 protected:
 
     /**
-     * Create a list of hashes out of this item's attributes.
-     *
-     * @param hash the hash function to use
-     * @return a list of hashes for each of the item's attributes
-     * @remarks called by KSecretCollection on-demand
-     */
-    QSet<QByteArray> createAttributeHashes(QCA::Hash *hash) const;
-
-    /**
-     * Create a list of hashes out of some attributes.
-     *
-     * @param attributes the attributes to create the hashes for
-     * @param hash the hash function to use
-     * @returns a list of hashes for each of the attributes
-     */
-    static QSet<QByteArray> createHashes(const QMap<QString, QString> &attributes,
-                                         QCA::Hash *hash);
-
-    /**
      * Delete the item.
      *
      * @remarks this is called by KSecretDeleteItemJob
@@ -214,7 +195,7 @@ private:
      */
     void markAsUsed() const;
 
-    KSecretCollection *m_collection;
+//     KSecretCollection *m_collection;
 
     QString m_id;
     QString m_label;

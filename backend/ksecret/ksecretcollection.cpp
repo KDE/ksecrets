@@ -148,7 +148,7 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
         // create hashes for each of the attributes queried
         Q_ASSERT( m_encryptionFilter != 0 );
         QList<BackendItem*> itemList;
-        QSet<QByteArray> attributeHashes = KSecretItem::createHashes(attributes, m_encryptionFilter->hash());
+        QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( attributes);
         if(attributeHashes.isEmpty()) {
             itemList = items().value();
         } else {
@@ -327,7 +327,7 @@ void KSecretCollection::changeAttributeHashes(KSecretItem *item)
     }
 
     // insert new hashes
-    QSet<QByteArray> attributeHashes = item->createAttributeHashes( m_encryptionFilter->hash() );
+    QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
     Q_FOREACH(const QByteArray & hash, attributeHashes) {
         m_secret.m_itemHashes.insert(hash, item);
     }
@@ -384,6 +384,7 @@ KSecretCollection* KSecretCollection::createFromFile(const QString& path, Backen
     stream >> coll->m_pub;
     
     // the rest of the file will be deserialized upon collection unlock as we need the password for that
+    coll->m_locked = true;
     return coll;
 }
 
@@ -401,6 +402,7 @@ BackendReturn<bool> KSecretCollection::tryUnlock()
     KSecretStream stream( &device );
 
     stream >> m_pub;
+    device.startEncrypting();
     stream >> m_secret;
     
     if ( !stream.isValid() ) {
@@ -415,9 +417,16 @@ BackendReturn<bool> KSecretCollection::tryUnlock()
         item->setCollection( this );
         connect(item, SIGNAL(attributesChanged(KSecretItem*)),
                 SLOT(changeAttributeHashes(KSecretItem*)));
+        
+        emit itemChanged( item ); // that is, item was unlocked
+        
+        QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
+        Q_FOREACH(const QByteArray & hash, attributeHashes) {
+            m_secret.m_itemHashes.insert(hash, item);
+        }
+        m_secret.m_reverseItemHashes.insert(item, attributeHashes);
     }
     
-    // TODO: recreate item hashes
     
     emit collectionChanged(this);
 

@@ -24,6 +24,7 @@
 
 #include <qca_tools.h>
 #include <qca_basic.h>
+#include <QSet>
 
 class QIODevice;
 
@@ -56,6 +57,15 @@ public:
     
     QByteArray decryptData( QByteArray );
     
+    /**
+     * Create a list of hashes out of some attributes.
+     *
+     * @param attributes the attributes to create the hashes for
+     * @param hash the hash function to use
+     * @returns a list of hashes for each of the attributes
+     */
+    QSet<QByteArray> createHashes(const QMap<QString, QString> &attributes);
+
 private:
     /**
      * Set-up the encryption to be used by the secret collection.
