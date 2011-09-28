@@ -30,6 +30,8 @@
 using namespace KSecretsService;
 using namespace std;
 
+Q_DECLARE_METATYPE( KSecretsService::ReadCollectionItemsJob::Item )
+
 ostream& operator << (ostream &out, const QString& str)
 {
     out << qPrintable( str );
@@ -108,6 +110,9 @@ void KSecretsApp::slotListItemsDone(KJob* job)
         
         foreach( ReadCollectionItemsJob::Item item, listJob->items() ) {
             ReadItemPropertyJob *readJob = item->attributes();
+            QVariant varItem;
+            varItem.setValue< ReadCollectionItemsJob::Item >( item );
+            listItemsJob->setCustomData( varItem );
             if ( listItemsJob->addSubjob( readJob ) ) {
                 connect( readJob, SIGNAL(finished(KJob*)), this, SLOT(slotReadItemAttributesDone(KJob*)) );
                 readJob->start();
@@ -125,16 +130,34 @@ void KSecretsApp::slotReadItemAttributesDone(KJob* job)
 {
     ReadItemPropertyJob *readJob = qobject_cast< ReadItemPropertyJob* >(job);
     if ( readJob->error() == 0 ) {
-        StringStringMap attrs = readJob->propertyValue().value< StringStringMap >();
-        StringStringMap::ConstIterator it = attrs.constBegin();
-        for ( ; it != attrs.constEnd(); ++it ) {
-            cout << it.key() << " = " << it.value() << endl;
-        }
+        ReadItemPropertyJob *readLabelJob = readJob->secretItem()->label();
+        QVariant varAttrs;
+        varAttrs.setValue< StringStringMap >( readJob->propertyValue().value< StringStringMap >() );
+        readLabelJob->setCustomData( varAttrs );
+        connect( readLabelJob, SIGNAL(finished(KJob*)), this, SLOT(slotReadItemLabelDone(KJob*)) );
+        readLabelJob->start();
     }
     else {
         cerr << readJob->errorString() << endl;
     }
     job->deleteLater();
+}
+
+void KSecretsApp::slotReadItemLabelDone(KJob* job)
+{
+    ReadItemPropertyJob *readJob = qobject_cast< ReadItemPropertyJob* >(job);
+    if ( readJob->error() == 0 ) {
+        cout << readJob->propertyValue().toString() << "" << endl;
+        cout << "    " << ki18n("attributes:") << endl;
+        StringStringMap attrs = readJob->customData().value< StringStringMap >();
+        StringStringMap::ConstIterator it = attrs.constBegin();
+        for ( ; it != attrs.constEnd(); ++it ) {
+            cout << "        " << it.key() << " = " << it.value() << endl;
+        }
+    }
+    else {
+        cerr << readJob->errorString() << endl;
+    }
 }
 
 void KSecretsApp::slotReadAllItemsDone(KJob* job)

@@ -22,6 +22,7 @@
 #define KSECRETSAPPJOB_H
 
 #include <kcompositejob.h>
+#include <QVariant>
 
 /**
  * This class extends KCompositeJob for several reasons:
@@ -37,8 +38,14 @@ public:
     virtual bool addSubjob( KJob* );
     void start();
     
+    void setCustomData( const QVariant& customData ) { m_customData = customData; }
+    const QVariant& customData() const { return m_customData; }
+    
 protected:
     virtual void slotResult( KJob* );
+    
+private:
+    QVariant    m_customData;
 };
 
 #endif // KSECRETSAPPJOB_H

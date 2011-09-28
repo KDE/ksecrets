@@ -39,6 +39,7 @@ protected Q_SLOTS:
     void slotListItemsDone(KJob*);
     void slotReadItemAttributesDone(KJob*);
     void slotReadAllItemsDone(KJob*);    
+    void slotReadItemLabelDone(KJob*);
 };
 
 
