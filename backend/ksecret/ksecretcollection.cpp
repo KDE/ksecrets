@@ -145,25 +145,42 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
         result.setError( BackendErrorIsLocked, i18n("The backend is locked!") );
     }
     else {
-        // create hashes for each of the attributes queried
-        Q_ASSERT( m_encryptionFilter != 0 );
         QList<BackendItem*> itemList;
-        QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( attributes);
-        if(attributeHashes.isEmpty()) {
-            itemList = items().value();
-        } else {
-            // use the first attribute hash to build an initial list of items matching
-            QHash<QByteArray, KSecretItem*>::const_iterator resit =
-                m_secret.m_itemHashes.constFind(*attributeHashes.constBegin());
-            QHash<QByteArray, KSecretItem*>::const_iterator resend = m_secret.m_itemHashes.constEnd();
-            // now check which of the items in resit match the remainder of the attributes
-            // to do this the actual attributes are used instead of the hashes
-            for(; resit != resend; ++resit) {
-                if(resit.value()->matches(attributes)) {
-                    itemList.append(resit.value());
+        
+        QMap<QString, QString>::const_iterator a = attributes.constBegin();
+        for ( ; a != attributes.constEnd() ; a++ ) {
+            QString attrKey = a.key();
+            QMultiHash< QString, KSecretItem* >::const_iterator it = m_secret.m_lookupHashes.constFind( attrKey );
+            for ( ; it != m_secret.m_lookupHashes.constEnd() ; it++ ) {
+                BackendItem *item = it.value();
+                if ( ! itemList.contains( item ) ) {
+                    QMap< QString, QString > itemAttrs = item->attributes().value();
+                    if ( itemAttrs.value( attrKey ) == a.value() ) {
+                        itemList.append( item );
+                    }
                 }
             }
         }
+        
+//         // create hashes for each of the attributes queried
+//         Q_ASSERT( m_encryptionFilter != 0 );
+//         QList<BackendItem*> itemList;
+//         QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( attributes);
+//         if(attributeHashes.isEmpty()) {
+//             itemList = items().value();
+//         } else {
+//             // use the first attribute hash to build an initial list of items matching
+//             QHash<QByteArray, KSecretItem*>::const_iterator resit =
+//                 m_secret.m_itemHashes.constFind(*attributeHashes.constBegin());
+//             QHash<QByteArray, KSecretItem*>::const_iterator resend = m_secret.m_itemHashes.constEnd();
+//             // now check which of the items in resit match the remainder of the attributes
+//             // to do this the actual attributes are used instead of the hashes
+//             for(; resit != resend; ++resit) {
+//                 if(resit.value()->matches(attributes)) {
+//                     itemList.append(resit.value());
+//                 }
+//             }
+//         }
         result = itemList;
     }
     return result;
@@ -299,13 +316,20 @@ void KSecretCollection::slotItemDeleted(BackendItem *item)
     KSecretItem *kitem = qobject_cast<KSecretItem*>(item);
     Q_ASSERT(kitem);
 
-    // remove the item as well as item hashes
-    if(m_secret.m_reverseItemHashes.contains(kitem)) {
-        Q_FOREACH(const QByteArray & hash, m_secret.m_reverseItemHashes.value(kitem)) {
-            m_secret.m_itemHashes.remove(hash);
+    QMultiHash< QString, KSecretItem* >::iterator it = m_secret.m_lookupHashes.begin();
+    while ( it != m_secret.m_lookupHashes.end() ) {
+        if ( it.value() == item ) {
+            m_secret.m_lookupHashes.erase( it );
         }
-        m_secret.m_reverseItemHashes.remove(kitem);
     }
+    
+//     // remove the item as well as item hashes
+//     if(m_secret.m_reverseItemHashes.contains(kitem)) {
+//         Q_FOREACH(const QByteArray & hash, m_secret.m_reverseItemHashes.value(kitem)) {
+//             m_secret.m_itemHashes.remove(hash);
+//         }
+//         m_secret.m_reverseItemHashes.remove(kitem);
+//     }
     m_secret.m_items.remove(kitem->id());
     
     // sync
@@ -318,20 +342,27 @@ void KSecretCollection::changeAttributeHashes(KSecretItem *item)
 {
     Q_ASSERT(item);
 
-    // remove previous item hashes
-    if(m_secret.m_reverseItemHashes.contains(item)) {
-        QSet<QByteArray> oldHashes = m_secret.m_reverseItemHashes.value(item);
-        Q_FOREACH(const QByteArray & hash, oldHashes) {
-            m_secret.m_itemHashes.remove(hash, item);
-        }
+    QMap< QString, QString> attrs = item->attributes().value();
+    QMapIterator< QString, QString > it( attrs );
+    while ( it.hasNext() ) {
+        it.next();
+        m_secret.m_lookupHashes.insert( it.key(), item );
     }
-
-    // insert new hashes
-    QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
-    Q_FOREACH(const QByteArray & hash, attributeHashes) {
-        m_secret.m_itemHashes.insert(hash, item);
-    }
-    m_secret.m_reverseItemHashes.insert(item, attributeHashes);
+    
+//     // remove previous item hashes
+//     if(m_secret.m_reverseItemHashes.contains(item)) {
+//         QSet<QByteArray> oldHashes = m_secret.m_reverseItemHashes.value(item);
+//         Q_FOREACH(const QByteArray & hash, oldHashes) {
+//             m_secret.m_itemHashes.remove(hash, item);
+//         }
+//     }
+// 
+//     // insert new hashes
+//     QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
+//     Q_FOREACH(const QByteArray & hash, attributeHashes) {
+//         m_secret.m_itemHashes.insert(hash, item);
+//     }
+//     m_secret.m_reverseItemHashes.insert(item, attributeHashes);
 }
 
 void KSecretCollection::startSyncTimer()
@@ -419,12 +450,17 @@ BackendReturn<bool> KSecretCollection::tryUnlock()
                 SLOT(changeAttributeHashes(KSecretItem*)));
         
         emit itemChanged( item ); // that is, item was unlocked
-        
-        QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
-        Q_FOREACH(const QByteArray & hash, attributeHashes) {
-            m_secret.m_itemHashes.insert(hash, item);
+
+        QMapIterator< QString, QString> it( item->attributes().value() );
+        while ( it.hasNext() ) {
+            it.next();
+            m_secret.m_lookupHashes.insert( it.key(), item );
         }
-        m_secret.m_reverseItemHashes.insert(item, attributeHashes);
+//         QSet<QByteArray> attributeHashes = m_encryptionFilter->createHashes( item->attributes().value() );
+//         Q_FOREACH(const QByteArray & hash, attributeHashes) {
+//             m_secret.m_itemHashes.insert(hash, item);
+//         }
+//         m_secret.m_reverseItemHashes.insert(item, attributeHashes);
     }
     
     

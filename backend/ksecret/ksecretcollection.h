@@ -366,11 +366,13 @@ private:
         // the acls message authentication code
         QHash<QString, ApplicationPermission> m_acls;
         QString m_creatorApplication;
+
+        QMultiHash< QString, KSecretItem* > m_lookupHashes;
         
-        // maps lookup attribute hashes to items
-        QMultiHash<QByteArray, KSecretItem*> m_itemHashes;
-        // maps item ids to their hashes for changing/removal
-        QHash<KSecretItem*, QSet<QByteArray> > m_reverseItemHashes;
+//         // maps lookup attribute hashes to items
+//         QMultiHash<QByteArray, KSecretItem*> m_itemHashes;
+//         // maps item ids to their hashes for changing/removal
+//         QHash<KSecretItem*, QSet<QByteArray> > m_reverseItemHashes;
 
         // maps item identifiers to items
         QHash<QString, KSecretItem*> m_items;
