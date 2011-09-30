@@ -29,6 +29,7 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusObjectPath>
 #include <kmessagebox.h>
+#include <kdebug.h>
 
 PromptBase::PromptBase(Service *service, QObject *parent)
     : QObject(parent), m_serviceObjectPath(service->objectPath())
@@ -309,7 +310,8 @@ void ServiceMultiPrompt::jobResult(KJob *job)
 
     if(m_jobs.isEmpty()) {
         // all jobs finished
-        emitCompleted(false, qVariantFromValue(m_result));
+        QVariant varResult = QVariant::fromValue< QList<QDBusObjectPath> >( m_result );
+        emitCompleted( false, varResult );
         deleteLater();
     }
 }

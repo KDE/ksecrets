@@ -34,4 +34,5 @@ void registerDBusTypes()
     qDBusRegisterMetaType<StringStringMap>();
     qDBusRegisterMetaType<ObjectPathSecretMap>();
     qDBusRegisterMetaType<StringVariantMap>();
+    qDBusRegisterMetaType<QList<QDBusObjectPath> >();
 }
