@@ -23,8 +23,8 @@
 #include "synclogger.h"
 #include <ksecretsservicedbustypes.h>
 #include <ksecretsservicecollection.h>
-#include "service_interface.h"
-#include "session_interface.h"
+// #include "service_interface.h"
+// #include "session_interface.h"
 
 #include <kdebug.h>
 #include <klocalizedstring.h>
