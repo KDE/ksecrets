@@ -257,6 +257,7 @@ void ServiceMultiPrompt::jobResult(KJob *job)
                 QDBusObjectPath path;
                 path.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
                 m_result.append(path);
+                // FIXME: find out why on my 64 bit system the m_result contains one empty string despite path is non-empty
             }
         }
         break;
@@ -310,7 +311,7 @@ void ServiceMultiPrompt::jobResult(KJob *job)
 
     if(m_jobs.isEmpty()) {
         // all jobs finished
-        QVariant varResult = QVariant::fromValue< QList<QDBusObjectPath> >( m_result );
+        QVariant varResult = qVariantFromValue( m_result );
         emitCompleted( false, varResult );
         deleteLater();
     }

@@ -28,6 +28,7 @@
 #include <QtDBus/QDBusObjectPath>
 
 #include "ksecretdbuscontext.h"
+#include <qdbusconnection.h>
 
 class Service;
 
@@ -198,9 +199,10 @@ private Q_SLOTS:
     void jobResult(KJob *job);
 
 private:
-    bool m_prompted; // true if one of the prompt()/dismiss() methods has been called already
-    QList<QDBusObjectPath> m_result; // resulting unlocked/locked object paths
-    QSet<BackendJob*> m_jobs; // encapsulated jobs
+    bool                    m_prompted; // true if one of the prompt()/dismiss() methods has been called already
+    QList<QDBusObjectPath>  m_result;   // resulting unlocked/locked object paths
+    QSet<BackendJob*>       m_jobs;     // encapsulated jobs
 };
+
 
 #endif
