@@ -19,6 +19,7 @@ add_subdirectory(icons)
 add_subdirectory(kcm)
 add_subdirectory(tests)
 
+
 SET( ksecretsync_SRCS 
     statuswidget.cpp 
     syncdaemon.cpp 
@@ -32,14 +33,6 @@ SET( ksecretsync_SRCS
     syncprotocol.cpp
 )
 
-kde4_add_kcfg_files(ksecretsync_SRCS
-     kcm/ksecretsynccfg.kcfgc
-)
-
-KDE4_ADD_UI_FILES ( ksecretsync_SRCS
-    statuswidget.ui
-)
-
 set_source_files_properties( 
     ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml
     ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml
@@ -47,6 +40,14 @@ set_source_files_properties(
 
 QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml service_interface )
 QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml session_interface )
+
+kde4_add_kcfg_files(ksecretsync_SRCS
+     kcm/ksecretsynccfg.kcfgc
+)
+
+KDE4_ADD_UI_FILES ( ksecretsync_SRCS
+    statuswidget.ui
+)
 
 KDE4_ADD_EXECUTABLE (ksecretsync ${ksecretsync_SRCS})
 
