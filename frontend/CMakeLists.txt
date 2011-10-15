@@ -11,7 +11,6 @@ SET (ksecretservice_frontend_SRCS
     secret/prompt.cpp
     secret/service.cpp
     secret/session.cpp
-    secret/ksecretdbuscontext.cpp
     # Daemon DBus adaptors
     secret/adaptors/daemonsecret.cpp
     secret/adaptors/dbustypes.cpp

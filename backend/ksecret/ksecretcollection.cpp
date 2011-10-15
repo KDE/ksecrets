@@ -154,8 +154,30 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
             for ( ; it != m_secret.m_lookupHashes.constEnd() ; it++ ) {
                 BackendItem *item = it.value();
                 if ( ! itemList.contains( item ) ) {
-                    QMap< QString, QString > itemAttrs = item->attributes().value();
-                    if ( itemAttrs.value( attrKey ) == a.value() ) {
+                    bool match = false;
+                    QString searchAttr = a.value();
+                    if ( searchAttr.isEmpty() ) {
+                        match = true;
+                    }
+                    else {
+                        QMap< QString, QString > itemAttrs = item->attributes().value();
+                        
+                        if ( searchAttr.startsWith("regexp:", Qt::CaseInsensitive ) ) {
+                            QString expr = searchAttr.mid(7);
+                            if ( !expr.isEmpty() ) {
+                                QRegExp rx( expr );
+                                match = rx.exactMatch( expr );
+                            }
+                        }
+                        else {
+                            // do exact match
+                            if ( itemAttrs.value( attrKey ) == a.value() ) {
+                                match = true;
+                            }
+                        }
+                    }
+
+                    if ( match ) {
                         itemList.append( item );
                     }
                 }

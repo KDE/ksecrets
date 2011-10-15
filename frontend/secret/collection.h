@@ -26,7 +26,8 @@
 #include <QtCore/QObject>
 #include <QtDBus/QDBusObjectPath>
 
-#include "ksecretdbuscontext.h"
+#include "ksecretobject.h"
+#include <QDBusContext>
 
 class BackendCollection;
 class BackendItem;
@@ -38,7 +39,7 @@ class Item;
  * Represents a collection on the D-Bus implementing the org.freedesktop.Secret.Collection
  * interface.
  */
-class Collection : public QObject, protected KSecretDBusContext
+class Collection : public QObject, public QDBusContext, public KSecretObject<Collection>
 {
     Q_OBJECT
 

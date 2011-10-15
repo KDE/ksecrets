@@ -27,7 +27,7 @@
 #include <QtCore/QSet>
 #include <QtDBus/QDBusObjectPath>
 
-#include "ksecretdbuscontext.h"
+#include "ksecretobject.h"
 #include <qdbusconnection.h>
 
 class Service;
@@ -36,7 +36,7 @@ class Service;
  * Implementation of prompt objects according to the org.freedesktop.Secret.Prompt
  * interface.
  */
-class PromptBase : public QObject, protected KSecretDBusContext
+class PromptBase : public QObject, public QDBusContext, public KSecretObject<PromptBase>
 {
     Q_OBJECT
 

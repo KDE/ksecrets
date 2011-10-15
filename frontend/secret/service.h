@@ -28,8 +28,9 @@
 #include <QtDBus/QDBusObjectPath>
 #include <QtDBus/QDBusConnectionInterface>
 
-#include "ksecretdbuscontext.h"
+#include "ksecretobject.h"
 #include "adaptors/secretstruct.h"
+#include <QDBusContext>
 
 class Collection;
 
@@ -40,7 +41,7 @@ class Collection;
  *
  * @todo Implement proper session handling
  */
-class Service : public QObject, protected KSecretDBusContext
+class Service : public QObject, public QDBusContext, public KSecretObject<Service>
 {
     Q_OBJECT
 

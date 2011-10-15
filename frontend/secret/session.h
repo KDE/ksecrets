@@ -28,7 +28,7 @@
 #include <QtCore/QObject>
 #include <QtCrypto/QtCrypto>
 
-#include "ksecretdbuscontext.h"
+#include "ksecretobject.h"
 #include <ksecretsservicecodec.h>
 
 using namespace KSecretsService;
@@ -42,7 +42,7 @@ class Peer;
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */
-class Session : public QObject, protected KSecretDBusContext
+class Session : public QObject, protected QDBusContext, public KSecretObject<Session>
 {
     Q_OBJECT
 

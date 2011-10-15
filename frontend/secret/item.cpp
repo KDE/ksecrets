@@ -141,6 +141,11 @@ SecretStruct Item::getSecret(const QDBusObjectPath &session)
             
         } else {
             // TODO: error, requires session
+            // FIXME: this really needs fixing as we get here in the followin scenario:
+            // kwallet manager editor is open
+            // ksecretsserviced is killed
+            // navigation occurs in kwallet editor
+            // the collection is unlocked then CRASH here
             Q_ASSERT(0);
         }
     }
