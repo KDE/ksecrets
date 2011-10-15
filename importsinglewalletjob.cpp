@@ -297,7 +297,20 @@ void ImportSingleWalletJob::processNextEntry()
     attrs[KSS_ATTR_WALLETTYPE] = QString("%1").arg((int)walletEntry->type());
 
     Secret secret;
-    secret.setValue( walletEntry->value(), "kwallet/value" );
+    switch (walletEntry->type()) {
+        case KWallet::Entry::Password:
+            secret.setValue( walletEntry->password(), "kwallet/password" );
+            break;
+        case KWallet::Entry::Stream:
+            secret.setValue( walletEntry->value(), "kwallet/stream" );
+            break;
+        case KWallet::Entry::Map:
+            secret.setValue( walletEntry->map(), "kwallet/map" );
+            break;
+        default:
+            kDebug() << "Unknown entry type " << walletEntry->type();
+            return;
+    }
     
     CreateCollectionItemJob *createItemJob = m_collection->createItem(entry, attrs, secret, true);
     createItemJob->setUiDelegate(0); // no notification needed from this job

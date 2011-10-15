@@ -37,6 +37,7 @@
 
 #include <KStandardDirs>
 #include <QDir>
+#include <kuniqueapplication.h>
 
 using namespace KSecretsService;
 
@@ -106,6 +107,10 @@ void KwlImporterJob::slotResult(KJob* job)
 {
     KCompositeJob::slotResult(job);
     setProcessedAmount( Files, processedAmount(Files) + 1 );
+    if ( !hasSubjobs() ) {
+        // this was the last subjob to end, so quit
+        KUniqueApplication::instance()->quit();
+    }
 }
 
 bool KwlImporterJob::doKill()
