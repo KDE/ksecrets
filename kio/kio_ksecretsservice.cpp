@@ -34,6 +34,7 @@ extern "C" int KDE_EXPORT kdemain( int argc, char **argv )
     
     KComponentData instance( "kio_ksecretsservice" );
     QCoreApplication app( argc, argv ); // need this for jobs event loop
+    KLocale::setMainCatalog("ksecrets");
     
     if ( argc != 4 ) {
         fprintf( stderr, "Usage: kio_ksecretsservice protocol domain-socket1 domain-socket2\n" );
