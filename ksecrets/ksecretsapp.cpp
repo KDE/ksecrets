@@ -80,7 +80,7 @@ void KSecretsApp::slotListCollectionsDone(KJob* job)
 {
     ListCollectionsJob *listJob = qobject_cast< ListCollectionsJob* >(job);
     if ( listJob->error() == 0 ) {
-        foreach( QString collName, listJob->collections() ) {
+        foreach( const QString &collName, listJob->collections() ) {
             cout << collName << endl;
         }
     }
@@ -108,7 +108,7 @@ void KSecretsApp::slotListItemsDone(KJob* job)
         KSecretsAppJob *listItemsJob = new KSecretsAppJob(this);
         connect( listItemsJob, SIGNAL(finished(KJob*)), this, SLOT(slotReadAllItemsDone(KJob*)) );
         
-        foreach( ReadCollectionItemsJob::Item item, listJob->items() ) {
+        foreach( const ReadCollectionItemsJob::Item &item, listJob->items() ) {
             ReadItemPropertyJob *readJob = item->attributes();
             QVariant varItem;
             varItem.setValue< ReadCollectionItemsJob::Item >( item );

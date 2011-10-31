@@ -20,6 +20,10 @@
  */
 
 
+#include "importsinglewalletjob.h"
+#include "kwalletbackend/kwalletentry.h"
+#include "kwalletbackend/kwalletbackend.h"
+#include <QTimer>
 #include <kpassworddialog.h>
 #include <kwallet.h> // for KSS_ macros
 #include <KLocalizedString>
@@ -34,10 +38,6 @@
 #include <ksecretsservicecollectionjobs.h>
 #include <ksecretsserviceitem.h>
 
-#include "importsinglewalletjob.h"
-#include "kwalletbackend/kwalletentry.h"
-#include "kwalletbackend/kwalletbackend.h"
-#include <QTimer>
 
 using namespace KSecretsService;
 
@@ -218,7 +218,7 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
     
     // count the entries in this wallet, for progress bar needs
     uint amount =0;
-    foreach( const QString folder, m_folderList ) {
+    foreach( const QString &folder, m_folderList ) {
         m_wallet->setFolder( folder );
         amount += m_wallet->entryList().count();
     }

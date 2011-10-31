@@ -21,7 +21,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="_computerName">
+      <widget class="KLineEdit" name="_computerName">
        <property name="toolTip">
         <string>Enter computer name or IP address here</string>
        </property>
@@ -42,7 +42,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="_port">
+      <widget class="KLineEdit" name="_port">
        <property name="toolTip">
         <string>Enter remote port number here</string>
        </property>

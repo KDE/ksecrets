@@ -97,7 +97,7 @@ SyncModel::SyncModel() :
     setHorizontalHeaderLabels( horizontalLabels );
 
     if ( KSecretSyncCfg::computerList().count() >0 ) {
-        foreach( QString computerName, KSecretSyncCfg::computerList() ) {
+        foreach( const QString &computerName, KSecretSyncCfg::computerList() ) {
             ComputerData *computerData = new ComputerData( computerName );
             QList< QStandardItem* > itemList;
             itemList.append( new ComputerDataDisplayItem( computerData, 0 ));
