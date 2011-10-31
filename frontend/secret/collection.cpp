@@ -31,9 +31,10 @@
 #include <kdebug.h>
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QDebug>
+#include <klocalizedstring.h>
 
 Collection::Collection(BackendCollection *collection, Service *service)
-    : QObject(service), m_service(service), m_collection(collection)
+    : QObject(service), m_service(service), m_collection(collection), m_deleted(false)
 {
     Q_ASSERT(collection);
     m_objectPath.setPath(service->objectPath().path() + "/collection/" + collection->id());
@@ -59,71 +60,123 @@ const QList<QDBusObjectPath> &Collection::items() const
     return m_itemPaths;
 }
 
-void Collection::setLabel(const QString &label)
+void Collection::setLabel( const QString &label )
 {
-    BackendReturn<void> rc = m_collection->setLabel(label);
-    if(rc.isError()) {
-        // TODO: generate D-Bus error
+    if ( !m_deleted && m_collection ) {
+        BackendReturn<void> rc = m_collection->setLabel( label );
+        if ( rc.isError() ) {
+            sendErrorReply( QDBusError::Failed, rc.errorMessage() );
+        }
+    }
+    else {
+        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The collection has been deleted").toString() );
     }
 }
 
 QString Collection::label() const
 {
-    BackendReturn<QString> rc = m_collection->label();
-    if(rc.isError()) {
-        // TODO: generate D-Bus error
+    QString result;
+    if ( !m_deleted && m_collection ) {
+        BackendReturn<QString> rc = m_collection->label();
+        if(rc.isError()) {
+            sendErrorReply( QDBusError::Failed, rc.errorMessage() );
+        }
+        result = rc.value();
     }
-    return rc.value();
+    else {
+        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The collection has been deleted").toString() );
+    }
+    return result;
 }
 
 bool Collection::locked() const
 {
-    return m_collection->isLocked();
+    bool result = true;
+    if ( !m_deleted && m_collection ) {
+        result = m_collection->isLocked();
+    }
+    return result;
 }
 
 qulonglong Collection::created() const
 {
-    return m_collection->created().toTime_t();
+    if ( !m_deleted && m_collection ) {
+        return m_collection->created().toTime_t();
+    }
+    return 0;
 }
 
 qulonglong Collection::modified() const
 {
-    return m_collection->modified().toTime_t();
+    if ( !m_deleted && m_collection ) {
+        return m_collection->modified().toTime_t();
+    }
+    return 0;
 }
 
 QDBusObjectPath Collection::deleteCollection()
 {
-    CollectionDeleteInfo deleteInfo(getCallingPeer());
-    // TODO: init peer here
-    DeleteCollectionJob *dcj = m_collection->createDeleteJob(deleteInfo);
-    if(dcj->isImmediate()) {
-        dcj->exec();
-        return QDBusObjectPath("/");
-    } else {
-        SingleJobPrompt *p = new SingleJobPrompt(m_service, dcj, this);
-        return p->objectPath();
+    QDBusObjectPath result("/");
+    if ( m_collection && !m_deleted ) {
+        CollectionDeleteInfo deleteInfo(getCallingPeer());
+        // TODO: init peer here
+        DeleteCollectionJob *dcj = m_collection->createDeleteJob(deleteInfo);
+        if(dcj->isImmediate()) {
+            dcj->exec();
+        } else {
+            SingleJobPrompt *p = new SingleJobPrompt(m_service, dcj, this);
+            result = p->objectPath();
+        }
+    }
+    else {
+        if ( m_deleted ) {
+            sendErrorReply( QDBusError::Failed, ki18n("Collection was already deleted").toString() );
+        }
+        else {
+            sendErrorReply( QDBusError::InternalError );
+        }
+    }
+    return result;
+}
+
+void Collection::slotCollectionDeleted(BackendCollection* coll)
+{
+    if ( coll == m_collection ) {
+        m_collection = 0;
+        m_deleted = true;
     }
 }
 
 QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &attributes)
 {
     QList<QDBusObjectPath> rc;
-    BackendReturn<QList<BackendItem*> > br = m_collection->searchItems(attributes);
-    if(br.isError()) {
-        // TODO: generate D-Bus error
-    } else {
-        Q_FOREACH(BackendItem * item, br.value()) {
-            rc.append(QDBusObjectPath(m_objectPath.path() + '/' + item->id()));
+    if ( m_collection ) {
+        BackendReturn<QList<BackendItem*> > br = m_collection->searchItems(attributes);
+        if(br.isError()) {
+            sendErrorReply( QDBusError::Failed, br.errorMessage() );
+        } else {
+            Q_FOREACH(BackendItem * item, br.value()) {
+                rc.append(QDBusObjectPath(m_objectPath.path() + '/' + item->id()));
+            }
         }
+    }
+    else {
+        sendErrorReply( QDBusError::InternalError );
     }
     return rc;
 }
 
+// FIXME: this method needs some refactoring for the sake of it's readability
 QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties,
                                        const SecretStruct &secret, 
                                        bool replace,
                                        QDBusObjectPath &prompt)
 {
+    if ( !m_collection ) {
+        sendErrorReply( QDBusError::InternalError );
+        return QDBusObjectPath("/");
+    }
+    
     // default label?
     QString label;
     QMap<QString, QString> attributes;
@@ -133,7 +186,9 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.m_session.path());
     Session *session;
     if(!(session = qobject_cast<Session*>(object))) {
-        // TODO: error, requires session
+        kDebug() << "ERROR there is no available session";
+        sendErrorReply( QDBusError::InternalError );
+        return QDBusObjectPath("/");
     }
 
     if(properties.contains("Locked")) {
@@ -175,9 +230,15 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
 
 QDBusObjectPath Collection::changePassword()
 {
-    ChangeAuthenticationCollectionJob *cpj = m_collection->createChangeAuthenticationJob( getCallingPeer() );
-    SingleJobPrompt *pj = new SingleJobPrompt(m_service, cpj, this );
-    return pj->objectPath();
+    if ( m_collection ) {
+        ChangeAuthenticationCollectionJob *cpj = m_collection->createChangeAuthenticationJob( getCallingPeer() );
+        SingleJobPrompt *pj = new SingleJobPrompt(m_service, cpj, this );
+        return pj->objectPath();
+    }
+    else {
+        sendErrorReply( QDBusError::InternalError );
+        return QDBusObjectPath("/");
+    }
 }
 
 BackendCollection *Collection::backendCollection() const

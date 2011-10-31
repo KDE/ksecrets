@@ -69,7 +69,7 @@ KSecretCollection *KSecretCollection::create(const QString &id, const QCA::Secur
 }
 
 KSecretCollection::KSecretCollection(BackendCollectionManager *parent)
-    : BackendCollection(parent), m_locked(), m_encryptionFilter(0), m_dirty(true)
+    : BackendCollection(parent), m_locked(), m_encryptionFilter(0), m_dirty(false)
 {
     m_syncTimer.setSingleShot(true);
     connect(&m_syncTimer, SIGNAL(timeout()), SLOT(sync()));
@@ -576,10 +576,10 @@ void KSecretCollection::setDirty(bool dirty)
             m_dirty = dirty;
             if ( dirty ) {
                 m_secret.m_modified = QDateTime::currentDateTimeUtc();
-                startSyncTimer();
             }
         }
     }
+    startSyncTimer();
 }
 
 bool KSecretCollection::serialize(QString &errorMessage) const

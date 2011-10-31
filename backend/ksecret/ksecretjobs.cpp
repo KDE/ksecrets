@@ -282,6 +282,7 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(KJob *job)
     } else {
         m_passwordAsked = true;
     
+        m_collectionPerm = collection()->applicationPermission( unlockInfo().m_peer.exePath() );
         if ( m_collectionPerm == PermissionUndefined ) {
             // ask for the ACL preference if the application is unknown by this collection
             AbstractUiManager *uiManager = BackendMaster::instance()->uiManager();

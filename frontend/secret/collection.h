@@ -172,6 +172,7 @@ private Q_SLOTS:
     void slotItemDeleted(BackendItem *item);
     // handle itemChanged() calls from a backend collection
     void slotItemChanged(BackendItem *item);
+    void slotCollectionDeleted(BackendCollection *coll);
 
 private:
     Service *m_service; // parent service
@@ -179,6 +180,7 @@ private:
     QDBusObjectPath m_objectPath;
     QList<QDBusObjectPath> m_itemPaths; // cache for items' object paths
     QMap< QDBusObjectPath, Item*>   m_items;
+    bool    m_deleted;
 };
 
 #endif
