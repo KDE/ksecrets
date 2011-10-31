@@ -161,7 +161,7 @@ private:
             result = B::writeData( data, maxSize );
         }
         
-        return result; // take care not to return chunk.lenght here 
+        return result; // take care not to return chunk.length here 
     }
 
 public:

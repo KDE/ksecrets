@@ -162,7 +162,7 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
                     else {
                         QMap< QString, QString > itemAttrs = item->attributes().value();
                         
-                        if ( searchAttr.startsWith("regexp:", Qt::CaseInsensitive ) ) {
+                        if ( searchAttr.startsWith( QLatin1String("regexp:"), Qt::CaseInsensitive ) ) {
                             QString expr = searchAttr.mid(7);
                             if ( !expr.isEmpty() ) {
                                 QRegExp rx( expr );
