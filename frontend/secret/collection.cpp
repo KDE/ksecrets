@@ -122,6 +122,7 @@ QDBusObjectPath Collection::deleteCollection()
         // TODO: init peer here
         DeleteCollectionJob *dcj = m_collection->createDeleteJob(deleteInfo);
         if(dcj->isImmediate()) {
+            m_deleted = true;
             dcj->exec();
         } else {
             SingleJobPrompt *p = new SingleJobPrompt(m_service, dcj, this);

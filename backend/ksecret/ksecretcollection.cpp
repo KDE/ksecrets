@@ -171,7 +171,7 @@ BackendReturn<QList<BackendItem*> > KSecretCollection::searchItems(
                         }
                         else {
                             // do exact match
-                            if ( itemAttrs.value( attrKey ) == a.value() ) {
+                            if ( itemAttrs.value( attrKey ) == searchAttr ) {
                                 match = true;
                             }
                         }
@@ -341,7 +341,10 @@ void KSecretCollection::slotItemDeleted(BackendItem *item)
     QMultiHash< QString, KSecretItem* >::iterator it = m_secret.m_lookupHashes.begin();
     while ( it != m_secret.m_lookupHashes.end() ) {
         if ( it.value() == item ) {
-            m_secret.m_lookupHashes.erase( it );
+            it = m_secret.m_lookupHashes.erase( it );
+        }
+        else {
+            ++it;
         }
     }
     

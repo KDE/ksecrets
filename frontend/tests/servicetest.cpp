@@ -84,7 +84,8 @@ void ServiceTest::session()
     QDBusMessage unsuppReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
                                unsuppInput);
     QCOMPARE(unsuppReply.type(), QDBusMessage::ErrorMessage);
-    QEXPECT_FAIL("", "Error only returned if called via D-Bus (test calls locally)", Continue);
+//    kDebug() << unsuppReply.errorName();
+//    QEXPECT_FAIL("", "Error only returned if called via D-Bus (test calls locally)", Continue);
     QCOMPARE(unsuppReply.errorName(),
              QLatin1String("org.freedesktop.Secret.Error.NotSupported"));
 
