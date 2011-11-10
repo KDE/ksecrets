@@ -48,9 +48,6 @@ Service::Service(BackendMaster *master, QObject *parent)
     new orgFreedesktopSecret::ServiceAdaptor(this);
     QDBusConnection::sessionBus().registerObject(m_basePath.path(), this);
 
-    // TODO: make master singleton so we can get a KWallet-compatible interface
-    //       on top of it as well.
-
     connect(m_master, SIGNAL(collectionCreated(BackendCollection*)),
             SLOT(slotCollectionCreated(BackendCollection*)));
     connect(m_master, SIGNAL(collectionDeleted(BackendCollection*)),
