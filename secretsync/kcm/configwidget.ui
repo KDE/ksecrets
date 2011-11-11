@@ -199,7 +199,7 @@
             <string>Find an announcing computer on the local network</string>
            </property>
            <property name="text">
-            <string>&amp;Find Computer ...</string>
+            <string>&amp;Find Computer...</string>
            </property>
           </widget>
          </item>
@@ -212,7 +212,7 @@
             <string>Start announcing this computer on the network</string>
            </property>
            <property name="text">
-            <string>Announce This Computer ...</string>
+            <string>Announce This Computer...</string>
            </property>
           </widget>
          </item>
