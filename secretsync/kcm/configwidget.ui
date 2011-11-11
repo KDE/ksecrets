@@ -176,7 +176,7 @@
             <string>Add a new computer to this list</string>
            </property>
            <property name="text">
-            <string>&amp;Add computer...</string>
+            <string>&amp;Add Computer...</string>
            </property>
           </widget>
          </item>
@@ -186,7 +186,7 @@
             <string>Delete the selected computer</string>
            </property>
            <property name="text">
-            <string>&amp;Delete computer</string>
+            <string>&amp;Delete Computer</string>
            </property>
           </widget>
          </item>
@@ -199,7 +199,7 @@
             <string>Find an announcing computer on the local network</string>
            </property>
            <property name="text">
-            <string>&amp;Find computer ...</string>
+            <string>&amp;Find Computer ...</string>
            </property>
           </widget>
          </item>
@@ -212,7 +212,7 @@
             <string>Start announcing this computer on the network</string>
            </property>
            <property name="text">
-            <string>Announce this computer ...</string>
+            <string>Announce This Computer ...</string>
            </property>
           </widget>
          </item>

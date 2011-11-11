@@ -16,6 +16,6 @@ add_subdirectory(kwl2kss)
 add_subdirectory(kio)
 add_subdirectory(secretsync)
 
-include(FeatureSummary)
+#include(FeatureSummary)
 
 macro_display_feature_log()

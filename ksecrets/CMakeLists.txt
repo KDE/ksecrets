@@ -34,5 +34,5 @@ TARGET_LINK_LIBRARIES (ksecrets
 
 
 install( TARGETS ksecrets ${INSTALL_TARGETS_DEFAULT_ARGS})
-install( FILES ksecrets.desktop  DESTINATION  ${SERVICES_INSTALL_DIR} )
+install( FILES ksecrets.desktop  DESTINATION  ${XDG_APPS_INSTALL_DIR} )
 

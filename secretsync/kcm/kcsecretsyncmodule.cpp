@@ -52,7 +52,7 @@ KCSecretSyncModule::KCSecretSyncModule(QWidget* parent, const QVariantList& args
     KCModule( KSecretSyncFactory::componentData(), parent, args)
 {
     KAboutData  *aboutdata = new KAboutData(
-                        "kcm_ksecretsync", 0, ki18n("KDE Secret Service Synchronization Daemon configuration module"),
+                        "kcm_ksecretsync", 0, ki18n("KDE Secret Service Synchronization Daemon Configuration Module"),
                         KDE_VERSION_STRING, ki18n("KDE Secret Service"),
                         KAboutData::License_GPL, ki18n("(C) 2010 Valentin Rusu"));
     aboutdata->addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
