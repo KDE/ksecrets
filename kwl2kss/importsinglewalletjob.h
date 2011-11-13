@@ -27,7 +27,7 @@
 #include <QtDBus/QDBusObjectPath>
 #include <KCompositeJob>
 
-#include <ksecretsservicecollection.h>
+#include <ksecretsservice/ksecretsservicecollection.h>
 
 class KPasswordDialog;
 namespace KWallet

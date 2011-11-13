@@ -23,8 +23,8 @@
 
 #include <QTimer>
 #include <kcmdlineargs.h>
-#include <ksecretsservicecollection.h>
-#include <ksecretsservicedbustypes.h>
+#include <ksecretsservice/ksecretsservicecollection.h>
+//#include <ksecretsservice/private/ksecretsservicedbustypes.h>
 #include <iostream>
 
 using namespace KSecretsService;

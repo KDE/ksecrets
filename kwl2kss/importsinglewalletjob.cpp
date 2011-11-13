@@ -34,9 +34,9 @@
 #include <KDebug>
 #include <QFileInfo>
 
-#include <ksecretsservicecollection.h>
-#include <ksecretsservicecollectionjobs.h>
-#include <ksecretsserviceitem.h>
+#include <ksecretsservice/ksecretsservicecollection.h>
+#include <ksecretsservice/ksecretsservicecollectionjobs.h>
+#include <ksecretsservice/ksecretsserviceitem.h>
 
 
 using namespace KSecretsService;
@@ -312,7 +312,7 @@ void ImportSingleWalletJob::processNextEntry()
             return;
     }
     
-    CreateCollectionItemJob *createItemJob = m_collection->createItem(entry, attrs, secret, true);
+    CreateCollectionItemJob *createItemJob = m_collection->createItem(entry, attrs, secret, KSecretsService::ReplaceExistingItem);
     createItemJob->setUiDelegate(0); // no notification needed from this job
     connect( createItemJob, SIGNAL(finished(KJob*)), this, SLOT(createItemFinished(KJob*)) );
     createItemJob->start();
