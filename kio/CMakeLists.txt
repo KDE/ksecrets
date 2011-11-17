@@ -13,6 +13,7 @@ set( kio_ksecretsservice_SRCS
 KDE4_ADD_PLUGIN( kio_ksecretsservice ${kio_ksecretsservice_SRCS} )
 
 TARGET_LINK_LIBRARIES( kio_ksecretsservice 
+    ksecretsservice
     ${KDE4_KIO_LIBS}
     ${KDE4_KDEUI_LIBS}
 )

@@ -45,7 +45,7 @@ Collection::~Collection()
 {
 }
 
-Collection * KSecretsService::Collection::findCollection(const QString& collectionName, 
+Collection * KSecretsService::Collection::findCollection(const QString& collectionName,
                                                          KSecretsService::Collection::FindCollectionOptions options /* = CreateCollection */,
                                                          const QVariantMap collectionProperties /* = QVariantMap() */,
                                                          const WId &promptParentWindowId /* =0 */ )
@@ -87,9 +87,9 @@ SearchCollectionSecretsJob* Collection::searchSecrets(const QStringStringMap& at
     return new SearchCollectionSecretsJob( this, attributes, this );
 }
 
-CreateCollectionItemJob* Collection::createItem(const QString& label, const QMap< QString, QString >& attributes, const Secret& secret, bool replace /* =false */)
+CreateCollectionItemJob* Collection::createItem(const QString& label, const QMap< QString, QString >& attributes, const Secret& secret, CreateItemOptions options /* = DoNotReplaceExistingItem */)
 {
-    return new CreateCollectionItemJob( this, label, attributes, secret, replace );
+    return new CreateCollectionItemJob( this, label, attributes, secret, options );
 }
 
 ReadCollectionItemsJob* Collection::items() const
@@ -127,10 +127,28 @@ ChangeCollectionPasswordJob* Collection::changePassword()
     return new ChangeCollectionPasswordJob( this );
 }
 
-CollectionLockJob *Collection::lock( const WId wid /* =0 */ )
+LockCollectionJob *Collection::lock( const WId wid /* =0 */ )
 {
-    return new CollectionLockJob( this, wid );
+    return new LockCollectionJob( this, wid );
 }
+
+void Collection::emitStatusChanged()
+{
+    emit statusChanged( d->collectionStatus );
+}
+
+void Collection::emitContentsChanged()
+{
+    emit contentsChanged();
+}
+
+void Collection::emitDeleted()
+{
+    emit deleted();
+}
+
+
+QMap< QDBusObjectPath, CollectionPrivate* > CollectionPrivate::collectionMap;
 
 CollectionPrivate::CollectionPrivate( Collection *coll ) :
         collection( coll ),
@@ -142,6 +160,9 @@ CollectionPrivate::CollectionPrivate( Collection *coll ) :
 
 CollectionPrivate::~CollectionPrivate()
 {
+    if ( collectionMap.contains( dbusPath ) ) {
+        collectionMap.remove( dbusPath );
+    }
 }
 
 void CollectionPrivate::setPendingFindCollection( const WId &promptParentId,
@@ -152,8 +173,14 @@ void CollectionPrivate::setPendingFindCollection( const WId &promptParentId,
     collectionName = collName;
     collectionProperties = collProps;
     findOptions = opts;
-    collectionStatus = Collection::Pending;
+    setStatus( Collection::Pending );
     promptParentWindowId = promptParentId;
+}
+
+void CollectionPrivate::setStatus( Collection::Status newStatus )
+{
+    collectionStatus = newStatus;
+    collection->emitStatusChanged();
 }
 
 bool CollectionPrivate::isValid()
@@ -169,11 +196,12 @@ void CollectionPrivate::setDBusPath( const QDBusObjectPath &path )
 {
     collectionIf = DBusSession::createCollectionIf( path );
     if ( collectionIf->isValid() ) {
-        collectionStatus = (findOptions & Collection::CreateCollection) ? Collection::NewlyCreated : Collection::FoundExisting;
         kDebug() << "SUCCESS opening collection " << path.path();
+        collectionMap.insert( path, this );
+        dbusPath = path;
     }
     else {
-        collectionStatus = Collection::NotFound;
+        setStatus( Collection::NotFound );
         kDebug() << "ERROR opening collection " << path.path();
     }
 }
@@ -189,7 +217,12 @@ OrgFreedesktopSecretCollectionInterface *CollectionPrivate::collectionInterface(
         // well, some attribute read method is now happening and we should now really open or find the collection
         // the only problem is that we'll be forced to call findJob->exec() to do this and it's evil :-)
         FindCollectionJob *findJob = new FindCollectionJob( collection, 0 );
-        findJob->exec();
+        if ( !findJob->exec() ) {
+            kDebug() << "FindCollectionJob failed!";
+        }
+        if ( collectionIf == 0 ) {
+           kDebug() << "WARNING: returning NULL collectionInterface";
+        }
     }
     return collectionIf;
 }
@@ -204,8 +237,30 @@ void Collection::readIsValid( ReadCollectionPropertyJob *readPropertyJob)
     readPropertyJob->d->value = d->isValid();
 }
 
+void CollectionPrivate::notifyCollectionChanged( const QDBusObjectPath& path )
+{
+    if ( collectionMap.contains( path ) ) {
+        CollectionPrivate *cp = collectionMap[ path ];
+        cp->collection->emitContentsChanged();
+    }
+    else {
+        kDebug() << "Ignoring notifyCollectionChanged for " << path.path();
+    }
+}
+
+void CollectionPrivate::notifyCollectionDeleted( const QDBusObjectPath& path )
+{
+    if ( collectionMap.contains( path ) ) {
+        CollectionPrivate *cp = collectionMap[ path ];
+        cp->collection->emitDeleted();
+    }
+    else {
+        kDebug() << "Ignoring notifyCollectionDeleted for " << path.path();
+    }
+}
+
+
 #include "ksecretsservicecollection.moc"
 
     
 };
-

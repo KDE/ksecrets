@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES (
     ${QCA2_INCLUDE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
@@ -36,7 +37,7 @@ SET( ksecretsync_SRCS
 set_source_files_properties( 
     ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml
     ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml
-    PROPERTIES INCLUDE ksecretsservice/private/ksecretsservicedbustypes.h )
+    PROPERTIES INCLUDE ../ksecretsservice/ksecretsservicedbustypes.h )
 
 QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml service_interface )
 QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml session_interface )

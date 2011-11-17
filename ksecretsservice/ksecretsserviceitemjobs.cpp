@@ -32,13 +32,29 @@
 using namespace KSecretsService;
 
 
-SecretItemJob::SecretItemJob(SecretItem* item): 
-    secretItem( item )
+SecretItemJob::SecretItemJob(SecretItem* item) :
+    d( new SecretItemJobPrivate() )
 {
+    d->_item = item;
 }
 
 SecretItemJob::~SecretItemJob()
 {
+}
+
+SecretItem* SecretItemJob::secretItem() const
+{
+    return d->_item;
+}
+
+void SecretItemJob::setCustomData(const QVariant& data)
+{
+    d->_customData = data;
+}
+
+const QVariant& SecretItemJob::customData() const
+{
+    return d->_customData;
 }
 
 void SecretItemJob::finished(SecretItemJob::ItemJobError err, const QString& msg)
@@ -48,14 +64,14 @@ void SecretItemJob::finished(SecretItemJob::ItemJobError err, const QString& msg
     emitResult();
 }
 
-
-
+SecretItemJobPrivate::SecretItemJobPrivate()
+{
+}
 
 GetSecretItemSecretJob::GetSecretItemSecretJob( SecretItem* item ) :
     SecretItemJob( item ),
     d( new GetSecretItemSecretJobPrivate( this ) )
 {
-    d->secretItemPrivate = item->d.data();
 }
 
 GetSecretItemSecretJob::~GetSecretItemSecretJob()
@@ -69,18 +85,23 @@ void GetSecretItemSecretJob::start()
 
 Secret GetSecretItemSecretJob::secret() const
 {
-    return Secret( new SecretPrivate( d->secret ) );
+    SecretPrivate *pr = 0;
+    if ( !SecretPrivate::fromSecretStruct( d->secret, pr ) ) {
+        kDebug() << "WARNING: decrypting secret FAILED";
+    }
+    return Secret( pr );
 }
 
 
 GetSecretItemSecretJobPrivate::GetSecretItemSecretJobPrivate(GetSecretItemSecretJob * j) :
-    job( j )
+    job( j ),
+    secretItemPrivate( j->secretItem()->d )
 {
 }
 
 void GetSecretItemSecretJobPrivate::start()
 {
-    QDBusPendingReply<SecretStruct> reply = job->d->secretItemPrivate->itemIf->GetSecret( DBusSession::sessionPath() );
+    QDBusPendingReply<DBusSecretStruct> reply = job->d->secretItemPrivate->itemIf()->GetSecret( DBusSession::sessionPath() );
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher( reply );
     connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(getSecretReply(QDBusPendingCallWatcher*)) );
 }
@@ -88,9 +109,10 @@ void GetSecretItemSecretJobPrivate::start()
 void GetSecretItemSecretJobPrivate::getSecretReply( QDBusPendingCallWatcher *watcher )
 {
     Q_ASSERT(watcher != 0);
-    QDBusPendingReply<SecretStruct> reply = *watcher;
+    QDBusPendingReply<DBusSecretStruct> reply = *watcher;
     if ( !reply.isError() ) {
         secret = reply.argumentAt<0>();
+        kDebug() << "Received Secret size: " << secret.m_value.size();
         job->finished( SecretItemJob::NoError );
     }
     else {
@@ -105,8 +127,8 @@ SetSecretItemSecretJob::SetSecretItemSecretJob( SecretItem* item, const Secret &
     SecretItemJob( item ),
     d( new SetSecretItemSecretJobPrivate( this, s ) )
 {
-    d->secretItemPrivate = item->d.data();
-    d->secretPrivate = s.d.data();
+    d->secretItemPrivate = item->d;
+    d->secretPrivate = s.d;
 }
 
 SetSecretItemSecretJob::~SetSecretItemSecretJob()
@@ -126,15 +148,15 @@ SetSecretItemSecretJobPrivate::SetSecretItemSecretJobPrivate( SetSecretItemSecre
     
 void SetSecretItemSecretJobPrivate::start()
 {
-    SecretStruct secretStruct;
+    DBusSecretStruct secretStruct;
     if ( secretPrivate->toSecretStruct( secretStruct ) ) {
-        QDBusPendingReply< void > reply = secretItemPrivate->itemIf->SetSecret( secretStruct );
+        QDBusPendingReply< void > reply = secretItemPrivate->itemIf()->SetSecret( secretStruct );
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher( reply );
         connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(setSecretReply(QDBusPendingCallWatcher*)) );
     }
     else {
-        kDebug() << "ERROR building SecretStruct";
-        job->finished( SecretItemJob::InternalError, "ERROR building SecretStruct" );
+        kDebug() << "ERROR building DBusSecretStruct";
+        job->finished( SecretItemJob::InternalError, "ERROR building DBusSecretStruct" );
     }
 }
 
@@ -156,7 +178,7 @@ SecretItemDeleteJob::SecretItemDeleteJob( SecretItem * item, const WId &promptPa
     SecretItemJob( item ),
     d( new SecretItemDeleteJobPrivate( this ) )
 {
-    d->secretItemPrivate = item->d.data();
+    d->secretItemPrivate = item->d;
     d->promptWinId = promptParentWindowId;
 }
 
@@ -176,7 +198,7 @@ SecretItemDeleteJobPrivate::SecretItemDeleteJobPrivate( SecretItemDeleteJob *j )
     
 void SecretItemDeleteJobPrivate::startDelete()
 {
-    QDBusPendingReply< QDBusObjectPath > reply =  secretItemPrivate->itemIf->Delete();
+    QDBusPendingReply< QDBusObjectPath > reply =  secretItemPrivate->itemIf()->Delete();
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher( reply );
     connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(deleteItemReply(QDBusPendingCallWatcher*)) );
 }
@@ -230,7 +252,7 @@ void SecretItemDeleteJobPrivate::deletePromptFinished( KJob* j)
 
 ReadItemPropertyJob::ReadItemPropertyJob( SecretItem *item, const char *propName ) :
     SecretItemJob( item ),
-    d( new ReadItemPropertyJobPrivate( item->d.data(), this ) ),
+    d( new ReadItemPropertyJobPrivate( item->d, this ) ),
     propertyReadMember(0)
 {
     d->propertyName = propName;
@@ -238,7 +260,7 @@ ReadItemPropertyJob::ReadItemPropertyJob( SecretItem *item, const char *propName
 
 ReadItemPropertyJob::ReadItemPropertyJob( SecretItem *item, void (SecretItem::*propReadMember)( ReadItemPropertyJob* ) ) :
     SecretItemJob( item ),
-    d( new ReadItemPropertyJobPrivate( item->d.data(), this ) ),
+    d( new ReadItemPropertyJobPrivate( item->d, this ) ),
     propertyReadMember( propReadMember )
 {
 }
@@ -250,7 +272,7 @@ ReadItemPropertyJob::~ReadItemPropertyJob()
 void ReadItemPropertyJob::start()
 {
     if ( propertyReadMember ) {
-        (secretItem->*propertyReadMember)( this );
+        (secretItem()->*propertyReadMember)( this );
         finished( NoError );
     }
     else {
@@ -263,7 +285,7 @@ const QVariant& ReadItemPropertyJob::propertyValue() const
     return d->value;
 }
 
-ReadItemPropertyJobPrivate::ReadItemPropertyJobPrivate( SecretItemPrivate *it, ReadItemPropertyJob *job ) :
+ReadItemPropertyJobPrivate::ReadItemPropertyJobPrivate( QSharedDataPointer<SecretItemPrivate> it, ReadItemPropertyJob *job ) :
     itemPrivate( it ),
     readPropertyJob( job )
 {
@@ -271,14 +293,14 @@ ReadItemPropertyJobPrivate::ReadItemPropertyJobPrivate( SecretItemPrivate *it, R
     
 void ReadItemPropertyJobPrivate::startReadingProperty()
 {
-    value = itemPrivate->itemIf->property( propertyName );
+    value = itemPrivate->itemIf()->property( propertyName );
     readPropertyJob->finished( SecretItemJob::NoError );
 }
 
 
 WriteItemPropertyJob::WriteItemPropertyJob( SecretItem *item, const char *propName, const QVariant& value ) :
     SecretItemJob( item ),
-    d( new WriteItemPropertyJobPrivate( item->d.data(), this ) )
+    d( new WriteItemPropertyJobPrivate( item->d, this ) )
 {
     d->propertyName = propName;
     d->value = value;
@@ -293,15 +315,15 @@ void WriteItemPropertyJob::start()
     d->startWritingProperty();
 }
 
-WriteItemPropertyJobPrivate::WriteItemPropertyJobPrivate( SecretItemPrivate *cp, WriteItemPropertyJob *job ) :
+WriteItemPropertyJobPrivate::WriteItemPropertyJobPrivate( QSharedDataPointer<SecretItemPrivate> cp, WriteItemPropertyJob *job ) :
     itemPrivate( cp ),
     writePropertyJob( job )
 {
 }
-    
+
 void WriteItemPropertyJobPrivate::startWritingProperty()
 {
-    value = itemPrivate->itemIf->setProperty( propertyName, value );
+    value = itemPrivate->itemIf()->setProperty( propertyName, value );
     writePropertyJob->finished( SecretItemJob::NoError );
 }
 

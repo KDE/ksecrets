@@ -33,6 +33,11 @@ SecretItem::SecretItem() :
 {
 }
 
+SecretItem::SecretItem(const SecretItem& that) :
+    d( that.d )
+{
+}
+
 SecretItem::SecretItem( SecretItemPrivate* sip ) :
     d( sip )
 {
@@ -96,25 +101,25 @@ WriteItemPropertyJob * SecretItem::setLabel(const QString& label)
 }
 
 SecretItemPrivate::SecretItemPrivate() :
-    itemIf(0)
+    _itemIf(0)
 {
 }
 
 SecretItemPrivate::SecretItemPrivate( const QDBusObjectPath &dbusPath ) :
-    itemIf(0)
+    _itemIf(0)
 {
-    itemIf = DBusSession::createItem( dbusPath );
+    _itemIf = DBusSession::createItemIf( dbusPath );
 }
 
 SecretItemPrivate::SecretItemPrivate( const SecretItemPrivate &that ) :
     QSharedData( that ),
-    itemIf( that.itemIf )
+    _itemIf( that._itemIf )
 {
 }
 
 bool SecretItemPrivate::isValid() const
 {
-    return itemIf && itemIf->isValid();
+    return _itemIf && _itemIf->isValid();
 }
 
 

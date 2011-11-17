@@ -21,8 +21,8 @@
 #ifndef KSECRETSSERVICEITEMJOBS_H
 #define KSECRETSSERVICEITEMJOBS_H
 
-#include "ksecretsserviceclientmacros.h"
 #include "ksecretsservicesecret.h"
+#include "ksecretsservicemacros.h"
 
 #include <QSharedPointer>
 #include <kcompositejob.h>
@@ -31,13 +31,21 @@
 namespace KSecretsService {
 
 class SecretItem;
+class SecretItemJobPrivate;
 class GetSecretItemSecretJobPrivate;
 class SetSecretItemSecretJobPrivate;
 class SecretItemDeleteJobPrivate;
 class ReadItemPropertyJobPrivate;
 class WriteItemPropertyJobPrivate;
 
-class SecretItemJob : public KCompositeJob {
+/**
+ * @class SecretItemJob
+ * @internal
+ * 
+ * Base class for the SecretItem related jobs. Your application is not supposed
+ * to use this class directly.
+ */
+class KSECRETSSERVICE_EXPORT SecretItemJob : public KCompositeJob {
     Q_OBJECT
     Q_DISABLE_COPY(SecretItemJob)
 public:
@@ -55,15 +63,24 @@ public:
     
     explicit SecretItemJob( SecretItem * item );
     virtual ~SecretItemJob();
+
+    SecretItem* secretItem() const;
+    /**
+     * Chaining asynchronous jobs may need you to pass data items around
+     * This member let you attach arbitrary data to this job
+     */
+    void setCustomData( const QVariant& data );
+    const QVariant& customData() const;
     
 protected:
-    void finished( ItemJobError, const QString& msg ="");
+    void finished( ItemJobError, const QString& msg = QString() );
     
-public:
-    SecretItem  *secretItem;
+private:
+    friend class SecretItemJobPrivate;
+    QSharedPointer< SecretItemJobPrivate > d;
 };
 
-class KSECRETSSERVICECLIENT_EXPORT GetSecretItemSecretJob : public SecretItemJob {
+class KSECRETSSERVICE_EXPORT GetSecretItemSecretJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(GetSecretItemSecretJob)
 public:
@@ -77,7 +94,7 @@ private:
     QSharedPointer< GetSecretItemSecretJobPrivate > d;
 };
 
-class KSECRETSSERVICECLIENT_EXPORT SetSecretItemSecretJob : public SecretItemJob {
+class KSECRETSSERVICE_EXPORT SetSecretItemSecretJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(SetSecretItemSecretJob)
 public:
@@ -91,7 +108,7 @@ private:
     QSharedPointer< SetSecretItemSecretJobPrivate > d;
 };
 
-class KSECRETSSERVICECLIENT_EXPORT SecretItemDeleteJob : public SecretItemJob {
+class KSECRETSSERVICE_EXPORT SecretItemDeleteJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(SecretItemDeleteJob)
 public:
@@ -105,7 +122,7 @@ private:
     QSharedPointer< SecretItemDeleteJobPrivate > d;
 };
 
-class KSECRETSSERVICECLIENT_EXPORT ReadItemPropertyJob : public SecretItemJob {
+class KSECRETSSERVICE_EXPORT ReadItemPropertyJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(ReadItemPropertyJob)
 public:
@@ -118,11 +135,11 @@ public:
     
 private:
     friend class ReadItemPropertyJobPrivate;
-    QSharedPointer<ReadItemPropertyJobPrivate> d;
+    QSharedDataPointer<ReadItemPropertyJobPrivate> d;
     void (SecretItem::*propertyReadMember)( ReadItemPropertyJob * );
 };
 
-class KSECRETSSERVICECLIENT_EXPORT WriteItemPropertyJob : public SecretItemJob {
+class KSECRETSSERVICE_EXPORT WriteItemPropertyJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(WriteItemPropertyJob)
 public:
@@ -133,7 +150,7 @@ public:
     
 private:
     friend class WriteItemPropertyJobPrivate;
-    QSharedPointer<WriteItemPropertyJobPrivate> d;
+    QSharedDataPointer<WriteItemPropertyJobPrivate> d;
 };
 
 

@@ -24,18 +24,18 @@
 #include <kdemacros.h>
 
 /**
- * @def KDESECRETSSERVICECLIENT_EXPORT
+ * @def KDESECRETSSERVICE_EXPORT
  * @ingroup KDEMacros
  * 
  * This macro marks the attached symbol as shared, so it can be used
  * from the outside of its library
  */
-#ifdef MAKE_KSECRETSSERVICECLIENT_LIB
+#ifdef MAKE_KSECRETSSERVICE_LIB
     /* when building KSecretsService Client API */
-#define KSECRETSSERVICECLIENT_EXPORT KDE_EXPORT
+#define KSECRETSSERVICE_EXPORT KDE_EXPORT
 #else // MAKE_KSECRETSSERVICECLIENT_LIB
     /* when using the KSecretsService Client API */
-#define KSECRETSSERVICECLIENT_EXPORT KDE_IMPORT
+#define KSECRETSSERVICE_EXPORT KDE_IMPORT
 #endif // MAKE_KSECRETSSERVICECLIENT_LIB
 
 

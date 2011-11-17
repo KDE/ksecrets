@@ -21,9 +21,8 @@
 #ifndef KSECRETSSERVICESECRET_H
 #define KSECRETSSERVICESECRET_H
 
-#include "ksecretsserviceclientmacros.h"
+#include "ksecretsservicemacros.h"
 
-#include <QObject>
 #include <QVariant>
 #include <QSharedDataPointer>
 
@@ -32,28 +31,61 @@ namespace KSecretsService {
 
 class SecretPrivate;
 
-class KSECRETSSERVICECLIENT_EXPORT Secret {
+/**
+ * This class holds the secret information your application wants to store
+ * inside a secrets collection.
+ */
+class KSECRETSSERVICE_EXPORT Secret {
+    explicit Secret( SecretPrivate* sp );
 public:
     Secret();
     Secret( const Secret & that );
-    explicit Secret( SecretPrivate* sp );
     virtual ~Secret();
+
+    /**
+     * Used to test if this Secret instance is correctly initialized.
+     * @return true if this Secret instance is not correctly initialized
+     */
+    bool operator ! () const;
     
     Secret& operator = (const Secret& that);
-    
+
+    /**
+     * Returns a QVariant containing the secret value
+     */
     QVariant value() const;
+    
+    /**
+     * Returns the content type of the value stored inside this secret
+     */
     QString contentType() const;
     
+    /**
+     * Convenience string used to qualify the content type when storing password secrets
+     */
     static const char* CONTENT_TYPE_PASSWORD;
 
+    /**
+     * Set this secrets value alongside with it's content type
+     */
     void setValue( const QVariant &value, const QString &contentType );
-    void setValue( const QVariant &value );
     
+    /**
+     * Convenience method used when no content type is available
+     * @see setValue( const QVariant &value, const QString &contentType )
+     */
+    void setValue( const QVariant &value );
+
+    /**
+     * Tests equality between this secret's value and content type and that's secret same properties
+     */
     bool operator == ( const Secret& that ) const;
     
 private:
     friend class CreateCollectionItemJob;
     friend class SetSecretItemSecretJob;
+    friend class GetSecretItemSecretJob;
+    friend class SearchCollectionSecretsJob;
     QSharedDataPointer< SecretPrivate > d;
 };
 

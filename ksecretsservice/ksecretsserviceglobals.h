@@ -18,30 +18,27 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICEITEM_P_H
-#define KSECRETSSERVICEITEM_P_H
-
-#include "ksecretsserviceitem.h"
-#include <QDBusObjectPath>
-#include <QSharedData>
-
-class OrgFreedesktopSecretItemInterface;
+#ifndef KSECRETSSERVICEGLOBALS_H
+#define KSECRETSSERVICEGLOBALS_H
 
 namespace KSecretsService {
 
-class SecretItemPrivate : public QSharedData {
-public:
-    SecretItemPrivate();
-    SecretItemPrivate( const QDBusObjectPath &dbusPath );
-    SecretItemPrivate( const SecretItemPrivate& that );
+    /**
+     * @enum CreateItemOptions
+     * @see Collection::createItem
+     */
+    enum CreateItemOptions {
+        DoNotReplaceExistingItem,   /// existing items will always be kept
+        ReplaceExistingItem         /// existing items will always be replaced by the one provided in the createItem call
+    };
 
-    bool isValid() const;
-    OrgFreedesktopSecretItemInterface* itemIf() const { return _itemIf; }
-    
-private:
-    OrgFreedesktopSecretItemInterface   *_itemIf;
-};
+    typedef QMap<QString, QString> StringStringMap;
 
 } // namespace
 
-#endif // KSECRETSSERVICEITEM_P_H
+#ifndef STRINGSTRINGMAP_METATYPE_DEFINED
+Q_DECLARE_METATYPE( KSecretsService::StringStringMap );
+#define STRINGSTRINGMAP_METATYPE_DEFINED
+#endif // STRINGSTRINGMAP_METATYPE_DEFINED
+
+#endif // KSECRETSSERVICEGLOBALS_H

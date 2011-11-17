@@ -64,7 +64,7 @@ public:
 
 /* @internal
  */
-class KDE_EXPORT Backend
+class Backend
 {
 public:
     explicit Backend(const QString& name = QLatin1String("kdewallet"), bool isPath = false);

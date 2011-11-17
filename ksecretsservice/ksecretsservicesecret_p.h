@@ -22,7 +22,7 @@
 #define KSECRETSSERVICESECRET_P_H
 
 #include "ksecretsservicesecret.h"
-#include "../daemon/frontend/secret/adaptors/secretstruct.h"
+#include "ksecretsservicedbustypes.h"
 
 #include <QtDBus/QDBusObjectPath>
 #include <QSharedData>
@@ -33,16 +33,25 @@ class SecretPrivate : public QSharedData {
 public:
     SecretPrivate();
     SecretPrivate( const SecretPrivate& that );
-    SecretPrivate( const SecretStruct& secretStruct );
+    SecretPrivate( const DBusSecretStruct& secretStruct );
     ~SecretPrivate();
 
     
     /**
-     * This will obtain a properly encrpyted SecretStruct ready to be transmitted over the dbus 
+     * This will obtain a properly encrypted SecretStruct ready to be transmitted over the dbus 
      * to the daemon
+     *
+     * @return true if the secretStruct was correctly initialized
      */
-    bool toSecretStruct( SecretStruct &secretStruct ) const;
-    static bool fromSecretStrut( const SecretStruct &secretStruct, SecretPrivate*& );
+    bool toSecretStruct( DBusSecretStruct &secretStruct ) const;
+
+    /**
+     * This method attempts to decrypt the secretStruct given and to allocate and initialize 
+     * SecretPrivate instance with it.
+     *
+     * @return true if the secret struct was successfully decrypted into the SecretPrivate object
+     */
+    static bool fromSecretStruct( const DBusSecretStruct &secretStruct, SecretPrivate*& );
     
     bool operator == ( const SecretPrivate &that ) const;
 

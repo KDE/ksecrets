@@ -21,12 +21,11 @@
 #ifndef KSECRETSSERVICEITEM_H
 #define KSECRETSSERVICEITEM_H
 
-#include "ksecretsserviceclientmacros.h"
 #include "ksecretsservicesecret.h"
 #include "ksecretsserviceitemjobs.h"
+#include "ksecretsservicemacros.h"
 
 #include <QSharedData>
-#include <kjob.h>
 
 
 namespace KSecretsService {
@@ -47,11 +46,16 @@ class CreateItemJobPrivate;
  * SecretItems can be qualified using attributes. These attributes are used internally by KSecretsService to uniquely identify them inside the collection.
  * The attributes list always contain at least one item, named "Label". It's content is up to the client application.
  * The "Label" attribute can also be read by calling the @ref attribute method and set by @ref setLabel method.
+ * 
+ * Please note that all the jobs returned by this class autodelete themselbes when done. If you application
+ * need to access the returned items, then it should copy them away before returning from the job's done 
+ * signal handling method.
  */
-class KSECRETSSERVICECLIENT_EXPORT SecretItem : public QSharedData {
-    SecretItem();
-public:
+class KSECRETSSERVICE_EXPORT SecretItem : public QSharedData {
     SecretItem( SecretItemPrivate * );
+public:
+    SecretItem();
+    SecretItem( const SecretItem& );
     virtual ~SecretItem();
     
     /**
@@ -107,17 +111,21 @@ public:
 private:
     friend class SecretItemPrivate;
     friend class GetSecretItemSecretJob;
+    friend class GetSecretItemSecretJobPrivate;
     friend class SetSecretItemSecretJob;
     friend class SecretItemDeleteJob;
     friend class ReadItemPropertyJob;
     friend class WriteItemPropertyJob;
     friend class CreateItemJobPrivate;
+    friend class SearchCollectionItemsJob;
+    friend class CreateCollectionItemJobPrivate;
+    friend class ReadCollectionItemsJob;
     
     QSharedDataPointer< SecretItemPrivate > d;
 };
 
-
-
 };
+
+Q_DECLARE_METATYPE( KSecretsService::SecretItem )
 
 #endif // KSECRETSSERVICEITEM_H

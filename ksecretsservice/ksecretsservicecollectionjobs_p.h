@@ -22,7 +22,7 @@
 #define KSECRETSSERVICECOLLECTIONJOBS_P_H
 
 #include "ksecretsservicecollectionjobs.h"
-#include "../daemon/frontend/secret/adaptors/secretstruct.h"
+#include "ksecretsservicedbustypes.h"
 
 #include <QObject>
 #include <QDBusPendingReply>
@@ -156,11 +156,11 @@ protected Q_SLOTS:
     
 public:
     CollectionPrivate                   *collectionPrivate;
-    CreateCollectionItemJob                       *createItemJob;
+    CreateCollectionItemJob             *createItemJob;
     QString                             label;
     QMap< QString, QString >            attributes;
     QSharedDataPointer< SecretPrivate > secretPrivate;
-    bool                                replace;
+    CreateItemOptions                   options;
     SecretItem                          *item;
 };
 
@@ -242,11 +242,11 @@ public:
     ChangeCollectionPasswordJob  *theJob;
 };
 
-class CollectionLockJobPrivate : public QObject {
+class LockCollectionJobPrivate : public QObject {
     Q_OBJECT
-    Q_DISABLE_COPY(CollectionLockJobPrivate)
+    Q_DISABLE_COPY(LockCollectionJobPrivate)
 public:
-    explicit CollectionLockJobPrivate( CollectionPrivate *cp, CollectionLockJob* );
+    explicit LockCollectionJobPrivate( CollectionPrivate *cp, LockCollectionJob* );
     
     void startLockingCollection();
     
@@ -259,8 +259,29 @@ private:
     
 public:
     CollectionPrivate *collectionPrivate;
-    CollectionLockJob *theJob;
+    LockCollectionJob *theJob;
     WId                windowId;
+};
+
+class UnlockCollectionJobPrivate : public QObject {
+    Q_OBJECT
+    Q_DISABLE_COPY(UnlockCollectionJobPrivate)
+public:
+    explicit UnlockCollectionJobPrivate( CollectionPrivate *cp, UnlockCollectionJob* );
+    
+    void startUnlockingCollection();
+    
+protected Q_SLOTS:
+    void slotUnlockFinished( QDBusPendingCallWatcher* );
+    void slotPromptFinished( KJob* );
+    
+private:
+    void checkResult( const QList< QDBusObjectPath > & ) const;
+    
+public:
+    CollectionPrivate   *collectionPrivate;
+    UnlockCollectionJob *theJob;
+    WId                 windowId;
 };
 
 } // namespace

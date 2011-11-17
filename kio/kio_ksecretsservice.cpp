@@ -25,6 +25,7 @@
 #include <QCoreApplication>
 #include <ksecretsservice/ksecretsservicecollection.h>
 #include <ksecretsservice/ksecretsservicecollectionjobs.h>
+#include <kdemacros.h>
 
 using namespace KSecretsService;
 

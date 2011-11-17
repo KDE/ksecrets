@@ -21,18 +21,16 @@
 #ifndef KSECRETSSERVICECOLLECTION_H
 #define KSECRETSSERVICECOLLECTION_H
 
-#include "ksecretsserviceclientmacros.h"
 #include "ksecretsservicesecret.h"
 #include "ksecretsservicecollectionjobs.h"
+#include "ksecretsserviceglobals.h"
+#include "ksecretsservicemacros.h"
 
 #include <QObject>
 #include <QMap>
 #include <QSharedPointer>
-#include <kjob.h>
 #include <kcompositejob.h>
 #include <qwindowdefs.h>
-
-typedef QMap< QString, QString > StringStringMap;
 
 namespace KSecretsService {
 
@@ -46,7 +44,7 @@ class ReadCollectionPropertyJob;
 class WriteCollectionPropertyJob;
 class ListCollectionsJob;
 class ChangeCollectionPasswordJob;
-class CollectionLockJob;
+class LockCollectionJob;
 
 /**
  * This is the main KSecretsService entry class, used by the applications that need to store secrets, 
@@ -62,9 +60,13 @@ class CollectionLockJob;
  * The KJob descendant classes returned by the methods also provide custom members, depending on the operation
  * they are intented to execute. Upon successuful execution, these members hold the corresponding return values.
  * 
+ * Please note that all the jobs returned by this class autodelete themselbes when done. If you application
+ * need to access the returned items, then it should copy them away before returning from the job's done 
+ * signal handling method.
+ * 
  * @see KJob
  */
-class KSECRETSSERVICECLIENT_EXPORT Collection : public QObject {
+class KSECRETSSERVICE_EXPORT Collection : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(Collection)
 public:
@@ -78,6 +80,10 @@ public:
         CreateCollection =1     /// the collection will be created if not found
     };
     
+    /**
+     * @see status()
+     * @see statusChanged()
+     */
     enum Status {
         Invalid         =0,     /// the collection objet is freshly initialized and none of it's methods have been called
         Pending         =1,     /// one of the collection methods was called but this object is yet to be connected to the backed
@@ -107,7 +113,7 @@ public:
     static Collection * findCollection( const QString &collectionName,
                                         FindCollectionOptions options = CreateCollection,
                                         const QVariantMap collectionProperties = QVariantMap(),
-                                        const WId &promptParentWindowId =0 );
+                                        const WId &promptParentWindowId = 0 );
 
     /**
      * Use this method to find out the names of all known secret service collections on the running system
@@ -146,6 +152,27 @@ public:
      * "Label" : item's or collection's label
      *
      * @param attributes hold the searched items attributes
+     * You may want to initialize the map followin one of the followin cases:
+     * @li put in empty strings such as
+     * @code
+     * StrinStringMap attrs;
+     * attrs["Key"] = "";
+     * @endcode
+     * This will match all attributes having the key "Key"
+     * @li use search string as values, 
+     * @code
+     * StrinStringMap attrs;
+     * attrs["Key"] = "string";
+     * @endcode
+     * This will try to exactly match "string" when finding items having "key" attributes
+     * @li use regular expressions
+     * @code
+     * StrinStringMap attrs;
+     * attrs["Key"] = "regexp:expr";
+     * @endcode
+     * This will find items having "Key" attribute, then will use the expr to do a QRegExp match
+     * against attribute values
+     * 
      * @return SearchCollectionItemsJob which is a KJob inheritor
      */
     SearchCollectionItemsJob * searchItems( const StringStringMap &attributes );
@@ -165,7 +192,7 @@ public:
      *
      * @see SecretItem
      */
-    CreateCollectionItemJob * createItem( const QString& label, const StringStringMap &attributes, const Secret &secret, bool replace =false );
+    CreateCollectionItemJob * createItem( const QString& label, const StringStringMap &attributes, const Secret &secret, CreateItemOptions options = DoNotReplaceExistingItem );
 
     /** 
      * Retrieve items stored inside this collection
@@ -216,15 +243,33 @@ public:
     
     /**
      * Request collection lock. Locked collection's contents cannot be changed.
-     * @return CollectionLockJob
+     * @note Accessing the other methods will trigger collection unlocking and as such the user may be prompted for the password
+     * @return LockCollectionJob
      */
-    CollectionLockJob* lock( const WId =0 );
-    
+    LockCollectionJob* lock( const WId =0 );
+   
 Q_SIGNALS:
+    /**
+     * This signal is emmited with any collection status change.
+     * Please cast the given integer to the Status type
+     * @see Status
+     */
+    void statusChanged( int );
+    /**
+     * This signal is emmited when one of the collection's attributes changed or when one
+     * of the contained items changed
+     */
+    void contentsChanged();
+    /**
+     * This signal is emmited when the collection was effectively deleted by the delete job
+     * Calling other methods on this collection instance after this signal was emmited is undefined and
+     * may lead to unpredictable results.
+     */
+    void deleted();
     /**
      * TODO: not yet implemented
      */
-    void itemCreated( const SecretItem& ); 
+    void itemCreated( const KSecretsService::SecretItem& ); 
     /**
      * TODO: not yet implemented
      */
@@ -232,14 +277,17 @@ Q_SIGNALS:
     /**
      * TODO: not yet implemented
      */
-    void itemChanged( const SecretItem& );
+    void itemChanged( const KSecretsService::SecretItem& );
 
-    
+
 protected:
     explicit Collection();
-    explicit Collection( CollectionPrivate* );
     
 private:
+    explicit Collection( CollectionPrivate* );
+
+private:
+    friend class CollectionPrivate;
     friend class CollectionJob; // to give access to Private class
     friend class FindCollectionJob;
     friend class ListCollectionsJob;
@@ -252,13 +300,20 @@ private:
     friend class ReadCollectionPropertyJob;
     friend class WriteCollectionPropertyJob;
     friend class ChangeCollectionPasswordJob;
-    friend class CollectionLockJob;
+    friend class LockCollectionJob;
+    friend class UnlockCollectionJob;
     
+    /** @internal */
     void readIsValid( ReadCollectionPropertyJob* );
+    /** @internal */
+    void emitStatusChanged();
+    /** @internal */
+    void emitContentsChanged();
+    /** @internal */
+    void emitDeleted();
     
     QSharedPointer< CollectionPrivate > d;
 };
-
 
 
 }; // namespace

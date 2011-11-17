@@ -21,8 +21,8 @@
 #ifndef DBUSBACKEND_H
 #define DBUSBACKEND_H
 
-#include "../daemon/frontend/secret/adaptors/secretstruct.h"
-#include "../lib/secretcodec.h"
+#include "ksecretsservicedbustypes.h"
+#include "ksecretsservicecodec.h"
 
 #include <kjob.h>
 #include <QDBusObjectPath>
@@ -35,6 +35,8 @@ class OrgFreedesktopSecretPromptInterface;
 class OrgFreedesktopSecretItemInterface;
 class QDBusPendingCallWatcher;
 
+namespace KSecretsService {
+    
 class OpenSessionJob : public KJob {
     Q_OBJECT
 public:
@@ -47,7 +49,10 @@ public:
     OrgFreedesktopSecretSessionInterface *sessionInterface() const;
     
 private Q_SLOTS:
-    void openSessionFinished(QDBusPendingCallWatcher*);
+    void slotOpenSessionFinished(QDBusPendingCallWatcher*);
+    void slotCollectionCreated( const QDBusObjectPath& );
+    void slotCollectionDeleted( const QDBusObjectPath& );
+    void slotCollectionChanged( const QDBusObjectPath& );
     
 private:
     friend class DBusSession;
@@ -72,13 +77,19 @@ public:
      */
     static OpenSessionJob * openSession();
     
-    static OrgFreedesktopSecretPromptInterface * createPrompt( const QDBusObjectPath &path );
+    static OrgFreedesktopSecretPromptInterface * createPromptIf( const QDBusObjectPath &path );
     static OrgFreedesktopSecretCollectionInterface * createCollectionIf( const QDBusObjectPath &path );
-    static OrgFreedesktopSecretItemInterface * createItem( const QDBusObjectPath &path );
+    static OrgFreedesktopSecretItemInterface * createItemIf( const QDBusObjectPath &path );
     static OrgFreedesktopSecretServiceInterface * serviceIf();
     static QDBusObjectPath sessionPath();
-    static bool encrypt( const QVariant& value, SecretStruct& secretStruct );
-    static bool decrypt( const SecretStruct &secretStruct, QVariant& value );
+    /**
+     * @return true if the variant was successfully encrypted
+     */
+    static bool encrypt( const QVariant& value, DBusSecretStruct& secretStruct );
+    /**
+     * @return true if the secret struct was successfully decrypted
+     */
+    static bool decrypt( const DBusSecretStruct &secretStruct, QVariant& value );
     
 private:
     friend class OpenSessionJob;
@@ -87,7 +98,9 @@ private:
     
     static DBusSession          staticInstance;
     static const QString        encryptionAlgorithm;
-    static OpenSessionJob       openSessionJob;
+    static OpenSessionJob       *openSessionJob;
 };
+
+} // namespace
 
 #endif // DBUSBACKEND_H

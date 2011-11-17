@@ -26,6 +26,7 @@
 #include <kdebug.h>
 #include <klocalizedstring.h>
 
+using namespace KSecretsService;
 
 PromptJob::PromptJob( const QDBusObjectPath &path, const WId &parentId, QObject *parent ) : 
             KJob( parent ),
@@ -36,7 +37,7 @@ PromptJob::PromptJob( const QDBusObjectPath &path, const WId &parentId, QObject 
 
 void PromptJob::start()
 {
-    promptIf = DBusSession::createPrompt( promptPath );
+    promptIf = DBusSession::createPromptIf( promptPath );
     if ( promptIf->isValid() ) {
         connect( promptIf, SIGNAL(Completed(bool,QDBusVariant)), this, SLOT(promptCompleted(bool,QDBusVariant)) );
         // TODO: place a timer here to avoid hanging up if the prompt never calls promptCompleted
