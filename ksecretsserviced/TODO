@@ -1,0 +1,1 @@
+- listen for NameOwnerChanged signals to detect when clients are gone
