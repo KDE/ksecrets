@@ -12,6 +12,7 @@ include(KDE4Defaults)
 include(MacroLogFeature)
 
 add_subdirectory(ksecretsservice)
+add_subdirectory(ksecretsserviced)
 add_subdirectory(ksecrets)
 add_subdirectory(kwl2kss)
 add_subdirectory(kio)

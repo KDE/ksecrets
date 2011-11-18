@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES (
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ksecretsservice
 )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
@@ -32,7 +33,7 @@ TARGET_LINK_LIBRARIES (ksecretsserviced
     ksecretservicebackend
     ksecretservicefrontend
     ksecretserviceui
-    ${KDE4_KDEUI_LIBS}
+    ksecretsservice
 )
 
 
