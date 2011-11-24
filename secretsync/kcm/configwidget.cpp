@@ -67,7 +67,7 @@ void ConfigWidget::onAddComputer()
     if ( dlg->exec() == QDialog::Accepted ) {
         QString computerName = dlg->computerName();
         if ( _computerList->findItems( computerName, Qt::MatchExactly ).count() >0 ) {
-            KMessageBox::error( this, i18n("The computer '%1' is already present into the computer list", computerName ) );
+            KMessageBox::error( this, i18n("The computer '%1' is already present in the list of computers", computerName ) );
         }
         else {
             _computerList->addItem( computerName );
@@ -79,7 +79,7 @@ void ConfigWidget::onAddComputer()
 void ConfigWidget::onDeleteComputer()
 {
     if ( _computerList->currentItem() ) {
-        QString message = QString( i18n("Really delete '%1' computer from the list?", 
+        QString message = QString( i18n("Do you want to delete the computer '%1' from the list?", 
                                         _computerList->currentItem()->text() ) );
         if ( KMessageBox::questionYesNo( this, message ) == KMessageBox::Yes ) {
             delete _computerList->takeItem( _computerList->currentRow() );
