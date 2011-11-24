@@ -70,7 +70,7 @@ void KSecretsApp::slotParseArgs()
 
 void KSecretsApp::listCollections()
 {
-    cout << ki18n("Listing collections...") << endl;
+    cout << ki18n("Listing secret collections...") << endl;
     ListCollectionsJob *listJob = Collection::listCollections();
     connect( listJob, SIGNAL(finished(KJob*)), this, SLOT(slotListCollectionsDone(KJob*)) );
     listJob->start();
@@ -93,7 +93,7 @@ void KSecretsApp::slotListCollectionsDone(KJob* job)
 
 void KSecretsApp::listCollection(QString collName)
 {
-    cout << ki18n("Listing collection ") << collName << "..." << endl;
+    cout << ki18n("Listing secret collection ") << collName << "..." << endl;
     Collection *coll = Collection::findCollection( collName, Collection::OpenOnly );
     ReadCollectionItemsJob *listJob = coll->items();
     connect( listJob, SIGNAL(finished(KJob*)), this, SLOT(slotListItemsDone(KJob*)) );

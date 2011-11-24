@@ -124,7 +124,7 @@ void CollectionJob::unlockCollection()
     }
     else {
         kDebug() << "Cannot add unlock subjob";
-        finishedWithError(InternalError, i18n("Cannot start collection unlocking") );
+        finishedWithError(InternalError, i18n("Cannot start secret collection unlocking") );
     }
 }
 
@@ -274,7 +274,7 @@ void FindCollectionJobPrivate::openSessionFinished(KJob* theJob)
             connect( createReplyWatch, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(createFinished(QDBusPendingCallWatcher*)) );
         }
         else {
-            findJob->finishedWithError( CollectionJob::CollectionNotFound, i18n("Cannot find a collection named '%1'", collectionName) );
+            findJob->finishedWithError( CollectionJob::CollectionNotFound, i18n("Cannot find a secret collection named '%1'", collectionName) );
         }
     }
 }
@@ -464,7 +464,7 @@ void RenameCollectionJobPrivate::startRename()
         emit renameIsDone( CollectionJob::NoError, "" );
     }
     else {
-        emit renameIsDone( CollectionJob::RenameError, QString( "Cannot rename collection to %1" ).arg( newName ) );
+        emit renameIsDone( CollectionJob::RenameError, QString( "Cannot rename secret collection to %1" ).arg( newName ) );
     }
 }
 

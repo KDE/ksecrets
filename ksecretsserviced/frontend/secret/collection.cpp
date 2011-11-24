@@ -69,7 +69,7 @@ void Collection::setLabel( const QString &label )
         }
     }
     else {
-        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The collection has been deleted").toString() );
+        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
     }
 }
 
@@ -84,7 +84,7 @@ QString Collection::label() const
         result = rc.value();
     }
     else {
-        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The collection has been deleted").toString() );
+        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
     }
     return result;
 }

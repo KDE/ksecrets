@@ -37,7 +37,7 @@ void DialogAskUnlockAclPrefs::setApplication(QString exePath)
 {
     // setCollectionLabel must have been called first
     Q_ASSERT( ! m_collectionLabel.isEmpty() );
-    QString locString = i18n( "The application '%1' asked to open the KSecretService collection named '%2'.",
+    QString locString = i18n( "The application '%1' asked to open the secret collection named '%2'.",
                               exePath, m_collectionLabel );
     m_widget->m_explainCollectionLabel->setText( locString );
 }
@@ -49,7 +49,7 @@ void DialogAskUnlockAclPrefs::setCollectionLabel(const QString& label)
 
 void DialogAskUnlockAclPrefs::setOriginalApplication(const QString& exePath)
 {
-    QString locString = i18n( "This collection was created by the application '%1'. What should KSecretService do now?",
+    QString locString = i18n( "This collection was created by the application '%1'. What should KSecretsService do now?",
                               exePath );
     m_widget->m_explainApplicationLabel->setText( locString );
 }

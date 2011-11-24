@@ -425,14 +425,14 @@ KSecretCollection* KSecretCollection::createFromFile(const QString& path, Backen
     
     KSecretDevice< QFile > device( path, coll->m_encryptionFilter );
     if ( !device.open( QIODevice::ReadOnly ) ) {
-        errorMessage = i18nc("Error message: collection file to be opened does not exist or is not a KSecretsService file",
+        errorMessage = i18nc("Error message: secret collection file to be opened does not exist or is not a KSecretsService file",
                              "Collection does not exist.");
         return 0;
     }
     
     KSecretStream stream( &device );
     if ( !stream.isValid() ) {
-        errorMessage = i18nc("Error message: collection file to be opened is corrupted",
+        errorMessage = i18nc("Error message: secret collection file to be opened is corrupted",
                              "Collection does not exist.");
         return 0;
     }
@@ -594,7 +594,7 @@ bool KSecretCollection::serialize(QString &errorMessage) const
 
     KSecretDevice< KSaveFile > device( m_path, m_encryptionFilter );
     if ( !device.open( QIODevice::ReadWrite ) ) {
-        errorMessage = i18nc("Error message: collection file could not be created",
+        errorMessage = i18nc("Error message: secret collection file could not be created",
                              "The disk may be full");
         return false;
     }
@@ -605,13 +605,13 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     ostream << m_secret;
     
     if ( !ostream.isValid() ) {
-        errorMessage = i18nc("Error message: collection contents could not be written to disk",
+        errorMessage = i18nc("Error message: secret collection contents could not be written to disk",
                              "The disk may be full");
         return false;
     }
     
     if ( !device.finalize() ) {
-        errorMessage = i18nc("Error message: collection contents could not be written to disk",
+        errorMessage = i18nc("Error message: secret collection contents could not be written to disk",
                              "The disk may be full");
         return false;
     }

@@ -40,8 +40,8 @@ int main(int argc, char **argv)
     KCmdLineArgs::init(argc, argv, &aboutdata);
     
     KCmdLineOptions options;
-    options.add( "lc", ki18n("List existing collection") );
-    options.add( "l <collection>", ki18n("List the contents of the collection named <collection>") );
+    options.add( "lc", ki18n("List existing secret collection") );
+    options.add( "l <collection>", ki18n("List the contents of the collection named <secret collection>") );
     KCmdLineArgs::addCmdLineOptions( options );
 
     KSecretsApp app;

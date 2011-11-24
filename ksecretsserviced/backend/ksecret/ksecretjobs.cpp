@@ -56,8 +56,8 @@ void KSecretCreateCollectionJob::start()
         subJob->start();
     }
     else {
-        kDebug() << "Cannot start subJob";
-        setErrorText( i18n("Cannot start password job") );
+        kDebug() << "Cannot start password subJob";
+        setErrorText( i18n("Cannot change password due to an internal error.") );
         emitResult();
     }
 }
@@ -69,7 +69,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
 
     if(npj->cancelled()) {
         setCollection(0);
-        setError(BackendErrorOther, i18n("Creating the collection was cancelled by the user."));
+        setError(BackendErrorOther, i18n("Creating the secret collection was cancelled by the user."));
         dismiss(); // this will also emitResult()
         return;
     }
@@ -127,7 +127,7 @@ void KSecretCreateCollectionJob::askAclPrefsJobResult(KJob* job)
             emitResult();
     }
     collection()->setCreatorApplication( createCollectionInfo().m_peer.exePath() );
-    
+
     emitResult();
 }
 
@@ -228,12 +228,12 @@ void KSecretUnlockCollectionJob::askAclPrefsJobResult(KJob *job)
     Q_ASSERT(apj);
     if(apj->denied()) {
         setResult(false);
-        setError(BackendErrorOther, i18n("Unlocking the collection was denied."));
+        setError(BackendErrorOther, i18n("Unlocking the secret collection was denied."));
         emitResult();
     } else 
     if (apj->cancelled() ) {
         setResult(false);
-        setError(BackendErrorOther, i18n("Unlocking the collection was canceled by the user."));
+        setError(BackendErrorOther, i18n("Unlocking the secret collection was canceled by the user."));
         emitResult();
     }
     else {
@@ -265,7 +265,7 @@ void KSecretUnlockCollectionJob::askPasswordJobResult(KJob *job)
 
     if(apj->cancelled()) {
         setResult(false);
-        setError(BackendErrorOther, i18n("Unlocking the collection was canceled by the user."));
+        setError(BackendErrorOther, i18n("Unlocking the secret collection was canceled by the user."));
         emitResult();
         return;
     }
@@ -381,7 +381,7 @@ void KSecretChangeAuthenticationCollectionJob::start()
     }
     else {
         kDebug() << "Failed to add unlock subjob";
-        setError(BackendErrorOther, i18n("Cannot start collection unlocking"));
+        setError(BackendErrorOther, i18n("Cannot start secret collection unlocking"));
     }
 }
 
@@ -397,12 +397,12 @@ void KSecretChangeAuthenticationCollectionJob::slotUnlockResult(KJob* j)
             newPasswordJob->start();
         }
         else {
-            setError(BackendErrorOther, i18n("Cannot start subjob."));
+            setError(BackendErrorOther, i18n("The secret collection cannot be unlocked."));
             emitResult();
         }
     }
     else {
-        setError(BackendErrorIsLocked, i18n("The collection cannot be unlocked."));
+        setError(BackendErrorIsLocked, i18n("The secret collection cannot be unlocked."));
         emitResult();
     }
     unlockJob->deleteLater();

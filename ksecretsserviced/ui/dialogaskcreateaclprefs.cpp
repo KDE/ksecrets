@@ -27,7 +27,7 @@ DialogAskCreateAclPrefs::DialogAskCreateAclPrefs(QWidget* parent):
     KDialog(parent),
     m_widget(0)
 {
-    setCaption( i18n("New Collection Access Policy") );
+    setCaption( i18n("New Secret Collection Access Policy") );
     setButtons( KDialog::Ok );
     m_widget = new AskCreateAclPrefsWidget( this );    
     setMainWidget( m_widget );
@@ -35,13 +35,13 @@ DialogAskCreateAclPrefs::DialogAskCreateAclPrefs(QWidget* parent):
 
 void DialogAskCreateAclPrefs::setCollectionLabel(const QString& label)
 {
-    QString locString = i18n( "You just created a KSecretService collection named '%1'.", label );
+    QString locString = i18n( "You just created a secret collection named '%1'.", label );
     m_widget->m_explainCollectionLabel->setText( locString );
 }
 
 void DialogAskCreateAclPrefs::setApplication(QString exePath)
 {
-    QString locString = i18n( "You used '%1' application to create this collection.", exePath );
+    QString locString = i18n( "You used '%1' application to create this secret collection.", exePath );
     m_widget->m_explainApplicationLabel->setText( locString );
 }
 
