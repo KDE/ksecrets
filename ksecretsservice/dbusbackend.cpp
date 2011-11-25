@@ -34,6 +34,7 @@
 #include <QDBusMetaType>
 #include "ksecretsservicecollection_p.h"
 #include <kglobal.h>
+#include <klocale.h>
 
 using namespace KSecretsService;
 
@@ -77,6 +78,7 @@ void OpenSessionJob::start()
         emitResult();
     }
     else {
+        KLocale::setMainCatalog("ksecretsservice_api");
         qRegisterMetaType<KSecretsService::DBusSecretStruct>();
         qDBusRegisterMetaType<KSecretsService::DBusSecretStruct>();
 

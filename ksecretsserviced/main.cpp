@@ -57,6 +57,7 @@ int main(int argc, char **argv)
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
     aboutdata.setProgramIconName("ksecretsservice");
 
+    KLocale::setMainCatalog("ksecretsserviced");
     KCmdLineArgs::init(argc, argv, &aboutdata);
     
     KCmdLineOptions options;

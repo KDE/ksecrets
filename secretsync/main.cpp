@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
     aboutdata.setProgramIconName("ksecretsyncd");
 
-    KLocale::setMainCatalog("ksecrets");
+    KLocale::setMainCatalog("ksecretsync");
     
     KCmdLineArgs::init(argc, argv, &aboutdata);
     KUniqueApplication::addCmdLineOptions();
