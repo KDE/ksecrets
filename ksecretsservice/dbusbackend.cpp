@@ -78,7 +78,8 @@ void OpenSessionJob::start()
         emitResult();
     }
     else {
-        KLocale::setMainCatalog("ksecretsservice_api");
+        KLocale::insertCatalog("ksecretsservice_api");
+
         qRegisterMetaType<KSecretsService::DBusSecretStruct>();
         qDBusRegisterMetaType<KSecretsService::DBusSecretStruct>();
 
