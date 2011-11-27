@@ -36,7 +36,6 @@ TARGET_LINK_LIBRARIES (ksecretsserviced
     ksecretsservice
 )
 
-
 install( TARGETS ksecretsserviced ${INSTALL_TARGETS_DEFAULT_ARGS})
 install( FILES ksecretsserviced.desktop  DESTINATION  ${SERVICES_INSTALL_DIR} )
 dbus_add_activation_service(org.kde.ksecretsserviced.service.in)

@@ -3,6 +3,8 @@ PROJECT (ksecretsync)
 include(MacroLibrary)
 include(KDE4Defaults)
 
+set(KSS_DBUS_INTERFACES_DIR ../ksecretsservice)
+
 INCLUDE_DIRECTORIES (
     ${KDE4_INCLUDES}
     ${QCA2_INCLUDE_DIR}
@@ -12,7 +14,6 @@ INCLUDE_DIRECTORIES (
 )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
-
 #
 # ksecret-sync
 #
@@ -35,12 +36,12 @@ SET( ksecretsync_SRCS
 )
 
 set_source_files_properties( 
-    ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml
-    ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml
+    ${KSS_DBUS_INTERFACES_DIR}/org.freedesktop.Secret.Service.xml
+    ${KSS_DBUS_INTERFACES_DIR}/org.freedesktop.Secret.Session.xml
     PROPERTIES INCLUDE ../ksecretsservice/ksecretsservicedbustypes.h )
 
-QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Service.xml service_interface )
-QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${DBUS_INTERFACES_INSTALL_DIR}/org.freedesktop.Secret.Session.xml session_interface )
+QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${KSS_DBUS_INTERFACES_DIR}/org.freedesktop.Secret.Service.xml service_interface )
+QT4_ADD_DBUS_INTERFACE(ksecretsync_SRCS  ${KSS_DBUS_INTERFACES_DIR}/org.freedesktop.Secret.Session.xml session_interface )
 
 kde4_add_kcfg_files(ksecretsync_SRCS
      kcm/ksecretsynccfg.kcfgc
@@ -57,7 +58,6 @@ TARGET_LINK_LIBRARIES (ksecretsync
     ${QCA2_LIBRARIES}
     ${QT_QTNETWORK_LIBRARY}
 )
-
 
 install( TARGETS ksecretsync ${INSTALL_TARGETS_DEFAULT_ARGS})
 install( FILES ksecretsync.rc DESTINATION ${DATA_INSTALL_DIR}/ksecretsync)

@@ -34,7 +34,6 @@ TARGET_LINK_LIBRARIES (ksecrets
     ${KDE4_KDEUI_LIBS}
 )
 
-
 install( TARGETS ksecrets ${INSTALL_TARGETS_DEFAULT_ARGS})
 install( FILES ksecrets.desktop  DESTINATION  ${XDG_APPS_INSTALL_DIR} )
 
