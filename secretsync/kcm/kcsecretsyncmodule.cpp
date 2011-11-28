@@ -27,7 +27,7 @@
 #include <kconfigdialog.h>
 
 K_PLUGIN_FACTORY(KSecretSyncFactory, registerPlugin<KCSecretSyncModule>();)
-K_EXPORT_PLUGIN(KSecretSyncFactory("kcm_ksecretsync"))
+K_EXPORT_PLUGIN(KSecretSyncFactory("kcm_ksecretsync", "ksecretsync"))
 
 /**
  * This module loads during KDE session startup in order to get the
