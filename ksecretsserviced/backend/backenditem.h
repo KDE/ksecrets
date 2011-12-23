@@ -28,7 +28,7 @@
 
 #include <QtCore/QMap>
 #include <QtCore/QDateTime>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 class BackendCollection;
 

@@ -40,7 +40,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QMap>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 #include "peer.h"
 

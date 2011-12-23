@@ -32,7 +32,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QList>
 #include <QtCore/QMap>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 class BackendCollectionManager;
 class BackendItem;

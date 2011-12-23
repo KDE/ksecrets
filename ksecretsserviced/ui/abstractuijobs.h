@@ -22,7 +22,7 @@
 #define ABSTRACTUIJOBS_H
 
 #include <QtCore/QQueue>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 #include <kglobal.h>
 #include <kjob.h>
 #include <kcompositejob.h>

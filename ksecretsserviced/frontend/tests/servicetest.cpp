@@ -35,7 +35,7 @@
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusReply>
 #include <QtDBus/QDBusConnectionInterface>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 #include <QtCore/QDebug>
 #include "../secret/adaptors/dbustypes.h"

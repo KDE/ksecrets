@@ -24,7 +24,7 @@
 #include <kcmdlineargs.h>
 #include <kdebug.h>
 #include <QtDBus/QDBusConnection>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 #include <iostream>
 
 #include "backend/backendmaster.h"

@@ -26,7 +26,7 @@
 #include <QtDBus/QDBusConnection>
 #include <klocalizedstring.h>
 #include <kstandarddirs.h>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 #include "ksecretsyncwindow.h"
 

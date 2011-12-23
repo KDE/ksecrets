@@ -21,7 +21,7 @@
 #include "dialogaskaclprefstest.h"
 #include "../dialoguimanager.h"
 
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 #include <qtest_kde.h>
 
 void DialogAskAclPrefsTest::initTestCase()

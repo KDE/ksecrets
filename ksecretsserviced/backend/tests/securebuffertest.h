@@ -28,7 +28,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaType>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 Q_DECLARE_METATYPE(QCA::SecureArray)
 

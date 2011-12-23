@@ -26,7 +26,7 @@
 #include <peer.h>
 
 #include <QtCore/QObject>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 #include "ksecretobject.h"
 #include <ksecretsservicecodec.h>

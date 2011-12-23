@@ -27,7 +27,7 @@
 #include <QtCore/QByteArray>
 #include <QtDBus/QDBusObjectPath>
 #include <QtDBus/QDBusArgument>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 /**
  * This class represents secret (possibly encrypted) for transfer on the

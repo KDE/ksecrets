@@ -20,7 +20,7 @@
 
 #include "dialoguimanagertest.h"
 
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 #include <qtest_kde.h>
 
 #include "../dialoguimanager.h"

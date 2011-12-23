@@ -27,7 +27,7 @@
 #define SECUREBUFFER_H
 
 #include <QtCore/QIODevice>
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 
 class SecureBufferPrivate;
 

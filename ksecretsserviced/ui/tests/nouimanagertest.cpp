@@ -20,7 +20,7 @@
 
 #include "nouimanagertest.h"
 
-#include <QtCrypto/QtCrypto>
+#include <QtCrypto>
 #include <QtTest/QTestEventLoop>
 #include <qtest_kde.h>
 
