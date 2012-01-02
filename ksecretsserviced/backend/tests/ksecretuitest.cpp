@@ -112,7 +112,7 @@ void KSecretUiTest::testLockCollectionAsync()
 void KSecretUiTest::testUnlockCollectionAsync()
 {
     QVERIFY( m_collection->isLocked() ); // the test above must create the collection in locked state
-    CollectionUnlockInfo unlockInfo( Peer( QCoreApplication::applicationPid() ));
+    CollectionUnlockInfo unlockInfo( ( Peer( QCoreApplication::applicationPid() ) ));
     UnlockCollectionJob *unlockColl = m_collection->createUnlockJob(unlockInfo);
     BackendMaster *master = BackendMaster::instance();
     QSignalSpy masterSpy(master, SIGNAL(collectionChanged(BackendCollection*)));
