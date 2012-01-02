@@ -24,7 +24,6 @@
 
 #include <QtNetwork/QTcpSocket>
 #include <kdebug.h>
-#include <libssh2.h>
 #include <klocalizedstring.h>
 
 #define SERVER_READ_TIMEOUT 60000
