@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     if ( KwlImporterJob::userHasWallets() ) {
         KwlImporterJob *importJob = new KwlImporterJob(&app);
         importJob->start();
+        app.connect( importJob, SIGNAL(finished(KJob*)), SLOT(quit()) );
     }
 
     kDebug() << "ksecretsserviced ready";

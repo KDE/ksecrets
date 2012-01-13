@@ -224,7 +224,7 @@ void ImportSingleWalletJob::onWalletOpened(bool success)
     }
     setTotalAmount( Files, amount );
     setProcessedAmount( Files, 0 );
-    
+
     m_currentFolder = m_folderList.takeFirst(); // the first folder is the wallet's current folder and it'll be imported right away
 
     QMetaObject::invokeMethod(this, "processCurrentFolder", Qt::QueuedConnection);

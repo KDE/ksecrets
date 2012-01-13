@@ -109,7 +109,7 @@ void KwlImporterJob::slotResult(KJob* job)
     setProcessedAmount( Files, processedAmount(Files) + 1 );
     if ( !hasSubjobs() ) {
         // this was the last subjob to end, so quit
-        KUniqueApplication::instance()->quit();
+        emitResult();
     }
 }
 
