@@ -2,7 +2,6 @@ PROJECT (ksecretsserviced)
 
 include(MacroLibrary)
 include(KDE4Defaults)
-include(PkgConfigGetVar)
 
 INCLUDE_DIRECTORIES (
     ${KDE4_INCLUDES}
@@ -38,4 +37,5 @@ TARGET_LINK_LIBRARIES (ksecretsserviced
 
 install( TARGETS ksecretsserviced ${INSTALL_TARGETS_DEFAULT_ARGS})
 install( FILES ksecretsserviced.desktop  DESTINATION  ${SERVICES_INSTALL_DIR} )
-dbus_add_activation_service(org.kde.ksecretsserviced.service.in)
+configure_file(org.kde.ksecretsserviced.service.in org.kde.ksecretsserviced.service)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kde.ksecretsserviced.service DESTINATION ${DBUS_SERVICES_INSTALL_DIR} )

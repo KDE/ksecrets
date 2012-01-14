@@ -3,7 +3,6 @@ project(kwl2kss)
 
 include(MacroLibrary)
 include(KDE4Defaults)
-include(PkgConfigGetVar)
 
 ########### Configure checks for kwalletbackend ###############
 

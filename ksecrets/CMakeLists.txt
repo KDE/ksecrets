@@ -5,7 +5,6 @@ PROJECT (ksecrets)
 
 include(MacroLibrary)
 include(KDE4Defaults)
-include(PkgConfigGetVar)
 
 INCLUDE_DIRECTORIES (
     ${KDE4_INCLUDES}
