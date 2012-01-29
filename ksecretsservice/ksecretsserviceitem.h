@@ -59,7 +59,7 @@ public:
     virtual ~SecretItem();
     
     /**
-     * @return SecretItemJob wich will attempt to delete this item upon it's start() method call
+     * @return SecretItemJob which will attempt to delete this item upon it's start() method call
      */
     SecretItemDeleteJob * deleteItem( const WId &promptParentWindowId =0 );
 
