@@ -40,6 +40,9 @@ using namespace KSecretsService;
 
 #define SERVICE_NAME "org.freedesktop.secrets"
 
+K_GLOBAL_STATIC(QCA::Initializer, s_qcaInitializer)
+static bool s_initQCA = true;
+
 const QString DBusSession::encryptionAlgorithm = "dh-ietf1024-aes128-cbc-pkcs7";
 OpenSessionJob *DBusSession::openSessionJob = 0;
 DBusSession DBusSession::staticInstance;
@@ -79,6 +82,13 @@ void OpenSessionJob::start()
     }
     else {
         KGlobal::locale()->insertCatalog("ksecretsservice_api");
+
+        if (s_initQCA) {
+            s_initQCA = false;
+            qAddPostRoutine(s_qcaInitializer.destroy);
+            static QCA::Initializer *dummy = s_qcaInitializer;
+            dummy = dummy; // suppress warning
+        }
 
         qRegisterMetaType<KSecretsService::DBusSecretStruct>();
         qDBusRegisterMetaType<KSecretsService::DBusSecretStruct>();

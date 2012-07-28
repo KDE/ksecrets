@@ -32,11 +32,11 @@ SecretCodec::SecretCodec() :
     m_cipher(0),
     m_mode(ModeUnitialized)
 {
-    static bool qcaInitialized = false;
-    if ( !qcaInitialized ) {
-        QCA::init();
-        qcaInitialized = true;
-    }
+//     static bool qcaInitialized = false;
+//     if ( !qcaInitialized ) {
+//         QCA::init();
+//         qcaInitialized = true;
+//     }
 }
 
 SecretCodec::~SecretCodec()

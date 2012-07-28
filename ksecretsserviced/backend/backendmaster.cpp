@@ -27,8 +27,11 @@
 #include <QtCore/QEventLoop>
 #include <QtCore/QCoreApplication>
 
+K_GLOBAL_STATIC(QCA::Initializer, s_qcaInitializer)
+
 K_GLOBAL_STATIC(BackendMaster, s_backendMaster)
 bool BackendMaster::s_initialized = false;
+
 
 BackendMaster::BackendMaster()
     : m_uiManager(0)
@@ -37,6 +40,10 @@ BackendMaster::BackendMaster()
 
 BackendMaster::~BackendMaster()
 {
+    if ( s_backendMaster.isDestroyed() ) {
+        return;
+    }
+
     qRemovePostRoutine(s_backendMaster.destroy);
     delete m_uiManager;
 }
@@ -45,6 +52,10 @@ BackendMaster *BackendMaster::instance()
 {
     if(!s_initialized) {
         s_initialized = true;
+        qAddPostRoutine(s_qcaInitializer.destroy);
+        static QCA::Initializer *dummy = s_qcaInitializer;
+        dummy = dummy; // suppress warning
+
         qAddPostRoutine(s_backendMaster.destroy);
     }
     return s_backendMaster;

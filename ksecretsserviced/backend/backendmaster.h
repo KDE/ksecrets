@@ -155,6 +155,8 @@ Q_SIGNALS:
 private:
     QList<BackendCollection*> m_collections;
     QList<BackendCollectionManager*> m_collectionManagers;
+    AbstractUiManager *m_uiManager;
+    static bool s_initialized;
 
     /**
      * @note QtCrypto doc states that QCA::Initializer should not go out
@@ -163,9 +165,7 @@ private:
      * a main() local variable and that will make the daemon crash on exit.
      * So keep this initializer here, to get it destroyed along with the manager
      */
-    QCA::Initializer qcaInit;
-    AbstractUiManager *m_uiManager;
-    static bool s_initialized;
+//     QCA::Initializer qcaInit;
 };
 
 #endif
