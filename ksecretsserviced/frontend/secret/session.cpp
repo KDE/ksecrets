@@ -29,23 +29,16 @@
 #include <QtCore/QRegExp>
 
 Session::Session(Service *parent, SecretCodec *codec)
-    : QObject(parent),
-      m_objectPath(parent->objectPath().path() + "/session/" + createId()),
+    : KSecretObject< Session, orgFreedesktopSecret::SessionAdaptor >(parent),
       m_secretCodec(codec)
 {
     // register on the bus
-    new orgFreedesktopSecret::SessionAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(m_objectPath.path(), this);
+    registerWithPath(parent->objectPath().path() + "/session/" + createId());
 }
 
 Session::~Session()
 {
     delete m_secretCodec;
-}
-
-const QDBusObjectPath &Session::objectPath() const
-{
-    return m_objectPath;
 }
 
 Session *Session::create(const QString &algorithm, const QVariant &input,

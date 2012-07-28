@@ -34,13 +34,11 @@
 #include <klocalizedstring.h>
 
 Collection::Collection(BackendCollection *collection, Service *service)
-    : QObject(service), m_service(service), m_collection(collection), m_deleted(false)
+    : KSecretObject< Collection, orgFreedesktopSecret::CollectionAdaptor >(service), 
+    m_service(service), m_collection(collection), m_deleted(false)
 {
     Q_ASSERT(collection);
-    m_objectPath.setPath(service->objectPath().path() + "/collection/" + collection->id());
-
-    new orgFreedesktopSecret::CollectionAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(m_objectPath.path(), this);
+    registerWithPath( service->objectPath().path() + "/collection/" + collection->id() );
 
     connect(collection, SIGNAL(itemCreated(BackendItem*)),
             SLOT(slotItemCreated(BackendItem*)));
@@ -48,11 +46,6 @@ Collection::Collection(BackendCollection *collection, Service *service)
             SLOT(slotItemDeleted(BackendItem*)));
     connect(collection, SIGNAL(itemChanged(BackendItem*)),
             SLOT(slotItemChanged(BackendItem*)));
-}
-
-const QDBusObjectPath &Collection::objectPath() const
-{
-    return m_objectPath;
 }
 
 const QList<QDBusObjectPath> &Collection::items() const
@@ -65,11 +58,11 @@ void Collection::setLabel( const QString &label )
     if ( !m_deleted && m_collection ) {
         BackendReturn<void> rc = m_collection->setLabel( label );
         if ( rc.isError() ) {
-            sendErrorReply( QDBusError::Failed, rc.errorMessage() );
+            dbusAdaptor()->sendErrorReply( QDBusError::Failed, rc.errorMessage() );
         }
     }
     else {
-        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
+        dbusAdaptor()->sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
     }
 }
 
@@ -79,12 +72,12 @@ QString Collection::label() const
     if ( !m_deleted && m_collection ) {
         BackendReturn<QString> rc = m_collection->label();
         if(rc.isError()) {
-            sendErrorReply( QDBusError::Failed, rc.errorMessage() );
+            dbusAdaptor()->sendErrorReply( QDBusError::Failed, rc.errorMessage() );
         }
         result = rc.value();
     }
     else {
-        sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
+        dbusAdaptor()->sendErrorReply( QDBusError::InvalidObjectPath, ki18n("The secret collection has been deleted").toString() );
     }
     return result;
 }
@@ -131,10 +124,10 @@ QDBusObjectPath Collection::deleteCollection()
     }
     else {
         if ( m_deleted ) {
-            sendErrorReply( QDBusError::Failed, ki18n("Collection was already deleted").toString() );
+            dbusAdaptor()->sendErrorReply( QDBusError::Failed, ki18n("Collection was already deleted").toString() );
         }
         else {
-            sendErrorReply( QDBusError::InternalError );
+            dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
         }
     }
     return result;
@@ -154,15 +147,15 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
     if ( m_collection ) {
         BackendReturn<QList<BackendItem*> > br = m_collection->searchItems(attributes);
         if(br.isError()) {
-            sendErrorReply( QDBusError::Failed, br.errorMessage() );
+            dbusAdaptor()->sendErrorReply( QDBusError::Failed, br.errorMessage() );
         } else {
             Q_FOREACH(BackendItem * item, br.value()) {
-                rc.append(QDBusObjectPath(m_objectPath.path() + '/' + item->id()));
+                rc.append(QDBusObjectPath(objectPath().path() + '/' + item->id()));
             }
         }
     }
     else {
-        sendErrorReply( QDBusError::InternalError );
+        dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
     }
     return rc;
 }
@@ -174,7 +167,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
                                        QDBusObjectPath &prompt)
 {
     if ( !m_collection ) {
-        sendErrorReply( QDBusError::InternalError );
+        dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
         return QDBusObjectPath("/");
     }
     
@@ -188,7 +181,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     Session *session;
     if(!(session = qobject_cast<Session*>(object))) {
         kDebug() << "ERROR there is no available session";
-        sendErrorReply( QDBusError::InternalError );
+        dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
         return QDBusObjectPath("/");
     }
 
@@ -220,7 +213,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
 
         // the Item is already created inside slotItemCreated()
         prompt.setPath("/");
-        QDBusObjectPath itemPath(m_objectPath.path() + '/' + cij->item()->id());
+        QDBusObjectPath itemPath(objectPath().path() + '/' + cij->item()->id());
         return itemPath;
     } else {
         SingleJobPrompt *p = new SingleJobPrompt(m_service, cij, this);
@@ -237,7 +230,7 @@ QDBusObjectPath Collection::changePassword()
         return pj->objectPath();
     }
     else {
-        sendErrorReply( QDBusError::InternalError );
+        dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
         return QDBusObjectPath("/");
     }
 }
@@ -259,7 +252,7 @@ void Collection::slotItemCreated(BackendItem *item)
 void Collection::slotItemDeleted(BackendItem *item)
 {
     Q_ASSERT(item);
-    QDBusObjectPath itmPath( m_objectPath.path() + '/' + item->id() );
+    QDBusObjectPath itmPath( objectPath().path() + '/' + item->id() );
     m_itemPaths.removeAll( itmPath );
     m_items.take( itmPath );
     emit itemDeleted(itmPath);
@@ -268,7 +261,7 @@ void Collection::slotItemDeleted(BackendItem *item)
 void Collection::slotItemChanged(BackendItem *item)
 {
     Q_ASSERT(item);
-    QDBusObjectPath itmPath(m_objectPath.path() + '/' + item->id());
+    QDBusObjectPath itmPath(objectPath().path() + '/' + item->id());
     if ( !m_itemPaths.contains( itmPath ) ) {
         m_itemPaths.append( itmPath );
         m_items.insert( itmPath, new Item( item, this ) );

@@ -36,13 +36,17 @@ using namespace KSecretsService;
 class Service;
 class Peer;
 
+namespace orgFreedesktopSecret {
+class SessionAdaptor;
+};
+
 /**
  * Represents an open session of a client on the D-Bus implementing the
  * org.freedesktop.Secret.Session interface.
  *
  * @todo stub implementation, currently only supports plain (no encryption)
  */
-class Session : public QObject, protected QDBusContext, public KSecretObject<Session>
+class Session : public KSecretObject<Session, orgFreedesktopSecret::SessionAdaptor>
 {
     Q_OBJECT
 
@@ -59,11 +63,6 @@ public:
      * Destructor.
      */
     ~Session();
-
-    /**
-     * Get the session's object path.
-     */
-    const QDBusObjectPath &objectPath() const;
 
     /**
      * Try to create a (possibly encrypted) session for the use of transferring
@@ -110,7 +109,6 @@ public:
     const Peer &peer() const;
 
 private:
-    QDBusObjectPath m_objectPath;
     Peer m_peer; // Information about the application that requested this session
 
     SecretCodec  *m_secretCodec;

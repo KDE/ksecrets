@@ -24,6 +24,7 @@
 #include "../prompt.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
+#include <QDBusContext>
 
 namespace orgFreedesktopSecret
 {
@@ -31,7 +32,7 @@ namespace orgFreedesktopSecret
 /**
  * D-Bus adaptor class for Prompt objects.
  */
-class PromptAdaptor : public QDBusAbstractAdaptor
+class PromptAdaptor : public QDBusAbstractAdaptor, public QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Prompt")

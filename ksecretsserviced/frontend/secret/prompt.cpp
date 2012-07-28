@@ -32,22 +32,15 @@
 #include <kdebug.h>
 
 PromptBase::PromptBase(Service *service, QObject *parent)
-    : QObject(parent), m_serviceObjectPath(service->objectPath())
+    : KSecretObject< PromptBase, orgFreedesktopSecret::PromptAdaptor >(parent), 
+    m_serviceObjectPath(service->objectPath())
 {
     Q_ASSERT(service);
-    m_objectPath.setPath(service->objectPath().path() + "/prompts/" + createId());
-
-    new orgFreedesktopSecret::PromptAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(m_objectPath.path(), this);
+    registerWithPath(service->objectPath().path() + "/prompts/" + createId());
 }
 
 PromptBase::~PromptBase()
 {
-}
-
-const QDBusObjectPath &PromptBase::objectPath() const
-{
-    return m_objectPath;
 }
 
 const QDBusObjectPath &PromptBase::serviceObjectPath() const
@@ -98,12 +91,12 @@ void SingleJobPrompt::jobResult(KJob *job)
     Q_ASSERT(job == m_job);
     // check for errors first
     if(m_job->isDismissed()) {
-        emit completed(true, QVariant(""));
+        emit completed(true, "");
     } else if(m_job->error() != BackendNoError) {
         // TODO: figure out how to handle errors gracefully.
         // FIXME; should we use KMessage here instead of KMessageBox ?
         KMessageBox::error( 0, m_job->errorMessage() );
-        emit completed(false, QVariant(""));
+        emit completed(false, "");
     } else {
         switch(m_job->type()) {
 

@@ -32,27 +32,26 @@ class QModelIndex;
 
 class KSecretSyncWindow : public KXmlGuiWindow
 {
-    Q_OBJECT
+//    Q_OBJECT
 public:
-    explicit KSecretSyncWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
-    virtual ~KSecretSyncWindow();
-    KAction* createAction(const QLatin1String &description);
-    
+    explicit KSecretSyncWindow(QWidget* parent = 0);
+//    virtual ~KSecretSyncWindow();
+
     void createLogEntry( const QString& );
 
 protected Q_SLOTS:
-    void onSynchronizeNow( bool =false );
-    void onConfigure( bool =false );
-    void onComputerDoubleClicked(QModelIndex);
-    
+//     void onSynchronizeNow( bool =false );
+//     void onConfigure( bool =false );
+//     void onComputerDoubleClicked(QModelIndex);
+
 protected:
-    virtual void closeEvent( QCloseEvent* );
-        
+//    virtual void closeEvent( QCloseEvent* );
+
 private:
-    SyncModel       *_syncModel;
-    SyncDaemon      *_syncDaemon;
-    TrayIcon        *_trayIcon;
-    StatusWidget    *_statusWidget;
+//     SyncModel       *_syncModel;
+//     SyncDaemon      *_syncDaemon;
+//     TrayIcon        *_trayIcon;
+//     StatusWidget    *_statusWidget;
 };
 
 #endif // KSECRETSYNC_H

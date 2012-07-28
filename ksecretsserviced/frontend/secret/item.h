@@ -30,11 +30,15 @@
 class BackendItem;
 class Collection;
 
+namespace orgFreedesktopSecret {
+class ItemAdaptor;
+};
+
 /**
  * Represents an item on the D-Bus implementing the org.freedesktop.Secret.Item
  * interface.
  */
-class Item : public QObject, public QDBusContext, public KSecretObject<Item>
+class Item : public KSecretObject<Item, orgFreedesktopSecret::ItemAdaptor>
 {
     Q_OBJECT
 
@@ -46,13 +50,6 @@ public:
      * @param collection Parent collection
      */
     Item(BackendItem *item, Collection *collection);
-
-    /**
-     * Return the item's path on the D-Bus.
-     *
-     * @return the Item object's path
-     */
-    const QDBusObjectPath &objectPath() const;
 
 public: // called by D-Bus adaptors
 
@@ -139,7 +136,6 @@ public:
 
 private:
     BackendItem *m_item;
-    QDBusObjectPath m_objectPath;
 };
 
 #endif

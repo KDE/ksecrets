@@ -41,12 +41,11 @@
 //#include <dbus/dbus.h>
 
 Service::Service(BackendMaster *master, QObject *parent)
-    : QObject(parent), m_master(master), m_basePath("/org/freedesktop/secrets")
+    : KSecretObject< Service, orgFreedesktopSecret::ServiceAdaptor >(parent), 
+    m_master(master)
 {
     Q_ASSERT(master);
-
-    new orgFreedesktopSecret::ServiceAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(m_basePath.path(), this);
+    registerWithPath("/org/freedesktop/secrets");
 
     connect(m_master, SIGNAL(collectionCreated(BackendCollection*)),
             SLOT(slotCollectionCreated(BackendCollection*)));
@@ -59,11 +58,6 @@ Service::Service(BackendMaster *master, QObject *parent)
 
 
 
-}
-
-const QDBusObjectPath &Service::objectPath() const
-{
-    return m_basePath;
 }
 
 const QList<QDBusObjectPath> &Service::collections() const
@@ -80,12 +74,15 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
         result = session->objectPath();
     } else {
         result = QDBusObjectPath("/");
-        if(calledFromDBus()) {
-            sendErrorReply("org.freedesktop.Secret.Error.NotSupported");
+        if(dbusAdaptor()->calledFromDBus()) {
+            dbusAdaptor()->sendErrorReply("org.freedesktop.Secret.Error.NotSupported");
+        }
+        else {
+            // TODO: how one could send an errorReply when not called over dbus ?
         }
     }
-    if(calledFromDBus()) {
-        connection().connect(QLatin1String("org.freedesktop.DBus"),
+    if(dbusAdaptor()->calledFromDBus()) {
+        dbusAdaptor()->connection().connect(QLatin1String("org.freedesktop.DBus"),
                              QLatin1String("/org/freedesktop/DBus"),
                              QLatin1String("org.freedesktop.DBus.Local"),
                              QLatin1String("Disconnected"),
@@ -135,7 +132,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
         } else {
             BackendCollection *coll = job->collection();
             prompt.setPath("/");
-            QDBusObjectPath collPath(m_basePath.path() + "/collection/" + coll->id());
+            QDBusObjectPath collPath(objectPath().path() + "/collection/" + coll->id());
             return collPath;
         }
     } else {
@@ -153,7 +150,7 @@ QList<QDBusObjectPath> Service::searchItems(const StringStringMap &attributes,
     // TODO: should we implement ACL handling on this call ? Maybe the collection unlocking ACL handling may have been sufficient
     QList<QDBusObjectPath> unlocked;
     Q_FOREACH(BackendCollection * collection, m_master->collections()) {
-        QString collPath = m_basePath.path() + "/collection/" + collection->id();
+        QString collPath = objectPath().path() + "/collection/" + collection->id();
         BackendReturn<QList<BackendItem*> > rc = collection->searchItems(attributes);
         if(!rc.isError()) {
             QList<BackendItem*> items = rc.value();
@@ -331,8 +328,8 @@ QMap<QDBusObjectPath, SecretStruct> Service::getSecrets(const QList<QDBusObjectP
 
     object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
     if(!object || !(sessionObj = qobject_cast<Session*>(object))) {
-        if(calledFromDBus()) {
-            sendErrorReply("org.freedesktop.Secret.Error.NoSession");
+        if(dbusAdaptor()->calledFromDBus()) {
+            dbusAdaptor()->sendErrorReply("org.freedesktop.Secret.Error.NoSession");
         }
         return rc;
     }
@@ -363,7 +360,8 @@ void Service::slotCollectionCreated(BackendCollection *collection)
 void Service::slotCollectionDeleted(BackendCollection *collection)
 {
     Q_ASSERT(collection);
-    QDBusObjectPath collPath(m_basePath.path() + "/collection/" + collection->id());
+    // TODO: move collection path computing inside Collection class
+    QDBusObjectPath collPath(objectPath().path() + "/collection/" + collection->id());
     m_collections.removeAll(collPath);
     // TODO: make sure Daemon::Collection gets destroyed
     emit collectionDeleted(collPath);
@@ -372,7 +370,7 @@ void Service::slotCollectionDeleted(BackendCollection *collection)
 void Service::slotCollectionChanged(BackendCollection *collection)
 {
     Q_ASSERT(collection);
-    QDBusObjectPath collPath(m_basePath.path() + "/collection/" + collection->id());
+    QDBusObjectPath collPath(objectPath().path() + "/collection/" + collection->id());
     emit collectionChanged(collPath);
 }
 

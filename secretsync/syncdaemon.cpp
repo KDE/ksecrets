@@ -49,17 +49,16 @@ SyncDaemon::SyncDaemon(QObject* parent, SyncModel* model) :
     Q_ASSERT( model != 0 );
     Q_ASSERT( _instance == 0);
     _instance = this;
-    
+
     qInstallMsgHandler( qMsgHandler );
-    
+
     startSyncing();
     startListening();
 }
 
 SyncDaemon::~SyncDaemon()
 {
-    // FIXME: should we wait for sync interval expire here ?
-    delete _syncTimer;
+    delete _syncTimer; // NOTE: QTimer destructor calls stop() if needed
 }
 
 void SyncDaemon::startSyncing()
@@ -89,12 +88,12 @@ void SyncDaemon::doSync()
     kDebug() << "startSync";
     if (!_model->hasComputers())
         return;
-    
+
     SyncJob *syncJob = new SyncJob;
     for (int r =0; r < _model->rowCount(); ++r ) {
         new ComputerSyncJob( syncJob, _model->computerData( r ), this );
     }
-    
+
     syncJob->start();
 }
 

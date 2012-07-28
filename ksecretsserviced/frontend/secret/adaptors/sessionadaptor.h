@@ -22,6 +22,7 @@
 #define ORG_FREEDESKTOP_SECRET_SESSIONADAPTOR_H
 
 #include <QtDBus/QDBusAbstractAdaptor>
+#include <QDBusContext>
 
 class Session;
 
@@ -31,7 +32,7 @@ namespace orgFreedesktopSecret
 /**
  * D-Bus adaptor class for Session objects.
  */
-class SessionAdaptor : public QDBusAbstractAdaptor
+class SessionAdaptor : public QDBusAbstractAdaptor, public QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Session")

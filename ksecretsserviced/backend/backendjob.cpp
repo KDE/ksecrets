@@ -173,7 +173,8 @@ void CreateCollectionMasterJob::createCollectionJobFinished(KJob *subJob)
 }
 
 BooleanResultJob::BooleanResultJob(BackendJob::JobType type)
-    : BackendJob(type)
+    : BackendJob(type),
+    m_result(false)
 {
 }
 

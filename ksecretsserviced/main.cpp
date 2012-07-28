@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     master->setUiManager( new DialogUiManager );
     master->addManager( new KSecretCollectionManager( "share/apps/ksecretsservice", master ) );
     Service service( BackendMaster::instance() ); // NOTE: this will also initialize QCA
-    
+
     if ( userHasWallets() ) {
         KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
         if ( args->isSet("kwl") ) {

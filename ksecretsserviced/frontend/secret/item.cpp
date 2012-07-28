@@ -30,18 +30,11 @@
 #include <QtDBus/QDBusConnection>
 
 Item::Item(BackendItem *item, Collection *collection)
-    : QObject(collection), m_item(item)
+    : KSecretObject< Item, orgFreedesktopSecret::ItemAdaptor >(collection), 
+    m_item(item)
 {
     Q_ASSERT(item);
-    m_objectPath.setPath(collection->objectPath().path() + '/' + item->id());
-
-    new orgFreedesktopSecret::ItemAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(m_objectPath.path(), this);
-}
-
-const QDBusObjectPath &Item::objectPath() const
-{
-    return m_objectPath;
+    registerWithPath( collection->objectPath().path() + '/' + item->id() );
 }
 
 bool Item::locked() const

@@ -26,6 +26,7 @@
 
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtDBus/QDBusObjectPath>
+#include <QDBusContext>
 
 class Service;
 
@@ -35,7 +36,7 @@ namespace orgFreedesktopSecret
 /**
  * D-Bus adaptor class for Service objects.
  */
-class ServiceAdaptor : public QDBusAbstractAdaptor
+class ServiceAdaptor : public QDBusAbstractAdaptor, public QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Service")

@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     aboutdata.setProgramIconName("ksecretsyncd");
 
     KLocale::setMainCatalog("ksecretsync");
-    
+
     KCmdLineArgs::init(argc, argv, &aboutdata);
     KUniqueApplication::addCmdLineOptions();
     KUniqueApplication app;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
     // initialize QCA
     QCA::Initializer qcaInit;
-    
+
     if(!QDBusConnection::sessionBus().registerService("org.freedesktop.Secret.Sync")) {
         kDebug() << "Couldn't register org.freedesktop.Secret.Sync D-Bus service!";
         return 1;
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
     KSecretSyncWindow mainWindow;
     mainWindow.setCaption(i18n("KSecretSync"));
-    
+
     // KGlobal::dirs()->addResourceType("kwallet", QLatin1String( "share/apps/kwallet" ));
 
     KCmdLineArgs *args = KCmdLineArgs::parsedArgs();

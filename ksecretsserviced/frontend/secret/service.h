@@ -34,6 +34,9 @@
 
 class Collection;
 
+namespace orgFreedesktopSecret {
+class ServiceAdaptor;
+};
 
 /**
  * Main entry point of the secret service D-Bus daemon implementing the
@@ -41,7 +44,7 @@ class Collection;
  *
  * @todo Implement proper session handling
  */
-class Service : public QObject, public QDBusContext, public KSecretObject<Service>
+class Service : public KSecretObject<Service, orgFreedesktopSecret::ServiceAdaptor>
 {
     Q_OBJECT
 
@@ -53,13 +56,6 @@ public:
      * @param parent Parent object
      */
     explicit Service(BackendMaster *master, QObject *parent = 0);
-
-    /**
-     * Return the service's path on the D-Bus.
-     *
-     * @return the Service object's path
-     */
-    const QDBusObjectPath &objectPath() const;
 
     /**
      * Accessor for the list of known collections.
@@ -166,7 +162,6 @@ private Q_SLOTS:
 private:
     BackendMaster *m_master;
     QList<QDBusObjectPath> m_collections; // cache object paths of collections
-    const QDBusObjectPath m_basePath;
 };
 
 #endif

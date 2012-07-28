@@ -26,6 +26,7 @@
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtCore/QString>
 #include <QtCore/QMap>
+#include <QDBusContext>
 
 class Item;
 
@@ -35,7 +36,7 @@ namespace orgFreedesktopSecret
 /**
  * D-Bus adaptor class for Item objects.
  */
-class ItemAdaptor : public QDBusAbstractAdaptor
+class ItemAdaptor : public QDBusAbstractAdaptor, public QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Item")

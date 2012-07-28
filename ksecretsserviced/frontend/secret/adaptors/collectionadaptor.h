@@ -24,6 +24,7 @@
 #include "dbustypes.h"
 
 #include <QtDBus/QDBusAbstractAdaptor>
+#include <QDBusContext>
 
 class Collection;
 
@@ -33,7 +34,7 @@ namespace orgFreedesktopSecret
 /**
  * D-Bus adaptor class for Collection objects.
  */
-class CollectionAdaptor : public QDBusAbstractAdaptor
+class CollectionAdaptor : public QDBusAbstractAdaptor, public QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Secret.Collection")

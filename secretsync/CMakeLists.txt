@@ -19,6 +19,7 @@ add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 #
 add_subdirectory(icons)
 add_subdirectory(kcm)
+#add_subdirectory(applet)
 add_subdirectory(tests)
 
 
@@ -65,3 +66,8 @@ install( FILES ksecretsync.rc DESTINATION ${DATA_INSTALL_DIR}/ksecretsync)
 kde4_install_icons( ${ICON_INSTALL_DIR} )
 
 
+install(DIRECTORY plasma/
+        DESTINATION ${DATA_INSTALL_DIR}/plasma/plasmoids/secretsync-qml PATTERN *~ EXCLUDE)
+ 
+install(FILES plasma/metadata.desktop
+        DESTINATION ${SERVICES_INSTALL_DIR} RENAME plasma-applet-secretsync.desktop)

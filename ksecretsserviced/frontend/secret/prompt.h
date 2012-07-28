@@ -32,11 +32,15 @@
 
 class Service;
 
+namespace orgFreedesktopSecret {
+    class PromptAdaptor;
+}
+
 /**
  * Implementation of prompt objects according to the org.freedesktop.Secret.Prompt
  * interface.
  */
-class PromptBase : public QObject, public QDBusContext, public KSecretObject<PromptBase>
+class PromptBase : public KSecretObject<PromptBase, orgFreedesktopSecret::PromptAdaptor>
 {
     Q_OBJECT
 
@@ -54,13 +58,6 @@ public:
      * Destructor.
      */
     virtual ~PromptBase();
-
-    /**
-     * Return the prompt's path on the D-Bus.
-     *
-     * @return the Prompt object's path
-     */
-    const QDBusObjectPath &objectPath() const;
 
     /**
      * Return the service object's path on the D-Bus.
@@ -101,7 +98,6 @@ protected:
     void emitCompleted(bool dismissed, const QVariant &result);
 
 private:
-    QDBusObjectPath m_objectPath; // the prompt object's objectpath
     QDBusObjectPath m_serviceObjectPath; // the service's objectpath
 };
 

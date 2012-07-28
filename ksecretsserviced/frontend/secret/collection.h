@@ -27,7 +27,6 @@
 #include <QtDBus/QDBusObjectPath>
 
 #include "ksecretobject.h"
-#include <QDBusContext>
 
 class BackendCollection;
 class BackendItem;
@@ -35,11 +34,15 @@ class BackendItem;
 class Service;
 class Item;
 
+namespace orgFreedesktopSecret {
+class CollectionAdaptor;
+};
+
 /**
  * Represents a collection on the D-Bus implementing the org.freedesktop.Secret.Collection
  * interface.
  */
-class Collection : public QObject, public QDBusContext, public KSecretObject<Collection>
+class Collection : public KSecretObject<Collection, orgFreedesktopSecret::CollectionAdaptor>
 {
     Q_OBJECT
 
@@ -51,13 +54,6 @@ public:
      * @param service Parent service
      */
     Collection(BackendCollection *collection, Service *service);
-
-    /**
-     * Return the collection's path on the D-Bus.
-     *
-     * @return the Collection object's path
-     */
-    const QDBusObjectPath &objectPath() const;
 
     /**
      * Get the items stored inside this collection.
@@ -136,12 +132,13 @@ public:
      * Get the backend collection linked to this object.
      */
     BackendCollection *backendCollection() const;
-    
+
     /**
      * Requests for current collection's password change
      * @return object path of the prompt that'll collect the new password
      */
     QDBusObjectPath changePassword();
+
 
 Q_SIGNALS:
     /**
@@ -177,7 +174,6 @@ private Q_SLOTS:
 private:
     Service *m_service; // parent service
     BackendCollection *m_collection;
-    QDBusObjectPath m_objectPath;
     QList<QDBusObjectPath> m_itemPaths; // cache for items' object paths
     QMap< QDBusObjectPath, Item*>   m_items;
     bool    m_deleted;
