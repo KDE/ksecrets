@@ -1,0 +1,21 @@
+[Desktop Entry]
+Name=KSecretsService Secret Sync QML
+Comment=KSecretsService synchronization tool
+Icon=kwalletmanager
+ 
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-Plasma-DefaultSize=200,200
+ 
+X-KDE-PluginInfo-Author=Valentin Rusu
+X-KDE-PluginInfo-Email=kde@rusu.info
+X-KDE-PluginInfo-Website=http://plasma.kde.org/
+X-KDE-PluginInfo-Category=Utilities
+X-KDE-PluginInfo-Name=secretsync-qml
+X-KDE-PluginInfo-Version=0.1
+ 
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-ServiceTypes=Plasma/Applet
+Type=Service
