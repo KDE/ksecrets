@@ -101,11 +101,13 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
                                           const QString& alias,
                                           QDBusObjectPath &prompt)
 {
+#define COLLECTION_PROPERTY(name) "org.freedesktop.Secret.Collection."name
+
     QString label;
     if ( alias.isEmpty() ) {
         // TODO: find a way to get properties lookup case insensitive
-        if(properties.contains("Label")) {
-            label = properties["Label"].toString();
+        if(properties.contains(COLLECTION_PROPERTY("Label"))) {
+            label = properties[COLLECTION_PROPERTY("Label")].toString();
         }
         else {
             // FIXME: shouldn't we throw an error if the collection has no name specified ?
@@ -119,9 +121,11 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
     }
 
     CollectionCreateInfo createCollectionInfo(label, getCallingPeer());
-    if(properties.contains("Locked")) {
-        createCollectionInfo.m_locked = properties["Locked"].toBool();
+    if(properties.contains(COLLECTION_PROPERTY("Locked"))) {
+        createCollectionInfo.m_locked = properties[COLLECTION_PROPERTY("Locked")].toBool();
     }
+
+#undef COLLECTION_PROPERTY
 
     CreateCollectionMasterJob *job = m_master->createCreateCollectionMasterJob(createCollectionInfo);
     if(job->isImmediate()) {

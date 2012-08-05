@@ -185,16 +185,20 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         return QDBusObjectPath("/");
     }
 
-    if(properties.contains("Locked")) {
-        locked = properties["Locked"].toBool();
+#define ITEM_PROPERTY(name) "org.freedesktop.Secret.Item."name
+
+    if(properties.contains(ITEM_PROPERTY("Locked"))) {
+        locked = properties[ITEM_PROPERTY("Locked")].toBool();
     }
-    if(properties.contains("Attributes")) {
-        attributes = qdbus_cast<StringStringMap>(properties["Attributes"].value<QDBusArgument>());
+    if(properties.contains(ITEM_PROPERTY("Attributes"))) {
+        attributes = qdbus_cast<StringStringMap>(properties[ITEM_PROPERTY("Attributes")].value<QDBusArgument>());
     }
-    if(properties.contains("Label")) {
-        label = properties["Label"].toString();
-        attributes["Label"] = label;
+    if(properties.contains(ITEM_PROPERTY("Label"))) {
+        label = properties[ITEM_PROPERTY("Label")].toString();
+        attributes[ITEM_PROPERTY("Label")] = label;
     }
+
+#undef ITEM_PROPERTY
 
     // TODO: check the parameters before creating the prompt
     QCA::SecureArray secretValue;

@@ -47,6 +47,8 @@
  * and not over the dbus and calling an eventually running daemon
  */
 #define DBUS_SERVICE "org.freedesktop.secrets.frontend.test"
+#define COLLECTION_PROPERTY(name) "org.freedesktop.Secret.Collection."name
+#define ITEM_PROPERTY(name) "org.freedesktop.Secret.Item."name
 
 void ServiceTest::initTestCase()
 {
@@ -176,8 +178,8 @@ void ServiceTest::nonBlockingCollection()
     QDBusObjectPath collectionPath;
     StringVariantMap createProperties;
     QList<QVariant> createInput;
-    createProperties["Label"] = "test";
-    createProperties["Locked"] = false; // create collection unlocked
+    createProperties[COLLECTION_PROPERTY("Label")] = "test";
+    createProperties[COLLECTION_PROPERTY("Locked")] = false; // create collection unlocked
     createInput << QVariant::fromValue(createProperties);
     createInput << QString("test alias");
     QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
@@ -290,8 +292,8 @@ void ServiceTest::nonBlockingItem()
     QDBusObjectPath collectionPath;
     QMap<QString, QVariant> collProperties;
     QList<QVariant> collInput;
-    collProperties["Label"] = "test3";
-    collProperties["Locked"] = false;
+    collProperties[COLLECTION_PROPERTY("Label")] = "test3";
+    collProperties[COLLECTION_PROPERTY("Locked")] = false;
     collInput << QVariant::fromValue(collProperties);
     collInput << "test alias";
     QDBusMessage collReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
@@ -317,9 +319,9 @@ void ServiceTest::nonBlockingItem()
     itemAttributes["attribute1"] = "value1";
     itemAttributes["attribute2"] = "value2";
     QMap<QString, QVariant> itemProperties;
-    itemProperties["Attributes"] = QVariant::fromValue(itemAttributes);
-    itemProperties["Label"] = "item1";
-    itemProperties["Locked"] = false;
+    itemProperties[ITEM_PROPERTY("Attributes")] = QVariant::fromValue(itemAttributes);
+    itemProperties[ITEM_PROPERTY("Label")] = "item1";
+    itemProperties[ITEM_PROPERTY("Locked")] = false;
     QList<QVariant> itemInput;
     SecretStruct secret;
     secret.m_session = sessionPath;
@@ -496,8 +498,8 @@ void ServiceTest::blockingCollection()
     QDBusObjectPath promptPath;
     QMap<QString, QVariant> createProperties;
     QList<QVariant> createInput;
-    createProperties["Label"] = "test";
-    createProperties["Locked"] = false; // create collection unlocked
+    createProperties[COLLECTION_PROPERTY("Label")] = "test";
+    createProperties[COLLECTION_PROPERTY("Locked")] = false; // create collection unlocked
     createInput << QVariant::fromValue(createProperties);
     createInput << QString("test alias");
     QDBusMessage createReply = ifaceService.callWithArgumentList(QDBus::Block, "CreateCollection",
