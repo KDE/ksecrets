@@ -1,6 +1,18 @@
 [Desktop Entry]
 Name=KSecretsService Secret Sync QML
+Name[nl]=KSecretsService Secret Sync QML
+Name[pt]=Sincronização de Senhas do KSecretsService (QML)
+Name[pt_BR]=Sincronização de senhas do KSecretsService em QML
+Name[sv]=KDE Secret Service-synkronisering QML
+Name[uk]=Засіб синхронізації паролів KSecretsService на основі QML
+Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
+Comment[nl]=KSecretsService hulpmiddel voor werken met service voor geheimen
+Comment[pt]=Ferramenta de sincronização do KSecretsService
+Comment[pt_BR]=Ferramenta de sincronização KSecretsService
+Comment[sv]=KDE Secret Service-synkroniseringsverktyg
+Comment[uk]=Засіб синхронізації KSecretsService
+Comment[x-test]=xxKSecretsService synchronization toolxx
 Icon=kwalletmanager
 
 X-Plasma-API=declarativeappletscript
