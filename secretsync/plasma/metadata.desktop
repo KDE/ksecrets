@@ -9,6 +9,7 @@ Name[sv]=KDE Secret Service-synkronisering QML
 Name[uk]=Засіб синхронізації паролів KSecretsService на основі QML
 Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
+Comment[cs]=Nástroj KDE pro synchronizaci KSecretsService
 Comment[fr]=Outil de synchronisation pour KSecretsService
 Comment[hu]=KSecretsService szinkronizálás eszköz
 Comment[nl]=KSecretsService hulpmiddel voor werken met service voor geheimen
