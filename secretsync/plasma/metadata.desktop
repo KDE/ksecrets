@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=KSecretsService Secret Sync QML
+Name[bs]=KSecretsService tajni sinhronizacijski alat
 Name[es]=Sincronización secreta de KSecretsService en QML
 Name[et]=Saladusteenuse saladuste sünkroonimine (QML)
 Name[fr]=Synchronisation du serveur de services de mots de passe (QML)
@@ -14,6 +15,7 @@ Name[tr]=KSecretsService Gizli Eşzamn. QML
 Name[uk]=Засіб синхронізації паролів KSecretsService на основі QML
 Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
+Comment[bs]=KSecretsService sinhronizacijski alat
 Comment[cs]=Nástroj KDE pro synchronizaci KSecretsService
 Comment[es]=Herramienta de sincronización de KSecretsService
 Comment[et]=Saladusteenuse sünkroonimistööriist
