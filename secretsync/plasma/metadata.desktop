@@ -18,6 +18,7 @@ Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
 Comment[bs]=KSecretsService sinhronizacijski alat
 Comment[cs]=Nástroj KDE pro synchronizaci KSecretsService
+Comment[de]=KSecretsService-Abgleichprogramm
 Comment[es]=Herramienta de sincronización de KSecretsService
 Comment[et]=Saladusteenuse sünkroonimistööriist
 Comment[fr]=Outil de synchronisation pour « KSecretService »
