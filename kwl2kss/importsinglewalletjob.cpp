@@ -187,7 +187,7 @@ void ImportSingleWalletJob::run()
             Qt::escape( m_walletName ) ) );
         if ( m_passDlg->exec() == QDialog::Rejected ) {
             setError(1);
-            setErrorText( i18n("Job cancelled") );
+            setErrorText( i18n("Job canceled") );
             emitResult();
             return;
         }
