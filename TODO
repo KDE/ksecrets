@@ -1,0 +1,16 @@
+There's still plenty of things to do (assorted, incomplete):
+- unit-tests for backends (important)
+- (unit-)tests for frontends
+- fd.o Secrets client API
+- adapt KWallet client API
+- a backend based on the kwl file-format
+- ACLs for determining which applications are allowed to access the
+  secrets (per-collection should be fine, probably based on information from
+  /proc)
+- ways to implement calls that require used-interaction (authorization)
+- devising a new file-format that supports the features of the D-Bus API
+- do Prompt objects need a maximum lifetime? It seems misbehaving clients could just
+  create a lot of them and neither execute nor dismiss them
+- see also TODO's in other subdirectories
+- use IMAP as a place-holder to centrally store secrets file
+- Firefox plugin

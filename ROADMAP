@@ -1,0 +1,22 @@
+
+ClientLib
+    
+    ClientLib aims to replace the KWallet interface
+
+    It'll not be considered complete if it'll not have test
+    cases for all the calls
+
+KWallet class rewriting
+
+    KWallet class will be rewritten so existing applications start using KSecretsService
+    Ideally, KWalletManager tool should work (but this is not sure)
+
+KSecretsExplorer
+
+    This new GUI will supersede KWalletManager
+
+KSecretSync
+
+    Tool to synchronize secrets accross several devices
+
+NOTE the ordering of release for KSecretSync and KSecretsExplorer is not yet sure

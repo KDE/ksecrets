@@ -1,0 +1,73 @@
+The ksecretservice is basically split into two generic parts:
+- backends implement access to stores of encrypted data like files (eg. kwl) or
+  smartcards
+- frontends implement ways to access the data, most prominently by using the
+  fd.o Secrets D-Bus API or the KWallet API
+
+
+.---------.
+| Backend |
+'---------'
+
+Backends consist of:
+- a CollectionManager detecting the presence of collections and making them
+  available to the frontends
+- a Collection class implementing all operations on collections
+  (locking/unlocking/searching/...)
+- an Item class that implements access to items inside collections
+  (creating/removing/changing items and their values)
+
+The Backend is tied rather closely to the actual D-Bus API and rather generic.
+Currently there is only the stub of a TemporaryCollection which should manage
+non-persistent collections (ie. useable as storage for KPasswdServer). Later
+on I want to at least support kwl (KWallet) files and a new file format I
+haven't drafted yet. It should also be possible to implement backends for
+storing secrets on a smartcard or on a biometric thumbdrive.
+
+One thing particular about the Backends is the notion of async calls which
+are meant to be a pendant to the spec's Prompt D-Bus interface. Handling of
+those PendingCalls is implemented in the base classes. Async calls are
+implemented so you shouldn't have to worry a lot about them when coding a
+new backend.
+If you check the D-Bus API you'll notice that every method using a Prompt can
+actually return without using a Prompt as well (ie. a Collection.Unlock call
+doesn't have to use a prompt if the collection is already unlocked). This is
+currently possible by asking the backend object that should perform the call
+if the call can be made immediately (BackendBase::isCallImmediate).
+
+The main entry point for the things building atop the backends is the
+Backend::Master class which basically consists of lists of known Collections and CollectionManagers.
+
+One thing that's missing from the Backend is a way to interact with the user,
+mainly for lock/unlock and password change requests. One major goal of that
+part is that requests that could basically be handled in parallel (async calls
+in different backend objects) have to be synchronized (only one dialog at a
+time). At the same time it would have to support different ways of authorization
+like password-based or smartcard-based (the former being more important).
+
+.----------.
+| Frontend |
+'----------'
+
+On top of the backends several frontends can be built. The current aim is to
+have a fd.o Secrets based D-Bus API and a legacy KWallet compatibility API. The
+D-Bus API is mostly in place (structurally) the KWallet API will be a key in
+figuring out how flexible the backend actually is.
+
+
+.-------------.
+| Client APIs |
+'-------------'
+
+There should be at least 2 APIs to use the service:
+- a KWallet compatibility API, binary compatible with KWallet::Wallet. This
+  will be neccessary so the transition from KWalletD to ksecretservice works
+  smoothly.
+- a fully fledged fd.o Secrets based API modeled to be similar like the actual
+  D-Bus API.
+
+It would be nice to have a third API, kind of like a simplified one for clients
+who just want to store a secret and not worry a lot about everything else.
+
+
+Michael Leupold <lemma@confuego.org>
