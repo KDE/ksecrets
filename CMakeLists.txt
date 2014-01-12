@@ -14,7 +14,6 @@ include(MacroLogFeature)
 add_subdirectory(src)
 add_subdirectory(ksecretsserviced)
 add_subdirectory(kwl2kss)
-add_subdirectory(kio)
 add_subdirectory(secretsync)
 
 #include(FeatureSummary)
