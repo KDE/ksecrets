@@ -1,25 +1,17 @@
-PROJECT( ksecretsservice_client_test )
 
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+include(ECMMarkAsTest)
 
-INCLUDE_DIRECTORIES (
-    ${KDE4_INCLUDES}
-    ${QCA2_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
+find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Test)
+
+macro(ksecrets_api_tests)
+  foreach(_testname ${ARGN})
+    add_executable(${_testname} ${_testname}.cpp)
+    ecm_mark_as_test(${_testname})
+    target_link_libraries(${_testname} Qt5::Test KF5::Secrets)
+  endforeach(_testname)
+endmacro()
+
+ksecrets_api_tests(
+    ksecretsservice-test
 )
 
-set( ksecretsservice_client_test_SRC 
-    ksecretsservice-test.cpp
-)
-
-KDE4_ADD_EXECUTABLE( ksecretsservice_client_test ${ksecretsservice_client_test_SRC} )
-
-TARGET_LINK_LIBRARIES( ksecretsservice_client_test
-    ksecretsservice
-    ${QT_QTTEST_LIBRARIES}
-    ${QT_QTCORE_LIBRARIES}
-    ${KDE4_KDECORE_LIBS}
-)
-
-ADD_TEST( KSecretsServiceClientAPITest ksecretsservice_client_test )

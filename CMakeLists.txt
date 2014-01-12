@@ -1,18 +1,16 @@
-cmake_minimum_required(VERSION 2.6.4)
+cmake_minimum_required(VERSION 2.8.12)
 
-PROJECT (ksecrets)
+find_package(ECM 0.0.9 REQUIRED NO_MODULE)
 
-FIND_PACKAGE (KDE4 REQUIRED)
-FIND_PACKAGE (QCA2 REQUIRED)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
-ADD_DEFINITIONS (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DQT_USE_FAST_CONCATENATION -DQT_USE_FAST_OPERATOR_PLUS)
+set(REQUIRED_QT_VERSION 5.2.0)
+find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Widgets DBus)
 
-include(MacroLibrary)
-include(KDE4Defaults)
-include(MacroLogFeature)
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+
+
 
 add_subdirectory(src)
 
-#include(FeatureSummary)
-
-macro_display_feature_log()
