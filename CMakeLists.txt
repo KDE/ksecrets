@@ -12,7 +12,6 @@ include(KDE4Defaults)
 include(MacroLogFeature)
 
 add_subdirectory(src)
-add_subdirectory(ksecretsserviced)
 
 #include(FeatureSummary)
 
