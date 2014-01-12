@@ -1,1 +1,1 @@
-add_subdirectory(ksecretsservice)
+add_subdirectory(ksecrets)
