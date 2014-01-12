@@ -13,7 +13,6 @@ include(MacroLogFeature)
 
 add_subdirectory(src)
 add_subdirectory(ksecretsserviced)
-add_subdirectory(secretsync)
 
 #include(FeatureSummary)
 
