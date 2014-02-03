@@ -26,7 +26,7 @@
 
 #include <kjob.h>
 #include <QDBusObjectPath>
-#include <qca_publickey.h>
+#include <QtCrypto/qca_publickey.h>
 
 class OrgFreedesktopSecretCollectionInterface;
 class OrgFreedesktopSecretServiceInterface;

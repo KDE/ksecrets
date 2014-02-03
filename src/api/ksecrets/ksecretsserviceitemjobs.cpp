@@ -20,8 +20,6 @@
 
 #include "ksecretsserviceitemjobs.h"
 #include "ksecretsserviceitemjobs_p.h"
-#include "ksecretsserviceitem_p.h"
-#include "ksecretsservicesecret_p.h"
 #include "dbusbackend.h"
 
 #include <item_interface.h>
@@ -330,4 +328,4 @@ void WriteItemPropertyJobPrivate::startWritingProperty()
 
 
 #include "ksecretsserviceitemjobs.moc"
-#include "ksecretsserviceitemjobs_p.moc"
+//#include "ksecretsserviceitemjobs_p.moc"

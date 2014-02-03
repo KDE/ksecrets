@@ -26,7 +26,8 @@
 #include "item_interface.h"
 
 #include <QtDBus/QDBusConnection>
-#include <QtCrypto>
+#include <QtCrypto/qca_publickey.h>
+#include <QtCrypto/qca_tools.h>
 #include <kdebug.h>
 #include <klocalizedstring.h>
 #include <fcntl.h>
@@ -40,7 +41,7 @@ using namespace KSecretsService;
 
 #define SERVICE_NAME "org.freedesktop.secrets"
 
-K_GLOBAL_STATIC(QCA::Initializer, s_qcaInitializer)
+Q_GLOBAL_STATIC(QCA::Initializer, s_qcaInitializer)
 static bool s_initQCA = true;
 
 const QString DBusSession::encryptionAlgorithm = "dh-ietf1024-aes128-cbc-pkcs7";
@@ -85,7 +86,6 @@ void OpenSessionJob::start()
 
         if (s_initQCA) {
             s_initQCA = false;
-            qAddPostRoutine(s_qcaInitializer.destroy);
             static QCA::Initializer *dummy = s_qcaInitializer;
             dummy = dummy; // suppress warning
         }

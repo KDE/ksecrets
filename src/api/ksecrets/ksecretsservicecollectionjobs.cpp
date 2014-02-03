@@ -1154,4 +1154,4 @@ void UnlockCollectionJobPrivate::checkResult( const QList< QDBusObjectPath > & o
 
 
 #include "ksecretsservicecollectionjobs.moc"
-#include "ksecretsservicecollectionjobs_p.moc"
+//#include "ksecretsservicecollectionjobs_p.moc"

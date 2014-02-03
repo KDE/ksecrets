@@ -21,7 +21,7 @@
 
 #include "ksecretsservicecodec.h"
 
-#include <qca_tools.h>
+#include <QtCrypto/qca_keystore.h>
 #include <kdebug.h>
 
 using namespace KSecretsService;

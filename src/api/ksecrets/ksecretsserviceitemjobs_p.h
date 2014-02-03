@@ -23,6 +23,9 @@
 
 #include "ksecretsserviceitemjobs.h"
 #include "ksecretsservicedbustypes.h"
+#include "ksecretsserviceitem_p.h"
+#include "ksecretsservicesecret_p.h"
+
 #include <qdbusconnection.h>
 #include <qwindowdefs.h>
 

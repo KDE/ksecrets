@@ -79,7 +79,7 @@ add_library(KF5::Secrets ALIAS KF5Secrets)
 
 target_include_directories(KF5Secrets INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/KSecrets>")
 
-target_link_libraries(KF5Secrets PUBLIC  Qt5::Widgets)
+target_link_libraries(KF5Secrets PUBLIC  Qt5::Widgets Qt5::DBus ${QCA2_LIBRARIES})
 
 set_target_properties(KF5Secrets PROPERTIES VERSION   ${KWALLET_VERSION_STRING}
                                          SOVERSION ${KWALLET_SOVERSION}
