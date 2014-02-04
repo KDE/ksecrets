@@ -24,17 +24,20 @@
 #include "session_interface.h"
 #include "prompt_interface.h"
 #include "item_interface.h"
+#include "ksecretsservicecollection_p.h"
 
-#include <QtDBus/QDBusConnection>
+#include <kdebug.h>
+#define TRANSLATION_DOMAIN "ksecretsservice_api"
+#include <klocalizedstring.h>
+#include <ktoolinvocation.h>
+
 #include <QtCrypto/qca_publickey.h>
 #include <QtCrypto/qca_tools.h>
-#include <kdebug.h>
-#include <klocalizedstring.h>
-#include <fcntl.h>
-#include <ktoolinvocation.h>
+
+#include <QDBusConnection>
 #include <QDBusMetaType>
-#include "ksecretsservicecollection_p.h"
-#include <klocale.h>
+#include <fcntl.h>
+
 
 using namespace KSecretsService;
 
@@ -80,8 +83,6 @@ void OpenSessionJob::start()
         emitResult();
     }
     else {
-        KGlobal::locale()->insertCatalog("ksecretsservice_api");
-
         if (s_initQCA) {
             s_initQCA = false;
             static QCA::Initializer *dummy = s_qcaInitializer;

@@ -3,8 +3,7 @@ PROJECT( KSecrets )
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 
 if(NOT kdelibs_SOURCE_DIR)
-    find_package(KF5Config ${KF5_VERSION} REQUIRED)
-    find_package(KF5WindowSystem ${KF5_VERSION} REQUIRED)
+    find_package(KF5 ${KF5_VERSION} REQUIRED Config WindowSystem I18n)
 endif()
 
 include(FeatureSummary)
@@ -79,7 +78,12 @@ add_library(KF5::Secrets ALIAS KF5Secrets)
 
 target_include_directories(KF5Secrets INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/KSecrets>")
 
-target_link_libraries(KF5Secrets PUBLIC  Qt5::Widgets Qt5::DBus ${QCA2_LIBRARIES})
+target_link_libraries(KF5Secrets PUBLIC
+    Qt5::Widgets
+    Qt5::DBus
+    qca
+    KF5::I18n
+)
 
 set_target_properties(KF5Secrets PROPERTIES VERSION   ${KWALLET_VERSION_STRING}
                                          SOVERSION ${KWALLET_SOVERSION}

@@ -24,14 +24,13 @@
 #include "../ksecretsservicesecret.h"
 #include "../ksecretsserviceitem.h"
 
-#include <qtest_kde.h>
 #include <ktoolinvocation.h>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusConnectionInterface>
 #include <QtTest/QTest>
 #include <kdebug.h>
 
-QTEST_KDEMAIN_CORE(KSecretServiceTest)
+QTEST_MAIN(KSecretServiceTest)
 
 #define SERVICE_NAME "org.freedesktop.secrets"
 
