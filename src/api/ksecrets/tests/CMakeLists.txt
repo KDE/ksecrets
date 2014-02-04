@@ -2,12 +2,13 @@
 include(ECMMarkAsTest)
 
 find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Test)
+find_package(KF5 REQUIRED CoreAddons Service)
 
 macro(ksecrets_api_tests)
   foreach(_testname ${ARGN})
     add_executable(${_testname} ${_testname}.cpp)
     ecm_mark_as_test(${_testname})
-    target_link_libraries(${_testname} Qt5::Test KF5::Secrets)
+    target_link_libraries(${_testname} Qt5::Test KF5::Secrets KF5::CoreAddons KF5::Service ${QCA2_LIBRARIES})
   endforeach(_testname)
 endmacro()
 
