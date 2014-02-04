@@ -34,7 +34,6 @@
 #include <ktoolinvocation.h>
 #include <QDBusMetaType>
 #include "ksecretsservicecollection_p.h"
-#include <kglobal.h>
 #include <klocale.h>
 
 using namespace KSecretsService;
@@ -57,7 +56,6 @@ OpenSessionJob* DBusSession::openSession()
     if ( 0 == openSessionJob ) {
         openSessionJob = new OpenSessionJob(0);
         openSessionJob->setAutoDelete(false);
-        KGlobal::deref(); // compensate for this job never finishing and preventing applications to quit
     }
     return openSessionJob;
 }

@@ -25,8 +25,11 @@
 #include "ksecretsservicecodec.h"
 
 #include <kjob.h>
-#include <QDBusObjectPath>
+
 #include <QtCrypto/qca_publickey.h>
+
+#include <QDBusObjectPath>
+#include <QEventLoopLocker>
 
 class OrgFreedesktopSecretCollectionInterface;
 class OrgFreedesktopSecretServiceInterface;
@@ -95,6 +98,8 @@ private:
     friend class OpenSessionJob;
 
     DBusSession();
+
+    QEventLoopLocker locker;
     
     static DBusSession          staticInstance;
     static const QString        encryptionAlgorithm;
