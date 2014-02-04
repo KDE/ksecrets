@@ -23,7 +23,7 @@
 
 #include "prompt_interface.h"
 
-#include <kdebug.h>
+#include <QDebug>
 #include <klocalizedstring.h>
 
 using namespace KSecretsService;
@@ -48,7 +48,7 @@ void PromptJob::start()
         // NOTE: ne need to wait for promptReply to finish. The prompt will call promptCompleted when user interaction takes end
     }
     else {
-        kDebug() << "ERROR instantiating prompt " << promptPath.path();
+        qDebug() << "ERROR instantiating prompt " << promptPath.path();
         setError(1); // FIXME: use enumerated error codes here
         setErrorText( i18n("ERROR instantiating prompt with path '%1'", promptPath.path() ) );
         emitResult();
@@ -57,7 +57,7 @@ void PromptJob::start()
 
 void PromptJob::promptCompleted(bool dism, const QDBusVariant &res)
 {
-    kDebug() << "dismissed = " << dism << ", result = " << res.variant().toString();
+    qDebug() << "dismissed = " << dism << ", result = " << res.variant().toString();
     dismissed = dism;
     opResult = res;
     setError(0);

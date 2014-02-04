@@ -27,7 +27,7 @@
 #include <ksecretsservice/ksecretsservicecollection.h>
 #include <ksecretsservice/ksecretsservicecollectionjobs.h>
 
-#include <KDebug>
+#include <QDebug>
 #include <kuiserverjobtracker.h>
 #include <KLocalizedString>
 
@@ -44,7 +44,7 @@ using namespace KSecretsService;
 KwlImporterJob::KwlImporterJob( QObject* parent)
     : KCompositeJob(parent)
 {
-    kDebug();
+    qDebug();
 
     setCapabilities(KJob::Killable | KJob::Suspendable);
 
@@ -59,7 +59,7 @@ KwlImporterJob::~KwlImporterJob()
 
 void KwlImporterJob::start()
 {
-    kDebug();
+    qDebug();
 
     emit description(this,
                      i18nc("@title job", "Converting Password storage"),
@@ -72,7 +72,7 @@ void KwlImporterJob::start()
 void KwlImporterJob::run()
 {
     if ( !userHasWallets() ) {
-        kDebug() << "No wallets are found into the user directory";
+        qDebug() << "No wallets are found into the user directory";
         return;
     }
 
@@ -85,7 +85,7 @@ void KwlImporterJob::run()
     foreach(const QFileInfo & fi, dir.entryInfoList()) {
         KJob *importJob = new ImportSingleWalletJob( fi.absoluteFilePath(), this);
         if ( !addSubjob( importJob ) ) {
-            kDebug() << "Cannot add import subjob";
+            qDebug() << "Cannot add import subjob";
         }
         importJob->start();
         amount++;

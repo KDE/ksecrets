@@ -35,7 +35,7 @@
 #include <QListWidgetItem>
 #include <QListWidget>
 #include <kconfigdialogmanager.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QPointer>
 
 ConfigWidget::ConfigWidget(QWidget* parent, Qt::WindowFlags f): 
@@ -90,7 +90,7 @@ void ConfigWidget::onDeleteComputer()
 
 void ConfigWidget::load(KSecretSyncCfg* settings)
 {
-    kDebug() << "ConfigWidget::load";
+    qDebug() << "ConfigWidget::load";
     _computerList->clear();
     foreach ( const QString &computerName, settings->computerList() ) {
         _computerList->addItem( computerName );
@@ -99,7 +99,7 @@ void ConfigWidget::load(KSecretSyncCfg* settings)
 
 void ConfigWidget::save(KSecretSyncCfg* settings)
 {
-    kDebug() << "ConfigWidget::save";
+    qDebug() << "ConfigWidget::save";
 
     QStringList computerList;
     if ( _computerList->count() >0 ) {

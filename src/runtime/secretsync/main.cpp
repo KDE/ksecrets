@@ -22,7 +22,7 @@
 #include <kuniqueapplication.h>
 #include <kaboutdata.h>
 #include <kcmdlineargs.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QtDBus/QDBusConnection>
 #include <klocalizedstring.h>
 #include <kstandarddirs.h>
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     app.setQuitOnLastWindowClosed(false);
 
     if(!KUniqueApplication::start()) {
-        kDebug() << "ksecretsyncd is already running!";
+        qDebug() << "ksecretsyncd is already running!";
         return 0;
     }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     QCA::Initializer qcaInit;
 
     if(!QDBusConnection::sessionBus().registerService("org.freedesktop.Secret.Sync")) {
-        kDebug() << "Couldn't register org.freedesktop.Secret.Sync D-Bus service!";
+        qDebug() << "Couldn't register org.freedesktop.Secret.Sync D-Bus service!";
         return 1;
     }
 

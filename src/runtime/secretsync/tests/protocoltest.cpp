@@ -26,7 +26,7 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtTest/QSignalSpy>
 #include <QTimer>
-#include <kdebug.h>
+#include <QDebug>
 #include <qtest_kde.h>
 
 QTEST_KDEMAIN( ProtocolTest, NoGUI )
@@ -39,7 +39,7 @@ ProtocolTest::ProtocolTest()
 
 void ProtocolTest::createLogEntry(const QString& logEntry)
 {
-    kDebug() << logEntry;
+    qDebug() << logEntry;
 }
 
 void ProtocolTest::initTestCase()

@@ -22,7 +22,7 @@
 #include "ksecretencryptionfilter.h"
 
 #include <klocalizedstring.h>
-#include <kdebug.h>
+#include <QDebug>
 #include "ksecretstream.h"
 
 // this must not be changed or else file compatibility is gone!
@@ -109,7 +109,7 @@ bool KSecretEncryptionFilter::setPassword(const QCA::SecureArray& password)
     int keyLength = m_cipher->keyLength().minimum();
     m_cryptKey = createKeyFromPassword(password, keyLength);
     if ( m_cryptKey.isEmpty() ) {
-//         kDebug() << "Cannot create key";
+//         qDebug() << "Cannot create key";
         result = false;
     }
     return result;
@@ -149,7 +149,7 @@ bool KSecretEncryptionFilter::setupForReading() {
     stream >> m_initVector;
     
     if ( stream.status() != QDataStream::Ok ) {
-        kDebug() << "Cannot read algo setup";
+        qDebug() << "Cannot read algo setup";
         return false;
     }
             
@@ -162,13 +162,13 @@ QCA::SecureArray KSecretEncryptionFilter::encryptData( const QByteArray & data)
     m_cipher->setup( QCA::Encode, m_cryptKey, m_initVector );
     QCA::SecureArray result = m_cipher->update( QCA::SecureArray( data ) );
     if ( !m_cipher->ok() ) {
-        kDebug() << "Cannot encrypt data!";
+        qDebug() << "Cannot encrypt data!";
     }
     result.append( m_cipher->final() );
     if ( !m_cipher->ok() ) {
-        kDebug() << "Cannot encrypt: final failed!";
+        qDebug() << "Cannot encrypt: final failed!";
     }
-//     kDebug() << "Encryted size " << result.size();
+//     qDebug() << "Encryted size " << result.size();
     return result;
 }
 
@@ -177,7 +177,7 @@ QByteArray KSecretEncryptionFilter::decryptData(QByteArray encrypted)
     m_cipher->setup( QCA::Decode, m_cryptKey, m_initVector );
     QCA::MemoryRegion result = m_cipher->process( encrypted );
     if ( !m_cipher->ok() ) {
-        kDebug() << "Cannot decrypt data!";
+        qDebug() << "Cannot decrypt data!";
     }
     return result.toByteArray();
 }

@@ -28,7 +28,7 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusConnectionInterface>
 #include <QtTest/QTest>
-#include <kdebug.h>
+#include <QDebug>
 
 QTEST_MAIN(KSecretServiceTest)
 

@@ -32,7 +32,7 @@
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QSharedDataPointer>
-#include <kdebug.h>
+#include <QDebug>
 #include <prompt_interface.h>
 #include <QWidget>
 #include <klocalizedstring.h>
@@ -87,7 +87,7 @@ void CollectionJob::startFindCollection()
             findJob->start();
         }
         else {
-            kDebug() << "FindCollectionJob failed to start";
+            qDebug() << "FindCollectionJob failed to start";
             setError( InternalError );
             emitResult();
         }
@@ -123,7 +123,7 @@ void CollectionJob::unlockCollection()
         // virtual method slotResult will be called upon job finish
     }
     else {
-        kDebug() << "Cannot add unlock subjob";
+        qDebug() << "Cannot add unlock subjob";
         finishedWithError(InternalError, i18n("Cannot start secret collection unlocking") );
     }
 }
@@ -181,10 +181,10 @@ void FindCollectionJobPrivate::createFinished(QDBusPendingCallWatcher* watcher)
     QDBusPendingReply< QDBusObjectPath, QDBusObjectPath > createReply = *watcher;
     Q_ASSERT( createReply.isFinished() ); // "on ne sait jamais"
     if ( watcher->isError() ) {
-        kDebug() << "creating collection '" << collectionName << "' failed";
-        kDebug() << "DBusError.type = " << createReply.error().type();
-        kDebug() << "DBusError.name = " << createReply.error().name();
-        kDebug() << "DBusError.message = " << createReply.error().message();
+        qDebug() << "creating collection '" << collectionName << "' failed";
+        qDebug() << "DBusError.type = " << createReply.error().type();
+        qDebug() << "DBusError.name = " << createReply.error().name();
+        qDebug() << "DBusError.message = " << createReply.error().message();
         findJob->finishedWithError( CollectionJob::CreateError, createReply.error().message() );
     }
     else {
@@ -201,7 +201,7 @@ void FindCollectionJobPrivate::createFinished(QDBusPendingCallWatcher* watcher)
             }
             else {
                 promptJob->deleteLater();
-                kDebug() << "cannot add prompt subjob!";
+                qDebug() << "cannot add prompt subjob!";
                 findJob->finishedWithError( CollectionJob::InternalError, i18n("Cannot add prompt job") );
             }
         }
@@ -242,7 +242,7 @@ void FindCollectionJobPrivate::startCreateOrOpenCollection()
         openSessionJob->start();
     }
     else {
-        kDebug() << "Cannot OpenSessionJob subjob";
+        qDebug() << "Cannot OpenSessionJob subjob";
         findJob->finishedWithError( CollectionJob::InternalError, i18n("Cannot open session") );
     }
 }
@@ -332,7 +332,7 @@ void ListCollectionsJobPrivate::startListingCollections()
         openSessionJob->start();
     }
     else {
-        kDebug() << "Cannot add OpenSessionJob!";
+        qDebug() << "Cannot add OpenSessionJob!";
         emit listingError();
     }
 }
@@ -348,7 +348,7 @@ void ListCollectionsJobPrivate::slotOpenSessionFinished(KJob* job) {
                 collections.append( coll->label() );
             }
             else {
-                kDebug() << "Cannot bind to collection " << path.path();
+                qDebug() << "Cannot bind to collection " << path.path();
                 emit listingError();
             }
             coll->deleteLater();
@@ -356,7 +356,7 @@ void ListCollectionsJobPrivate::slotOpenSessionFinished(KJob* job) {
         emit listingDone();
     }
     else {
-        kDebug() << "OpenSessionJob returned error " << openSessionJob->errorString();
+        qDebug() << "OpenSessionJob returned error " << openSessionJob->errorString();
         emit listingError();
     }
 }
@@ -418,7 +418,7 @@ void DeleteCollectionJobPrivate::callFinished( QDBusPendingCallWatcher*  watcher
         msg = QString("d-bus error %1 (%2)").arg( QDBusError::errorString( dbusErr.type() ) ).arg( dbusErr.message() );
     }
 
-    kDebug() << "callFinished with err=" << (int)err << " and msg='" << msg << "'";
+    qDebug() << "callFinished with err=" << (int)err << " and msg='" << msg << "'";
     emit deleteIsDone( err, msg );
     watcher->deleteLater();
 }
@@ -526,7 +526,7 @@ void SearchCollectionItemsJobPrivate::searchFinished(QDBusPendingCallWatcher* wa
         searchItemJob->finishedOk();
     }
     else {
-        kDebug() << "ERROR searching items";
+        qDebug() << "ERROR searching items";
         searchItemJob->finishedWithError( CollectionJob::InternalError, i18n("ERROR searching items") );
     }
     watcher->deleteLater();
@@ -588,7 +588,7 @@ void SearchCollectionSecretsJobPrivate::searchSecretsReply( QDBusPendingCallWatc
     QDBusPendingReply<QList<QDBusObjectPath> > searchReply = *watcher;
     if ( !searchReply.isError() ) {
         QList< QDBusObjectPath > pathList = searchReply.value();
-        kDebug() << "FOUND " << pathList.count() << " secrets";
+        qDebug() << "FOUND " << pathList.count() << " secrets";
         if ( pathList.count() >0 ) {
             QDBusPendingReply<DBusObjectPathSecretMap> getReply = DBusSession::serviceIf()->GetSecrets( pathList, DBusSession::sessionPath() );
             QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher( getReply );
@@ -599,7 +599,7 @@ void SearchCollectionSecretsJobPrivate::searchSecretsReply( QDBusPendingCallWatc
         }
     }
     else {
-        kDebug() << "ERROR searching items";
+        qDebug() << "ERROR searching items";
         emit searchIsDone( CollectionJob::InternalError, "ERROR searching items" );
     }
     watcher->deleteLater();
@@ -616,14 +616,14 @@ void SearchCollectionSecretsJobPrivate::getSecretsReply(QDBusPendingCallWatcher*
                 secretsList.append( QSharedDataPointer<SecretPrivate>( sp ) );
             }
             else {
-                kDebug() << "ERROR decrypting the secret";
+                qDebug() << "ERROR decrypting the secret";
                 emit searchIsDone( CollectionJob::InternalError, "ERROR decrypting the secret" );
             }
         }
         emit searchIsDone( CollectionJob::NoError, "" );
     }
     else {
-        kDebug() << "ERROR trying to retrieve the secrets";
+        qDebug() << "ERROR trying to retrieve the secrets";
         emit searchIsDone( CollectionJob::InternalError, "ERROR trying to retrieve the secrets" );
     }
     watcher->deleteLater();
@@ -690,7 +690,7 @@ void CreateCollectionItemJobPrivate::startCreateItem()
         connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(createItemReply(QDBusPendingCallWatcher*)) );
     }
     else {
-        kDebug() << "ERROR preparing DBusSecretStruct";
+        qDebug() << "ERROR preparing DBusSecretStruct";
         createItemJob->finishedWithError( CollectionJob::CreateError, i18n("Cannot prepare secret structure") );
     }
 }
@@ -708,7 +708,7 @@ void CreateCollectionItemJobPrivate::createItemReply(QDBusPendingCallWatcher* wa
                 promptJob->start();
             }
             else {
-                kDebug() << "ERROR creating prompt job for " << promptPath.path();
+                qDebug() << "ERROR creating prompt job for " << promptPath.path();
                 createItemJob->finishedWithError( CollectionJob::CreateError, i18n("Cannot create prompt job!") );
             }
         }
@@ -720,13 +720,13 @@ void CreateCollectionItemJobPrivate::createItemReply(QDBusPendingCallWatcher* wa
             }
             else {
                 item = NULL;
-                kDebug() << "ERROR creating item, as it's invalid. path = " << itemPath.path();
+                qDebug() << "ERROR creating item, as it's invalid. path = " << itemPath.path();
                 createItemJob->finishedWithError( CollectionJob::CreateError, i18n("The backend returned an invalid item path or it's no longer present") );
             }
         }
     }
     else {
-        kDebug() << "ERROR trying to create item : " << createReply.error().message();
+        qDebug() << "ERROR trying to create item : " << createReply.error().message();
         createItemJob->finishedWithError( CollectionJob::CreateError, i18n("Backend communication error") );
     }
     watcher->deleteLater();
@@ -916,12 +916,12 @@ void ChangeCollectionPasswordJobPrivate::changePasswordStarted( QDBusPendingCall
         }
         else {
             promptJob->deleteLater();
-            kDebug() << "cannot add prompt subjob!";
+            qDebug() << "cannot add prompt subjob!";
             theJob->finishedWithError( CollectionJob::InternalError, i18n("Cannot add prompt job") );
         }
     }
     else {
-        kDebug() << "ERROR when starting password change " << reply.error().message();
+        qDebug() << "ERROR when starting password change " << reply.error().message();
         theJob->finishedWithError( CollectionJob::InternalError, reply.error().message() );
     }
     watcher->deleteLater();
@@ -991,7 +991,7 @@ void LockCollectionJobPrivate::slotLockFinished( QDBusPendingCallWatcher *watche
             }
             else {
                 promptJob->deleteLater();
-                kDebug() << "cannot add prompt subjob";
+                qDebug() << "cannot add prompt subjob";
                 theJob->finishedWithError( CollectionJob::InternalError, i18n("Cannot add prompt job") );
             }
         }
@@ -1001,7 +1001,7 @@ void LockCollectionJobPrivate::slotLockFinished( QDBusPendingCallWatcher *watche
         }
     }
     else {
-        kDebug() << "ERROR when trying to lock collection " << reply.error().message();
+        qDebug() << "ERROR when trying to lock collection " << reply.error().message();
         theJob->finishedWithError( CollectionJob::InternalError, reply.error().message() );
     }
     watcher->deleteLater();
@@ -1036,7 +1036,7 @@ void LockCollectionJobPrivate::checkResult( const QList< QDBusObjectPath > & obj
         theJob->finishedOk();
     }
     else {
-        kDebug() << "objList.count() = " << objList.count();
+        qDebug() << "objList.count() = " << objList.count();
         theJob->finishedWithError( CollectionJob::InternalError, i18n("Unlock operation returned unexpected result") );
     }
 }
@@ -1094,7 +1094,7 @@ void UnlockCollectionJobPrivate::slotUnlockFinished( QDBusPendingCallWatcher *wa
             }
             else {
                 promptJob->deleteLater();
-                kDebug() << "cannot add prompt subjob";
+                qDebug() << "cannot add prompt subjob";
                 theJob->finishedWithError( CollectionJob::InternalError, i18n("Cannot add prompt job") );
             }
         }
@@ -1104,7 +1104,7 @@ void UnlockCollectionJobPrivate::slotUnlockFinished( QDBusPendingCallWatcher *wa
         }
     }
     else {
-        kDebug() << "ERROR when trying to lock collection " << reply.error().message();
+        qDebug() << "ERROR when trying to lock collection " << reply.error().message();
         theJob->finishedWithError( CollectionJob::InternalError, reply.error().message() );
     }
     watcher->deleteLater();
@@ -1147,7 +1147,7 @@ void UnlockCollectionJobPrivate::checkResult( const QList< QDBusObjectPath > & o
         theJob->finishedOk();
     }
     else {
-        kDebug() << "objList.count() = " << objList.count();
+        qDebug() << "objList.count() = " << objList.count();
         theJob->finishedWithError( CollectionJob::InternalError, i18n("Unlock operation returned unexpected result") );
     }
 }

@@ -20,7 +20,7 @@
 
 #include "backenditem.h"
 #include "backendcollection.h"
-#include <kdebug.h>
+#include <QDebug>
 
 #define ATTR_CONTENT_TYPE "content-type"
 

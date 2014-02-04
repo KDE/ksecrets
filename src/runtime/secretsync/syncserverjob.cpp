@@ -23,7 +23,7 @@
 #include "syncprotocol.h"
 
 #include <QtNetwork/QTcpSocket>
-#include <kdebug.h>
+#include <QDebug>
 #include <klocalizedstring.h>
 
 #define SERVER_READ_TIMEOUT 60000
@@ -46,7 +46,7 @@ SyncServerJob::~SyncServerJob()
 
 void SyncServerJob::start()
 {
-    kDebug() << "starting server sync job";
+    qDebug() << "starting server sync job";
     _syncProtocol = new SyncProtocolServer( _daemon );
 
     forever {
@@ -92,7 +92,7 @@ QString SyncServerJob::errorString() const
 
 void SyncServerJob::onSocketStateChanged( QAbstractSocket::SocketState state )
 {
-    kDebug() << "onSocketStateChanged " << state;
+    qDebug() << "onSocketStateChanged " << state;
 }
 
 #include "syncserverjob.moc"

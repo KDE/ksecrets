@@ -28,7 +28,7 @@
 #include <QTimer>
 #include <QDir>
 #include <QFile>
-#include <kdebug.h>
+#include <QDebug>
 #include <qtest_kde.h>
 #include <kprocess.h>
 #include <unistd.h>
@@ -44,7 +44,7 @@ SocketConnectionTest::SocketConnectionTest() :
 
 void SocketConnectionTest::createLogEntry(const QString& logEntry)
 {
-    kDebug() << logEntry;
+    qDebug() << logEntry;
 }
 
 void SocketConnectionTest::initTestCase()
@@ -65,7 +65,7 @@ void SocketConnectionTest::initTestCase()
             qint64 count = cmdLineFile.read( buffer, sizeof(buffer) );
             QVERIFY( count >0 );
             if ( QString( buffer ).startsWith( "ksecretsync" ) ) {
-                kDebug() << "found ksecretsync PID " << pid;
+                qDebug() << "found ksecretsync PID " << pid;
                 startSecretSync = false;
                 break;
             }
@@ -73,7 +73,7 @@ void SocketConnectionTest::initTestCase()
     }*/
     
     if ( startSecretSync ) {
-        kDebug() << "launching ksecretsync";
+        qDebug() << "launching ksecretsync";
         system( "killall 'ksecretsync'" );
         sleep(2);
         QString program = "ksecretsync";

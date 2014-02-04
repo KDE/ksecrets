@@ -21,7 +21,7 @@
 #include <kuniqueapplication.h>
 #include <kaboutdata.h>
 #include <kcmdlineargs.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <iostream>
 #include <QString>
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     app.setQuitOnLastWindowClosed(false);
 
     if(!KUniqueApplication::start()) {
-        kDebug() << "kwl2kss is already running!";
+        qDebug() << "kwl2kss is already running!";
         return 0;
     }
 
@@ -59,6 +59,6 @@ int main(int argc, char **argv)
         app.connect( importJob, SIGNAL(finished(KJob*)), SLOT(quit()) );
     }
 
-    kDebug() << "ksecretsserviced ready";
+    qDebug() << "ksecretsserviced ready";
     return app.exec();
 }

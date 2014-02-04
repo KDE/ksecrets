@@ -22,7 +22,7 @@
 #include <kuniqueapplication.h>
 #include <kaboutdata.h>
 #include <kcmdlineargs.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QtDBus/QDBusConnection>
 #include <QtCrypto>
 #include <iostream>
@@ -69,12 +69,12 @@ int main(int argc, char **argv)
     app.setQuitOnLastWindowClosed(false);
 
     if(!KUniqueApplication::start()) {
-        kDebug() << "ksecretsservice is already running!";
+        qDebug() << "ksecretsservice is already running!";
         return 0;
     }
 
     if(!QDBusConnection::sessionBus().registerService("org.freedesktop.secrets")) {
-        kDebug() << "Couldn't register org.freedesktop.Secret D-Bus service!";
+        qDebug() << "Couldn't register org.freedesktop.Secret D-Bus service!";
         return 1;
     }
 
@@ -97,6 +97,6 @@ int main(int argc, char **argv)
         }
     }
 
-    kDebug() << "ksecretsserviced ready";
+    qDebug() << "ksecretsserviced ready";
     return app.exec();
 }

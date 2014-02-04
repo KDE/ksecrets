@@ -29,7 +29,7 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusObjectPath>
 #include <kmessagebox.h>
-#include <kdebug.h>
+#include <QDebug>
 
 PromptBase::PromptBase(Service *service, QObject *parent)
     : KSecretObject< PromptBase, orgFreedesktopSecret::PromptAdaptor >(parent), 

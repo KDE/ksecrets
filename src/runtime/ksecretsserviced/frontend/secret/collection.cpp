@@ -28,7 +28,7 @@
 #include <backend/backendcollection.h>
 #include <backend/backenditem.h>
 #include <peer.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QtDBus/QDBusConnection>
 #include <QtCore/QDebug>
 #include <klocalizedstring.h>
@@ -180,7 +180,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     QObject *object = QDBusConnection::sessionBus().objectRegisteredAt(secret.m_session.path());
     Session *session;
     if(!(session = qobject_cast<Session*>(object))) {
-        kDebug() << "ERROR there is no available session";
+        qDebug() << "ERROR there is no available session";
         dbusAdaptor()->sendErrorReply( QDBusError::InternalError );
         return QDBusObjectPath("/");
     }
@@ -204,7 +204,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
     QCA::SecureArray secretValue;
     if(!session->decrypt(secret.m_value, secret.m_parameters, secretValue)) {
         // TODO: invalid session
-        kDebug() << "ERROR Attempting to create an item without a valid session";
+        qDebug() << "ERROR Attempting to create an item without a valid session";
     }
     ItemCreateInfo createInfo(label, attributes, secretValue, secret.m_contentType, replace, locked, getCallingPeer());
     CreateItemJob *cij = m_collection->createCreateItemJob(createInfo);
@@ -212,7 +212,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         cij->exec();
         if(cij->error() != BackendNoError || !cij->item()) {
             // TODO: error creating the item
-            kDebug() << "ERROR creating the item";
+            qDebug() << "ERROR creating the item";
         }
 
         // the Item is already created inside slotItemCreated()

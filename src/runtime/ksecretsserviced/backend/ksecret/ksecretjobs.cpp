@@ -30,7 +30,7 @@
 #include <klocalizedstring.h>
 
 #include <QtCore/QDebug>
-#include <kdebug.h>
+#include <QDebug>
 
 KSecretCreateCollectionJob::KSecretCreateCollectionJob(const CollectionCreateInfo &createCollectionInfo,
         KSecretCollectionManager *manager)
@@ -56,7 +56,7 @@ void KSecretCreateCollectionJob::start()
         subJob->start();
     }
     else {
-        kDebug() << "Cannot start password subJob";
+        qDebug() << "Cannot start password subJob";
         setErrorText( i18n("Cannot change password due to an internal error.") );
         emitResult();
     }
@@ -108,7 +108,7 @@ void KSecretCreateCollectionJob::newPasswordJobResult(KJob *job)
         aclSubjob->start();
     }
     else {
-        kDebug() << "Cannot add aclSubjob";
+        qDebug() << "Cannot add aclSubjob";
         setErrorText( i18n("Cannot launch ACL preferences job") );
         emitResult();
     }
@@ -215,7 +215,7 @@ void KSecretUnlockCollectionJob::createAskPasswordJob()
             m_firstTry = false;
         }
         else {
-            kDebug() << "Cannot add subJob";
+            qDebug() << "Cannot add subJob";
             setErrorText(i18n("Cannot launch asking password job"));
             emitResult();
         }
@@ -380,7 +380,7 @@ void KSecretChangeAuthenticationCollectionJob::start()
         unlockJob->start();
     }
     else {
-        kDebug() << "Failed to add unlock subjob";
+        qDebug() << "Failed to add unlock subjob";
         setError(BackendErrorOther, i18n("Cannot start secret collection unlocking"));
     }
 }

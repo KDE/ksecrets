@@ -23,7 +23,7 @@
 #include "dbusbackend.h"
 
 #include <item_interface.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QDBusPendingCallWatcher>
 #include "promptjob.h"
 
@@ -85,7 +85,7 @@ Secret GetSecretItemSecretJob::secret() const
 {
     SecretPrivate *pr = 0;
     if ( !SecretPrivate::fromSecretStruct( d->secret, pr ) ) {
-        kDebug() << "WARNING: decrypting secret FAILED";
+        qDebug() << "WARNING: decrypting secret FAILED";
     }
     return Secret( pr );
 }
@@ -110,11 +110,11 @@ void GetSecretItemSecretJobPrivate::getSecretReply( QDBusPendingCallWatcher *wat
     QDBusPendingReply<DBusSecretStruct> reply = *watcher;
     if ( !reply.isError() ) {
         secret = reply.argumentAt<0>();
-        kDebug() << "Received Secret size: " << secret.m_value.size();
+        qDebug() << "Received Secret size: " << secret.m_value.size();
         job->finished( SecretItemJob::NoError );
     }
     else {
-        kDebug() << "ERROR calling GetSecret";
+        qDebug() << "ERROR calling GetSecret";
         job->finished( SecretItemJob::InternalError, "ERROR calling GetSecret" );
     }
     watcher->deleteLater();
@@ -153,7 +153,7 @@ void SetSecretItemSecretJobPrivate::start()
         connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(setSecretReply(QDBusPendingCallWatcher*)) );
     }
     else {
-        kDebug() << "ERROR building DBusSecretStruct";
+        qDebug() << "ERROR building DBusSecretStruct";
         job->finished( SecretItemJob::InternalError, "ERROR building DBusSecretStruct" );
     }
 }
@@ -163,7 +163,7 @@ void SetSecretItemSecretJobPrivate::setSecretReply( QDBusPendingCallWatcher *wat
     Q_ASSERT(watcher != 0);
     QDBusPendingReply< void > reply = *watcher;
     if ( reply.isError() ) {
-        kDebug() << "ERROR calling setSecret : " << reply.error().message();
+        qDebug() << "ERROR calling setSecret : " << reply.error().message();
         job->finished( SecretItemJob::InternalError, reply.error().message() );
     }
     else {
@@ -218,13 +218,13 @@ void SecretItemDeleteJobPrivate::deleteItemReply( QDBusPendingCallWatcher *watch
             }
             else {
                 promptjob->deleteLater();
-                kDebug() << "Cannot add subjob for prompt " << promptPath.path();
+                qDebug() << "Cannot add subjob for prompt " << promptPath.path();
                 job->finished( SecretItemJob::InternalError, "Cannot start prompt job for the delete operation!" );
             }
         }
     }
     else {
-        kDebug() << "ERROR when calling item.Delete() : " << reply.error().message();
+        qDebug() << "ERROR when calling item.Delete() : " << reply.error().message();
         job->finished( SecretItemJob::InternalError, reply.error().message() );
     }
     watcher->deleteLater();

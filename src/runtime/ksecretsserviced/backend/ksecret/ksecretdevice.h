@@ -32,7 +32,7 @@
 #define KSECRET_MAGIC "KSECRET\n\r\r\n"
 #define KSECRET_MAGIC_LEN 11
 #include <QIODevice>
-#include <kdebug.h>
+#include <QDebug>
 #include <algorithm>
 
 #include "ksecretencryptionfilter.h"
@@ -148,7 +148,7 @@ private:
             if ( m_buffer.size() >= BUFFER_CHUNK_SIZE ) {
                 QCA::SecureArray arr = m_encryptionFilter->encryptData( m_buffer );
                 QByteArray chunk = arr.toByteArray();
-//                 kDebug() << "buffer size " << m_buffer.size() << " encrypted chunk size " << arr.size();
+//                 qDebug() << "buffer size " << m_buffer.size() << " encrypted chunk size " << arr.size();
                 m_buffer.clear();
                 QDataStream stream( this );
                 writingChunk = true;

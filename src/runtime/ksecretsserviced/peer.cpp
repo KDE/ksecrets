@@ -23,7 +23,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QSharedData>
 
-#include <kdebug.h>
+#include <QDebug>
 #include <QCoreApplication>
 
 class PeerData : public QSharedData
@@ -60,9 +60,9 @@ Peer::Peer(uint pid) : d(new PeerData)
     d->m_valid = true;
     d->m_pid = pid;
 
-    kDebug() << "Peer " << pid;
-    kDebug() << "   cmdLine = " << cmdLine();
-    kDebug() << "   exePath = " << exePath();
+    qDebug() << "Peer " << pid;
+    qDebug() << "   cmdLine = " << cmdLine();
+    qDebug() << "   exePath = " << exePath();
 }
 
 Peer::~Peer()

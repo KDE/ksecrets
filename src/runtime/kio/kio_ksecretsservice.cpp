@@ -21,7 +21,7 @@
 #include "kio_ksecretsservice.h"
 
 #include <kcomponentdata.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <QCoreApplication>
 #include <ksecretsservice/ksecretsservicecollection.h>
 #include <ksecretsservice/ksecretsservicecollectionjobs.h>
@@ -31,7 +31,7 @@ using namespace KSecretsService;
 
 extern "C" int KDE_EXPORT kdemain( int argc, char **argv ) 
 {
-    kDebug() << "Entering kio_ksecretsservice";
+    qDebug() << "Entering kio_ksecretsservice";
     
     KComponentData instance( "kio_ksecretsservice" );
     QCoreApplication app( argc, argv ); // need this for jobs event loop
@@ -67,10 +67,10 @@ Secrets::Secrets(const QByteArray& pool, const QByteArray& app):
 
 void Secrets::listDir(const KUrl& url)
 {
-    kDebug() << "Entering listDir " << url.url();
+    qDebug() << "Entering listDir " << url.url();
     initClientLib();
     const QString fileName = url.fileName();
-    kDebug() << fileName;
+    qDebug() << fileName;
 
     int itemCount =0;
     // root dir?
@@ -79,7 +79,7 @@ void Secrets::listDir(const KUrl& url)
         if (listJob->exec()) {
             KIO::UDSEntry entry;
             foreach( const QString &collName, listJob->collections() ) {
-                kDebug() << "collection : " << collName;
+                qDebug() << "collection : " << collName;
                 entry.clear();
                 createDirEntry( entry, collName, "wallet-open" );
                 // TODO: add access and modification times
@@ -92,7 +92,7 @@ void Secrets::listDir(const KUrl& url)
             finished();
         }
         else {
-            kDebug() << "Cannot list collections : " << listJob->errorString();
+            qDebug() << "Cannot list collections : " << listJob->errorString();
             error( KIO::ERR_COULD_NOT_CONNECT, i18n("Could not connect to KSecretsService daemon") );
         }
         return;
@@ -106,7 +106,7 @@ void Secrets::listDir(const KUrl& url)
 void Secrets::get(const KUrl& url)
 {
     const QString fileName = url.fileName();
-    kDebug() << "Entering get URL=" << url.url() << " FILE=" << fileName;
+    qDebug() << "Entering get URL=" << url.url() << " FILE=" << fileName;
     if (fileName.isEmpty()) {
         error( KIO::ERR_IS_DIRECTORY, url.prettyUrl() );
     }
@@ -118,10 +118,10 @@ void Secrets::get(const KUrl& url)
 
 void Secrets::stat(const KUrl& url)
 {
-    kDebug() << "Entering stat " << url.url();
+    qDebug() << "Entering stat " << url.url();
     initClientLib();
     const QString fileName = url.fileName();
-    kDebug() << fileName;
+    qDebug() << fileName;
     
     KIO::UDSEntry entry;
     

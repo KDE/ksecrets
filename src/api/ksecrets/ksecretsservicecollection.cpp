@@ -30,7 +30,7 @@
 #include <kcompositejob.h>
 #include <QTimer>
 #include <kjob.h>
-#include <kdebug.h>
+#include <QDebug>
 
 namespace KSecretsService {
 
@@ -196,13 +196,13 @@ void CollectionPrivate::setDBusPath( const QDBusObjectPath &path )
 {
     collectionIf = DBusSession::createCollectionIf( path );
     if ( collectionIf->isValid() ) {
-        kDebug() << "SUCCESS opening collection " << path.path();
+        qDebug() << "SUCCESS opening collection " << path.path();
         collectionMap.insert( path, this );
         dbusPath = path;
     }
     else {
         setStatus( Collection::NotFound );
-        kDebug() << "ERROR opening collection " << path.path();
+        qDebug() << "ERROR opening collection " << path.path();
     }
 }
 
@@ -218,10 +218,10 @@ OrgFreedesktopSecretCollectionInterface *CollectionPrivate::collectionInterface(
         // the only problem is that we'll be forced to call findJob->exec() to do this and it's evil :-)
         FindCollectionJob *findJob = new FindCollectionJob( collection, 0 );
         if ( !findJob->exec() ) {
-            kDebug() << "FindCollectionJob failed!";
+            qDebug() << "FindCollectionJob failed!";
         }
         if ( collectionIf == 0 ) {
-           kDebug() << "WARNING: returning NULL collectionInterface";
+           qDebug() << "WARNING: returning NULL collectionInterface";
         }
     }
     return collectionIf;
@@ -244,7 +244,7 @@ void CollectionPrivate::notifyCollectionChanged( const QDBusObjectPath& path )
         cp->collection->emitContentsChanged();
     }
     else {
-        kDebug() << "Ignoring notifyCollectionChanged for " << path.path();
+        qDebug() << "Ignoring notifyCollectionChanged for " << path.path();
     }
 }
 
@@ -255,7 +255,7 @@ void CollectionPrivate::notifyCollectionDeleted( const QDBusObjectPath& path )
         cp->collection->emitDeleted();
     }
     else {
-        kDebug() << "Ignoring notifyCollectionDeleted for " << path.path();
+        qDebug() << "Ignoring notifyCollectionDeleted for " << path.path();
     }
 }
 

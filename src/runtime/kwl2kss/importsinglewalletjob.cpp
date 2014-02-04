@@ -31,7 +31,7 @@
 #include <QtDBus/QDBusPendingReply>
 #include <QtDBus/QDBusReply>
 #include <QtGui/QTextDocument> // Qt::escape
-#include <KDebug>
+#include <QDebug>
 #include <QFileInfo>
 
 #include <ksecretsservice/ksecretsservicecollection.h>
@@ -72,7 +72,7 @@ ImportSingleWalletJob::~ImportSingleWalletJob()
 
 void ImportSingleWalletJob::start()
 {
-    kDebug() << "Importing " << m_walletPath << ": initializing";
+    qDebug() << "Importing " << m_walletPath << ": initializing";
     // Go
     m_status = Initializing;
     QMetaObject::invokeMethod(this, "checkImportNeeded", Qt::QueuedConnection);
@@ -91,7 +91,7 @@ void ImportSingleWalletJob::checkImportNeeded()
         return;
     }
     
-    kDebug() << "Importing " << m_walletPath << ": checking for existing collection";
+    qDebug() << "Importing " << m_walletPath << ": checking for existing collection";
     m_checkCollection = Collection::findCollection( m_walletName, Collection::OpenOnly );
     StringStringMap attrs;
     attrs.insert( "creator", "kwl2kss" );
@@ -159,7 +159,7 @@ void ImportSingleWalletJob::checkImportNeededSecret(KJob *job)
                 secret.kwlUpdateTime == fileInfo.lastModified().toTime_t() ) {
                 
                 // no need to import this wallet as it's already in KSS
-                kDebug() << "Importing " << m_walletPath << ": wallet was already imported";
+                qDebug() << "Importing " << m_walletPath << ": wallet was already imported";
                 setError(0);
                 emitResult();
                 return;
@@ -236,7 +236,7 @@ void ImportSingleWalletJob::processCurrentFolder()
         return;
     }
 
-    kDebug() << "FOLDER: " << m_currentFolder;
+    qDebug() << "FOLDER: " << m_currentFolder;
     m_wallet->setFolder( m_currentFolder );
     m_currentEntryList = m_wallet->entryList();
 
@@ -278,14 +278,14 @@ void ImportSingleWalletJob::processNextEntry()
     }
 
     QString entry = m_currentEntryList.takeFirst();
-    kDebug() << "  ENTRY: " << entry;
+    qDebug() << "  ENTRY: " << entry;
 
     // Read the entry
     KWallet::Entry *walletEntry = m_wallet->readEntry(entry);
 
     if(!walletEntry) {
         // We abort the job here - but maybe we should just spit a warning?
-        kDebug() << "Could not read the entry " << entry;
+        qDebug() << "Could not read the entry " << entry;
         setErrorText(i18n("Could not read the entry %1 from wallet %2", entry, m_walletName));
         emitResult();
         return;
@@ -308,7 +308,7 @@ void ImportSingleWalletJob::processNextEntry()
             secret.setValue( walletEntry->map(), "kwallet/map" );
             break;
         default:
-            kDebug() << "Unknown entry type " << walletEntry->type();
+            qDebug() << "Unknown entry type " << walletEntry->type();
             return;
     }
     

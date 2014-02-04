@@ -26,7 +26,7 @@
 #include "syncserverjob.h"
 
 #include <kglobal.h>
-#include <kdebug.h>
+#include <QDebug>
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
 #include <klocalizedstring.h>
@@ -85,7 +85,7 @@ void SyncDaemon::onSyncTimer()
 void SyncDaemon::doSync()
 {
     // FIXME: should we create a log entry instead? pitfall: create too many log entries
-    kDebug() << "startSync";
+    qDebug() << "startSync";
     if (!_model->hasComputers())
         return;
 
@@ -150,7 +150,7 @@ void SyncDaemon::qMsgHandler(QtMsgType type, const char* msg)
 
 void SyncDaemon::createLogEntry(const QString& message )
 {
-    kDebug() << message;
+    qDebug() << message;
     // TODO: implement this by forwarding message to the logger
 }
 

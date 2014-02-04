@@ -25,7 +25,7 @@
 #include "../lib/secrettool.h"
 #include <kglobal.h>
 #include <kstandarddirs.h>
-#include <kdebug.h>
+#include <QDebug>
 
 #include <QtCore/QTimer>
 #include <QtCore/QDir>
@@ -72,15 +72,15 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
         QFileInfo fi( dir.filePath( file ) );
         // avoid double inclusion and also avoid trying to read collections that are in the process of serialization
         if(!m_collections.contains(file) && !(m_creatingCollectionId == fi.baseName() ) ) {
-            kDebug() << "FILE: " << file << " deserializing...";
+            qDebug() << "FILE: " << file << " deserializing...";
             QString errorMessage;
             KSecretCollection *coll = KSecretCollection::createFromFile( dir.filePath(file), this, errorMessage);
             if(coll) {
                 addCollection(coll);
-                kDebug() << "   ...DONE";
+                qDebug() << "   ...DONE";
             }
             else {
-                kDebug() << " ERROR: " << errorMessage;
+                qDebug() << " ERROR: " << errorMessage;
             }
         }
     }
@@ -88,7 +88,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
 
 void KSecretCollectionManager::slotStartupDiscovery()
 {
-    kDebug() << "Discovering collections...";
+    qDebug() << "Discovering collections...";
     slotDirectoryChanged(KGlobal::dirs()->saveLocation("ksecret"));
 }
 

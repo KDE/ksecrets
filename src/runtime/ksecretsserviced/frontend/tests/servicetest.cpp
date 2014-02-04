@@ -39,7 +39,7 @@
 
 #include <QtCore/QDebug>
 #include "../secret/adaptors/dbustypes.h"
-#include <kdebug.h>
+#include <QDebug>
 
 /*
  * NOTE the DBUS_SERVICE here is purposely not the same as the name
@@ -91,7 +91,7 @@ void ServiceTest::session()
     QDBusMessage unsuppReply = ifaceService.callWithArgumentList(QDBus::Block, "OpenSession",
                                unsuppInput);
     QCOMPARE(unsuppReply.type(), QDBusMessage::ErrorMessage);
-//    kDebug() << unsuppReply.errorName();
+//    qDebug() << unsuppReply.errorName();
 //    QEXPECT_FAIL("", "Error only returned if called via D-Bus (test calls locally)", Continue);
     QCOMPARE(unsuppReply.errorName(),
              QLatin1String("org.freedesktop.Secret.Error.NotSupported"));
@@ -331,7 +331,7 @@ void ServiceTest::nonBlockingItem()
     itemInput << false;
     QDBusMessage itemReply = ifaceColl.callWithArgumentList(QDBus::Block, "CreateItem",
                              itemInput);
-    kDebug() << itemReply.errorMessage();
+    qDebug() << itemReply.errorMessage();
     QCOMPARE(itemReply.type(), QDBusMessage::ReplyMessage);
     QList<QVariant> itemArgs = itemReply.arguments();
     QCOMPARE(itemArgs.size(), 2);

@@ -36,7 +36,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QSet>
 #include <QtCore/QTimer>
-#include <kdebug.h>
+#include <QDebug>
 #include <QFileInfo>
 
 static QCA::SecureArray replaceWithDefaultIfEmpty( const QCA::SecureArray &password ) 
@@ -462,7 +462,7 @@ BackendReturn<bool> KSecretCollection::tryUnlock()
     stream >> m_secret;
     
     if ( !stream.isValid() ) {
-        kDebug() << "collection serialization failed";
+        qDebug() << "collection serialization failed";
         return BackendReturn<bool>( false );
     }
     

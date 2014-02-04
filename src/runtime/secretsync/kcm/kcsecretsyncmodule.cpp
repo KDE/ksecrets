@@ -79,14 +79,14 @@ KCSecretSyncModule::KCSecretSyncModule(QWidget* parent, const QVariantList& args
 
 void KCSecretSyncModule::load()
 {
-    kDebug() << "KCSecretSyncModule::load";
+    qDebug() << "KCSecretSyncModule::load";
     _configWidget->load( KSecretSyncCfg::self() );
     KCModule::load();
 }
 
 void KCSecretSyncModule::save()
 {
-    kDebug() << "KCSecretSyncModule::save";
+    qDebug() << "KCSecretSyncModule::save";
     _configWidget->save( KSecretSyncCfg::self() );
     KCModule::save();
     // changes will be saved automatically by KConfigXT
@@ -95,7 +95,7 @@ void KCSecretSyncModule::save()
 
 void KCSecretSyncModule::defaults()
 {
-    kDebug() << "KCSecretSyncModule::defaults";
+    qDebug() << "KCSecretSyncModule::defaults";
     KCModule::defaults();
     _configWidget->defaults();
     // defaults will be automatically loaded here by KConfigXT

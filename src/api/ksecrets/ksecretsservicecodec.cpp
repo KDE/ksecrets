@@ -22,7 +22,7 @@
 #include "ksecretsservicecodec.h"
 
 #include <QtCrypto/qca_keystore.h>
-#include <kdebug.h>
+#include <QDebug>
 
 using namespace KSecretsService;
 
@@ -47,7 +47,7 @@ SecretCodec::~SecretCodec()
 bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QVariant& output)
 {
     if ( m_mode != ModeUnitialized ) {
-        kDebug() << "ERROR the code is already initialized";
+        qDebug() << "ERROR the code is already initialized";
         Q_ASSERT(0);
         return false;
     }
@@ -55,7 +55,7 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
     m_mode = ModeServer;
     
     if ( algorithm.compare( AlgorithmPlain ) == 0 ) {
-        kDebug() << "Initializing a PLAIN (noencrypting) server codec";
+        qDebug() << "Initializing a PLAIN (noencrypting) server codec";
     }
     else {
     
@@ -156,7 +156,7 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
 bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutput)
 {
     if ( m_mode != ModeUnitialized ) {
-        kDebug() << "ERROR the code is already initialized";
+        qDebug() << "ERROR the code is already initialized";
         Q_ASSERT(0);
         return false;
     }
@@ -164,7 +164,7 @@ bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutp
     m_mode = ModeClient;
     
     if ( algorithm.compare( AlgorithmPlain ) == 0 ) {
-        kDebug() << "Initializing a PLAIN (noencrypting) client codec";
+        qDebug() << "Initializing a PLAIN (noencrypting) client codec";
     }
     else {
         // TODO: implement other cases here

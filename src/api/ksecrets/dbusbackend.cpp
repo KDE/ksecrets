@@ -26,7 +26,7 @@
 #include "item_interface.h"
 #include "ksecretsservicecollection_p.h"
 
-#include <kdebug.h>
+#include <QDebug>
 #define TRANSLATION_DOMAIN "ksecretsservice_api"
 #include <klocalizedstring.h>
 #include <ktoolinvocation.h>
@@ -111,14 +111,14 @@ void OpenSessionJob::start()
 
             int ret = KToolInvocation::startServiceByDesktopPath("ksecretsserviced.desktop", QStringList(), &error);
             if (ret != 0) {
-                kDebug() << "KToolInvocation cannot start ksecretsserviced";
+                qDebug() << "KToolInvocation cannot start ksecretsserviced";
                 setError(1); // FIXME: use error codes here
                 emitResult();
                 return;
             }
 
             if( !QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME )) ) {
-                kDebug() << "Secret Service was started but the " SERVICE_NAME " is not registered on the DBus!";
+                qDebug() << "Secret Service was started but the " SERVICE_NAME " is not registered on the DBus!";
                 setError(1); // FIXME: use error codes here
                 emitResult();
                 return;
@@ -134,10 +134,10 @@ void OpenSessionJob::start()
             QDBusReply< QString > ownerReply = serviceInfo->serviceOwner( SERVICE_NAME );
             QDBusReply< uint > pidReply = serviceInfo->servicePid( SERVICE_NAME );
             if ( ownerReply.isValid() && pidReply.isValid() ) {
-                kDebug() << "SERVICE owner is " << (QString)ownerReply << ", PID = " << (uint)pidReply;
+                qDebug() << "SERVICE owner is " << (QString)ownerReply << ", PID = " << (uint)pidReply;
             }
             else {
-                kDebug() << "Cannot get SERVICE information";
+                qDebug() << "Cannot get SERVICE information";
             }
 
 
@@ -145,7 +145,7 @@ void OpenSessionJob::start()
             dhDlgroup = new QCA::DLGroup(keygen.createDLGroup(QCA::IETF_1024));
             if ( dhDlgroup->isNull() ) {
                 QString errorTxt = i18n("Cannot create DL Group for dbus session open");
-                kDebug() << errorTxt;
+                qDebug() << errorTxt;
                 setError(1); // FIXME: use error codes here
                 setErrorText( errorTxt );
                 emitResult();
@@ -164,7 +164,7 @@ void OpenSessionJob::start()
             }
         }
         else {
-            kDebug() << "ERROR when trying to bind to " SERVICE_NAME " daemon";
+            qDebug() << "ERROR when trying to bind to " SERVICE_NAME " daemon";
             setError( 3 ); // FIXME: use error codes here
             setErrorText( ki18n( "ERROR when trying to bind to %1 daemon. Check dbus configuration." ).subs(SERVICE_NAME).toString() );
             emitResult();
@@ -177,7 +177,7 @@ void OpenSessionJob::slotOpenSessionFinished(QDBusPendingCallWatcher* watcher)
     Q_ASSERT( watcher->isFinished() );
     QDBusPendingReply< QDBusVariant, QDBusObjectPath > reply = *watcher;
     if ( watcher->isError() ) {
-        kDebug() << "ERROR when attempting to open a session " << reply.error().message();
+        qDebug() << "ERROR when attempting to open a session " << reply.error().message();
         setError(2); // FIXME: use error codes here
         setErrorText( reply.error().message() );
         emitResult();
@@ -190,7 +190,7 @@ void OpenSessionJob::slotOpenSessionFinished(QDBusPendingCallWatcher* watcher)
         //QCA::Cipher *dhCipher = new QCA::Cipher("aes128", QCA::Cipher::CBC, QCA::Cipher::PKCS7);
 
         QDBusObjectPath sessionPath = reply.argumentAt<1>();
-        kDebug() << "SESSION path is " << sessionPath.path();
+        qDebug() << "SESSION path is " << sessionPath.path();
         sessionIf = new OrgFreedesktopSecretSessionInterface( SERVICE_NAME, sessionPath.path(), QDBusConnection::sessionBus() );
         
         connect( serviceIf, SIGNAL(CollectionChanged(const QDBusObjectPath &)), this, SLOT(slotCollectionChanged(const QDBusObjectPath&)) );

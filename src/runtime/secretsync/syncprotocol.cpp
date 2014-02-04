@@ -26,7 +26,7 @@
 // #include "service_interface.h"
 // #include "session_interface.h"
 
-#include <kdebug.h>
+#include <QDebug>
 #include <klocalizedstring.h>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusConnectionInterface>
@@ -67,7 +67,7 @@ void SyncProtocol::changeState(SyncProtocol::State state)
                 break;
         }
         if ( newPhase ) {
-            kDebug() << "changing state from " << (_phase ? _phase->name() : "NONE") << " to " << newPhase->name();
+            qDebug() << "changing state from " << (_phase ? _phase->name() : "NONE") << " to " << newPhase->name();
             delete _phase;
             _phase = newPhase;
         }
@@ -122,7 +122,7 @@ const char* SyncProtocol::Phase::name() const
 
 SyncProtocol::State SyncProtocol::Phase::errorHandlingRequest(const QString& request)
 {
-    kDebug() << "ERROR handling request " << request;
+    qDebug() << "ERROR handling request " << request;
     return STATE_ERROR;
 }
 
@@ -174,7 +174,7 @@ SyncProtocol::State SyncProtocol::PhaseHello::handleRequest(const QString& req, 
         return STATE_LIST_ITEMS;
     }
     response = "500 VERSION NOT SUPPORTED";
-    kDebug() << "ERROR: expecting " << request();
+    qDebug() << "ERROR: expecting " << request();
     return SyncProtocol::Phase::errorHandlingRequest( req );
 }
 

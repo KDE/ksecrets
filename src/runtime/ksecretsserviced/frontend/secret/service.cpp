@@ -35,7 +35,7 @@
 #include <QtDBus/QDBusConnectionInterface>
 #include <QtDBus/QDBusMetaType>
 #include <QtDBus/QDBusMessage>
-#include <kdebug.h>
+#include <QDebug>
 #include <klocalizedstring.h>
 
 //#include <dbus/dbus.h>
@@ -94,7 +94,7 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
 
 void Service::onDbusDisconnected(QString path)
 {
-    kDebug() << "Disconnected " << path;
+    qDebug() << "Disconnected " << path;
 }
 
 QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &properties,
@@ -111,7 +111,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
         }
         else {
             // FIXME: shouldn't we throw an error if the collection has no name specified ?
-            kDebug() << "No collection name give, giving default alias";
+            qDebug() << "No collection name give, giving default alias";
             // TODO: default label
             label = i18n("Default Collection");
         }
