@@ -191,7 +191,7 @@ void FindCollectionJobPrivate::createFinished(QDBusPendingCallWatcher* watcher)
         QDBusObjectPath collPath = createReply.argumentAt<0>();
         QDBusObjectPath promptPath = createReply.argumentAt<1>();
         
-        if ( collPath.path().compare("/") == 0 ) {
+        if ( collPath.path().compare( QStringLiteral( "/" ) ) == 0 ) {
             // we need prompting
             Q_ASSERT( promptPath.path().compare("/") ); // we should have a prompt path here other than "/"
             PromptJob *promptJob = new PromptJob( promptPath, collectionPrivate->promptParentId(), this );
@@ -267,7 +267,7 @@ void FindCollectionJobPrivate::openSessionFinished(KJob* theJob)
         if ( collectionPrivate->findOptions == Collection::CreateCollection ) {
             OpenSessionJob *openSessionJob = dynamic_cast< OpenSessionJob * >( theJob );
             QVariantMap creationProperties = collectionPrivate->collectionProperties;
-            creationProperties.insert("org.freedesktop.Secret.Collection.Label", collectionName);
+            creationProperties.insert( QStringLiteral( "org.freedesktop.Secret.Collection.Label" ), collectionName);
             QDBusPendingReply< QDBusObjectPath, QDBusObjectPath > createReply = openSessionJob->serviceInterface()->CreateCollection(
                 creationProperties, collectionName );
             QDBusPendingCallWatcher *createReplyWatch = new QDBusPendingCallWatcher( createReply, this );
@@ -415,7 +415,7 @@ void DeleteCollectionJobPrivate::callFinished( QDBusPendingCallWatcher*  watcher
     if ( deleteReply.isError() ) {
         err = CollectionJob::DeleteError;
         const QDBusError &dbusErr = deleteReply.error();
-        msg = QString("d-bus error %1 (%2)").arg( QDBusError::errorString( dbusErr.type() ) ).arg( dbusErr.message() );
+        msg = QStringLiteral("d-bus error %1 (%2)").arg( QDBusError::errorString( dbusErr.type() ) ).arg( dbusErr.message() );
     }
 
     qDebug() << "callFinished with err=" << (int)err << " and msg='" << msg << "'";
@@ -461,10 +461,10 @@ RenameCollectionJobPrivate::RenameCollectionJobPrivate( CollectionPrivate *collP
 void RenameCollectionJobPrivate::startRename()
 {
     if ( collectionPrivate->collectionInterface()->setProperty( "Label", QVariant( newName ) ) ) {
-        emit renameIsDone( CollectionJob::NoError, "" );
+        emit renameIsDone( CollectionJob::NoError, QStringLiteral( "" ) );
     }
     else {
-        emit renameIsDone( CollectionJob::RenameError, QString( "Cannot rename secret collection to %1" ).arg( newName ) );
+        emit renameIsDone( CollectionJob::RenameError, QStringLiteral( "Cannot rename secret collection to %1" ).arg( newName ) );
     }
 }
 
@@ -595,12 +595,12 @@ void SearchCollectionSecretsJobPrivate::searchSecretsReply( QDBusPendingCallWatc
             connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(getSecretsReply(QDBusPendingCallWatcher*)) );
         }
         else {
-           emit searchIsDone( CollectionJob::NoError, "" ); 
+           emit searchIsDone( CollectionJob::NoError, QStringLiteral( "" ) );
         }
     }
     else {
         qDebug() << "ERROR searching items";
-        emit searchIsDone( CollectionJob::InternalError, "ERROR searching items" );
+        emit searchIsDone( CollectionJob::InternalError, QStringLiteral( "ERROR searching items" ) );
     }
     watcher->deleteLater();
 }
@@ -617,14 +617,14 @@ void SearchCollectionSecretsJobPrivate::getSecretsReply(QDBusPendingCallWatcher*
             }
             else {
                 qDebug() << "ERROR decrypting the secret";
-                emit searchIsDone( CollectionJob::InternalError, "ERROR decrypting the secret" );
+                emit searchIsDone( CollectionJob::InternalError, QStringLiteral( "ERROR decrypting the secret" ) );
             }
         }
-        emit searchIsDone( CollectionJob::NoError, "" );
+        emit searchIsDone( CollectionJob::NoError, QStringLiteral( "" ) );
     }
     else {
         qDebug() << "ERROR trying to retrieve the secrets";
-        emit searchIsDone( CollectionJob::InternalError, "ERROR trying to retrieve the secrets" );
+        emit searchIsDone( CollectionJob::InternalError, QStringLiteral( "ERROR trying to retrieve the secrets" ) );
     }
     watcher->deleteLater();
 }
@@ -678,11 +678,11 @@ CreateCollectionItemJobPrivate::CreateCollectionItemJobPrivate( CollectionPrivat
 void CreateCollectionItemJobPrivate::startCreateItem()
 {
     QVariantMap varMap;
-    varMap["Label"] = label;
-    attributes["Label"] = label;
+    varMap[ QStringLiteral( "Label" ) ] = label;
+    attributes[ QStringLiteral( "Label" ) ] = label;
     QVariant varAttrs;
     varAttrs.setValue<StringStringMap>(attributes);
-    varMap["Attributes"] = varAttrs;
+    varMap[ QStringLiteral( "Attributes" ) ] = varAttrs;
     DBusSecretStruct secretStruct;
     if ( secretPrivate->toSecretStruct( secretStruct ) ) {
         QDBusPendingReply<QDBusObjectPath, QDBusObjectPath> createReply = collectionPrivate->collectionInterface()->CreateItem( varMap, secretStruct, options == ReplaceExistingItem );
@@ -701,7 +701,7 @@ void CreateCollectionItemJobPrivate::createItemReply(QDBusPendingCallWatcher* wa
     if ( !createReply.isError() ) {
         QDBusObjectPath itemPath = createReply.argumentAt<0>();
         QDBusObjectPath promptPath = createReply.argumentAt<1>();
-        if ( itemPath.path().compare("/") == 0 ) {
+        if ( itemPath.path().compare( QStringLiteral( "/" ) ) == 0 ) {
             PromptJob *promptJob = new PromptJob( promptPath, collectionPrivate->promptParentWindowId, this );
             if ( createItemJob->addSubjob( promptJob ) ) {
                 connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(createPromptFinished(KJob*)) );
@@ -758,7 +758,7 @@ void ReadCollectionItemsJob::onFindCollectionFinished()
 {
     // this is a property read - Qt seems to read properties synchrounously
     setError( 0 );
-    setErrorText( "" );
+    setErrorText( QStringLiteral( "" ) );
     emitResult();
 }
 
@@ -983,7 +983,7 @@ void LockCollectionJobPrivate::slotLockFinished( QDBusPendingCallWatcher *watche
     QDBusPendingReply<QList<QDBusObjectPath> , QDBusObjectPath> reply = *watcher;
     if ( !reply.isError() ) {
         QDBusObjectPath promptPath = reply.argumentAt<1>();
-        if ( promptPath.path().compare("/") ) {
+        if ( promptPath.path().compare( QStringLiteral( "/" ) ) ) {
             PromptJob *promptJob = new PromptJob( promptPath, windowId, this ); 
             connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(slotPromptFinished(KJob*)) );
             if ( theJob->addSubjob( promptJob ) ) {
@@ -1086,7 +1086,7 @@ void UnlockCollectionJobPrivate::slotUnlockFinished( QDBusPendingCallWatcher *wa
     QDBusPendingReply<QList<QDBusObjectPath> , QDBusObjectPath> reply = *watcher;
     if ( !reply.isError() ) {
         QDBusObjectPath promptPath = reply.argumentAt<1>();
-        if ( promptPath.path().compare("/") ) {
+        if ( promptPath.path().compare( QStringLiteral( "/" ) ) ) {
             PromptJob *promptJob = new PromptJob( promptPath, windowId, this ); 
             connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(slotPromptFinished(KJob*)) );
             if ( theJob->addSubjob( promptJob ) ) {

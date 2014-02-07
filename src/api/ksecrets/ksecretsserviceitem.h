@@ -24,7 +24,6 @@
 #include "ksecretsservicesecret.h"
 #include "ksecretsserviceitemjobs.h"
 #include "ksecretsservicemacros.h"
-
 #include <QSharedData>
 
 

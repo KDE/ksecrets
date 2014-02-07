@@ -21,7 +21,8 @@
 #define KSECRETSSERVICECODEC_H
 
 #include "ksecretsservicemacros.h"
-#include <QtCrypto/qca_basic.h>
+
+#include <qca_basic.h>
 
 namespace KSecretsService {
 

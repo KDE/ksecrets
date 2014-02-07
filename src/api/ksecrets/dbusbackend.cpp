@@ -31,8 +31,8 @@
 #include <klocalizedstring.h>
 #include <ktoolinvocation.h>
 
-#include <QtCrypto/qca_publickey.h>
-#include <QtCrypto/qca_tools.h>
+#include <qca_publickey.h>
+#include <qca_tools.h>
 
 #include <QDBusConnection>
 #include <QDBusMetaType>
@@ -41,12 +41,12 @@
 
 using namespace KSecretsService;
 
-#define SERVICE_NAME "org.freedesktop.secrets"
+#define SERVICE_NAME QStringLiteral( "org.freedesktop.secrets" )
 
 Q_GLOBAL_STATIC(QCA::Initializer, s_qcaInitializer)
 static bool s_initQCA = true;
 
-const QString DBusSession::encryptionAlgorithm = "dh-ietf1024-aes128-cbc-pkcs7";
+const QString DBusSession::encryptionAlgorithm = QStringLiteral( "dh-ietf1024-aes128-cbc-pkcs7" );
 OpenSessionJob *DBusSession::openSessionJob = 0;
 DBusSession DBusSession::staticInstance;
 
@@ -106,10 +106,10 @@ void OpenSessionJob::start()
         // qDBusRegisterMetaType< QList<QDBusObjectPath> >();
 
         // launch the daemon if it's not yet started
-        if (!QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME ))) {
+        if (!QDBusConnection::sessionBus().interface()->isServiceRegistered( SERVICE_NAME ) ) {
             QString error;
 
-            int ret = KToolInvocation::startServiceByDesktopPath("ksecretsserviced.desktop", QStringList(), &error);
+            int ret = KToolInvocation::startServiceByDesktopPath( QStringLiteral( "ksecretsserviced.desktop" ), QStringList(), &error);
             if (ret != 0) {
                 qDebug() << "KToolInvocation cannot start ksecretsserviced";
                 setError(1); // FIXME: use error codes here
@@ -117,16 +117,16 @@ void OpenSessionJob::start()
                 return;
             }
 
-            if( !QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME )) ) {
-                qDebug() << "Secret Service was started but the " SERVICE_NAME " is not registered on the DBus!";
+            if( !QDBusConnection::sessionBus().interface()->isServiceRegistered( SERVICE_NAME ) ) {
+                qDebug() << "Secret Service was started but the " << SERVICE_NAME << " is not registered on the DBus!";
                 setError(1); // FIXME: use error codes here
                 emitResult();
                 return;
             }
         }
 
-        serviceIf = new OrgFreedesktopSecretServiceInterface( SERVICE_NAME, 
-                                                              "/org/freedesktop/secrets", 
+        serviceIf = new OrgFreedesktopSecretServiceInterface( SERVICE_NAME,
+                                                              QStringLiteral( "/org/freedesktop/secrets" ),
                                                               QDBusConnection::sessionBus() );
 
         if ( serviceIf->isValid() ) {
@@ -155,7 +155,7 @@ void OpenSessionJob::start()
                 QCA::PublicKey dhPubkey(*dhPrivkey);
                 QByteArray dhBytePub(dhPubkey.toDH().y().toArray().toByteArray());
                 
-                QDBusPendingReply< QDBusVariant, QDBusObjectPath > openSessionReply = serviceIf->OpenSession( 
+                QDBusPendingReply< QDBusVariant, QDBusObjectPath > openSessionReply = serviceIf->OpenSession(
                     DBusSession::encryptionAlgorithm,
                     QDBusVariant(dhBytePub)
                 );
@@ -164,7 +164,7 @@ void OpenSessionJob::start()
             }
         }
         else {
-            qDebug() << "ERROR when trying to bind to " SERVICE_NAME " daemon";
+            qDebug() << "ERROR when trying to bind to " << SERVICE_NAME << " daemon";
             setError( 3 ); // FIXME: use error codes here
             setErrorText( ki18n( "ERROR when trying to bind to %1 daemon. Check dbus configuration." ).subs(SERVICE_NAME).toString() );
             emitResult();

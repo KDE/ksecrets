@@ -44,7 +44,7 @@ void PromptJob::start()
         // NOTE: however, care should be taken to avoid problems when user is too slow interacting with the prompt.
         //       a sensible timeout value should be chosen
         
-        QDBusPendingReply<> promptReply = promptIf->Prompt( QString("%1").arg( parentWindowId ) );
+        QDBusPendingReply<> promptReply = promptIf->Prompt( QStringLiteral("%1").arg( parentWindowId ) );
         // NOTE: ne need to wait for promptReply to finish. The prompt will call promptCompleted when user interaction takes end
     }
     else {

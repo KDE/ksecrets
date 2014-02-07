@@ -21,7 +21,8 @@
 
 #include "ksecretsservicecodec.h"
 
-#include <QtCrypto/qca_keystore.h>
+#include <qca_keystore.h>
+
 #include <QDebug>
 
 using namespace KSecretsService;
@@ -54,12 +55,12 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
 
     m_mode = ModeServer;
     
-    if ( algorithm.compare( AlgorithmPlain ) == 0 ) {
+    if ( algorithm.compare( QString::fromLatin1( AlgorithmPlain ) ) == 0 ) {
         qDebug() << "Initializing a PLAIN (noencrypting) server codec";
     }
     else {
     
-        static QRegExp rxAlgorithm("^dh-ietf(\\d+)-([^-]+)-([^-]+)-([^-]+)$",
+        static QRegExp rxAlgorithm( QStringLiteral( "^dh-ietf(\\d+)-([^-]+)-([^-]+)-([^-]+)$" ),
                                 Qt::CaseInsensitive);
 
         if(rxAlgorithm.exactMatch(algorithm) &&
@@ -108,11 +109,14 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
 
             // determine if we support (or want to support)
             // the encryption algorithm.
-            if((encalgo == "blowfish" || encalgo == "twofish" ||
-                    encalgo == "aes128" || encalgo == "aes192" ||
-                    encalgo == "aes256") &&
-                    QCA::isSupported(QString("%1-%2-%3").arg(encalgo, blockmode, padding)
-                                    .toLatin1().constData())) {
+            if( ( encalgo == QStringLiteral( "blowfish" ) ||
+                  encalgo == QStringLiteral( "twofish" ) ||
+                  encalgo == QStringLiteral( "aes128" ) ||
+                  encalgo == QStringLiteral( "aes192" ) ||
+                  encalgo == QStringLiteral( "aes256" ) ) &&
+                QCA::isSupported( QStringLiteral( "%1-%2-%3" )
+                                  .arg( encalgo, blockmode, padding )
+                                  .toLatin1().constData())) {
 
                 // get client's public key
                 QCA::DHPublicKey clientKey(dlgroup,
@@ -123,16 +127,16 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
                 QCA::SymmetricKey sharedKey(privKey.deriveKey(clientKey));
 
                 QCA::Cipher::Mode cbm;
-                if(blockmode == "cbc") {
+                if( blockmode == QStringLiteral( "cbc" ) ) {
                     cbm = QCA::Cipher::CBC;
                 } else {
                     return false;
                 }
 
                 QCA::Cipher::Padding cp;
-                if(padding == "pkcs7") {
+                if(padding == QStringLiteral( "pkcs7" ) ) {
                     cp = QCA::Cipher::PKCS7;
-                } else if(padding == "default") {
+                } else if(padding == QStringLiteral( "default" ) ) {
                     cp = QCA::Cipher::DefaultPadding;
                 } else {
                     return false;
@@ -155,6 +159,7 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
 
 bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutput)
 {
+    Q_UNUSED( serverOutput )
     if ( m_mode != ModeUnitialized ) {
         qDebug() << "ERROR the code is already initialized";
         Q_ASSERT(0);
@@ -163,7 +168,7 @@ bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutp
     
     m_mode = ModeClient;
     
-    if ( algorithm.compare( AlgorithmPlain ) == 0 ) {
+    if ( algorithm.compare( QString::fromLatin1( AlgorithmPlain ) ) == 0 ) {
         qDebug() << "Initializing a PLAIN (noencrypting) client codec";
     }
     else {
@@ -224,6 +229,7 @@ bool SecretCodec::decryptServer(const QCA::SecureArray& encrypted, const QByteAr
 
 bool SecretCodec::encryptClient(const QCA::SecureArray& value, QCA::SecureArray& encrypted, QByteArray& encryptedParams)
 {
+    Q_UNUSED( encryptedParams )
     if ( m_cipher ) {
         // TODO: implement client-side encryption
         Q_ASSERT(0);
@@ -236,6 +242,7 @@ bool SecretCodec::encryptClient(const QCA::SecureArray& value, QCA::SecureArray&
 
 bool SecretCodec::decryptClient(const QCA::SecureArray& encrypted, const QByteArray& encryptedParams, QCA::SecureArray& value)
 {
+    Q_UNUSED( encryptedParams )
     if ( m_cipher ) {
         // TODO: implement client-side decryption
         Q_ASSERT(0);

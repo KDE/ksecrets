@@ -2,16 +2,7 @@ PROJECT( KSecrets )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 
-if(NOT kdelibs_SOURCE_DIR)
-    find_package(KF5 ${KF5_VERSION} REQUIRED Config WindowSystem I18n)
-endif()
-
-include(FeatureSummary)
-include(GenerateExportHeader)
-include(ECMSetupVersion)
-include(ECMGenerateHeaders)
-
-set(KF5_VERSION "5.0.0")
+include_directories(${QCA2_INCLUDE_DIR})
 
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KWALLET
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kwallet_version.h"
@@ -81,8 +72,10 @@ target_include_directories(KF5Secrets INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_I
 target_link_libraries(KF5Secrets PUBLIC
     Qt5::Widgets
     Qt5::DBus
-    qca
+    ${QCA2_LIBRARIES}
     KF5::I18n
+    KF5::CoreAddons
+    KF5::Service
 )
 
 set_target_properties(KF5Secrets PROPERTIES VERSION   ${KWALLET_VERSION_STRING}

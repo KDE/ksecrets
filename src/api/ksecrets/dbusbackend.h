@@ -26,7 +26,7 @@
 
 #include <kjob.h>
 
-#include <QtCrypto/qca_publickey.h>
+#include <qca_publickey.h>
 
 #include <QDBusObjectPath>
 #include <QEventLoopLocker>

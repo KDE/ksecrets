@@ -115,7 +115,7 @@ void GetSecretItemSecretJobPrivate::getSecretReply( QDBusPendingCallWatcher *wat
     }
     else {
         qDebug() << "ERROR calling GetSecret";
-        job->finished( SecretItemJob::InternalError, "ERROR calling GetSecret" );
+        job->finished( SecretItemJob::InternalError, QStringLiteral( "ERROR calling GetSecret" ) );
     }
     watcher->deleteLater();
 }
@@ -154,7 +154,7 @@ void SetSecretItemSecretJobPrivate::start()
     }
     else {
         qDebug() << "ERROR building DBusSecretStruct";
-        job->finished( SecretItemJob::InternalError, "ERROR building DBusSecretStruct" );
+        job->finished( SecretItemJob::InternalError, QStringLiteral( "ERROR building DBusSecretStruct" ) );
     }
 }
 
@@ -207,7 +207,7 @@ void SecretItemDeleteJobPrivate::deleteItemReply( QDBusPendingCallWatcher *watch
     QDBusPendingReply< QDBusObjectPath > reply = *watcher;
     if ( ! reply.isError() ) {
         QDBusObjectPath promptPath = reply.argumentAt<0>();
-        if ( promptPath.path().compare( "/" ) == 0 ) {
+        if ( promptPath.path().compare( QStringLiteral( "/" ) ) == 0 ) {
             job->finished( SecretItemJob::NoError );
         }
         else {
@@ -219,7 +219,7 @@ void SecretItemDeleteJobPrivate::deleteItemReply( QDBusPendingCallWatcher *watch
             else {
                 promptjob->deleteLater();
                 qDebug() << "Cannot add subjob for prompt " << promptPath.path();
-                job->finished( SecretItemJob::InternalError, "Cannot start prompt job for the delete operation!" );
+                job->finished( SecretItemJob::InternalError, QStringLiteral( "Cannot start prompt job for the delete operation!" ) );
             }
         }
     }
@@ -239,11 +239,11 @@ void SecretItemDeleteJobPrivate::deletePromptFinished( KJob* j)
             job->finished( SecretItemJob::NoError );
         }
         else {
-            job->finished( SecretItemJob::OperationCancelledByTheUser, "The operation was cancelled by the user" );
+            job->finished( SecretItemJob::OperationCancelledByTheUser, QStringLiteral( "The operation was cancelled by the user" ) );
         }
     }
     else {
-        job->finished( SecretItemJob::InternalError, "Error encountered when trying to prompt the user" );
+        job->finished( SecretItemJob::InternalError, QStringLiteral( "Error encountered when trying to prompt the user" ) );
     }
 }
 

@@ -52,7 +52,7 @@ void KSecretServiceTest::initTestCase()
     {
         QString error;
         
-        int ret = KToolInvocation::startServiceByDesktopPath("ksecretsserviced.desktop", QStringList(), &error);
+        int ret = KToolInvocation::startServiceByDesktopPath( QStringLiteral( "ksecretsserviced.desktop" ), QStringList(), &error);
         QVERIFY2( ret == 0, qPrintable( error ) );
         
         QVERIFY2( QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME )),
@@ -62,11 +62,11 @@ void KSecretServiceTest::initTestCase()
 
 void KSecretServiceTest::testCreateAndDelete()
 {
-    Collection *createdColl = Collection::findCollection( "test collection" );
+    Collection *createdColl = Collection::findCollection( QStringLiteral( "test collection" ) );
     ReadCollectionPropertyJob *isValidJob = createdColl->isValid();
     QVERIFY2( isValidJob->exec(), qPrintable( isValidJob->errorText() ) );
     
-    Collection *existingColl = Collection::findCollection( "test collection" );
+    Collection *existingColl = Collection::findCollection( QStringLiteral( "test collection" ) );
     isValidJob = existingColl->isValid();
     QVERIFY2( isValidJob->exec(), qPrintable( isValidJob->errorText() ) );
     
@@ -80,13 +80,13 @@ void KSecretServiceTest::testCreateAndDelete()
 
 void KSecretServiceTest::testRenameCollection()
 {
-    Collection *coll = Collection::findCollection( "test name1" );
-    KJob *renameJob = coll->renameCollection( "test name2" );
+    Collection *coll = Collection::findCollection( QStringLiteral( "test name1" ) );
+    KJob *renameJob = coll->renameCollection( QStringLiteral( "test name2" ) );
     renameJob->exec();
     QVERIFY2( (renameJob->error() == 0), qPrintable( renameJob->errorText() ) );
     ReadCollectionPropertyJob *readLabelJob = coll->label();
     QVERIFY2( readLabelJob->exec(), qPrintable( readLabelJob->errorText() ) );
-    QVERIFY2( (readLabelJob->propertyValue() == "test name2"), "Collection won't change it's name!" );
+    QVERIFY2( (readLabelJob->propertyValue() == QStringLiteral( "test name2" ) ), "Collection won't change it's name!" );
     
     // finally, delete the collection
     KJob *deleteJob = coll->deleteCollection();
@@ -96,12 +96,12 @@ void KSecretServiceTest::testRenameCollection()
 
 void KSecretServiceTest::testCreateItem()
 {
-    Collection *coll = Collection::findCollection( "test collection" );
+    Collection *coll = Collection::findCollection( QStringLiteral( "test collection" ) );
     QStringStringMap attributes;
-    attributes.insert( "test-attribute", "test-attribute-value" );
+    attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
     Secret newSecret;
-    newSecret.setValue( QVariant("test-secret"), "stringVariant" );
-    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( "test label", attributes, newSecret );
+    newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
+    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
     QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
     
     // first method, try to directly read the SecretStruct
@@ -155,25 +155,25 @@ void KSecretServiceTest::testCreateItem()
 
 void KSecretServiceTest::testItems()
 {
-    Collection *coll = Collection::findCollection( "test collection" );
+    Collection *coll = Collection::findCollection( QStringLiteral( "test collection" ) );
     QStringStringMap attributes;
-    attributes.insert( "test-attribute", "test-attribute-value" );
+    attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
     Secret newSecret;
-    newSecret.setValue( QVariant("test-secret"), "stringVariant" );
-    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( "test label", attributes, newSecret );
+    newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
+    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
     QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
 
     SecretItem * createdItem = createItemJob->item();
     ReadItemPropertyJob * readLabelJob = createdItem->label();
     QVERIFY( readLabelJob->exec() );
-    QVERIFY( readLabelJob->propertyValue() == "test label" );
+    QVERIFY( readLabelJob->propertyValue() == QStringLiteral( "test label" ) );
     
     KSecretsService::GetSecretItemSecretJob *getSecretJob = createdItem->getSecret();
     QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
     QVERIFY( getSecretJob->secret() == newSecret );
     
     Secret secondSecret;
-    secondSecret.setValue( QVariant("second secret"), "stringVariant" );
+    secondSecret.setValue( QVariant( QStringLiteral( "second secret" ) ), QStringLiteral( "stringVariant" ) );
     KSecretsService::SetSecretItemSecretJob * setSecretJob = createdItem->setSecret( secondSecret );
     QVERIFY2( setSecretJob->exec(), qPrintable( setSecretJob->errorText() ) );
     getSecretJob = createdItem->getSecret();

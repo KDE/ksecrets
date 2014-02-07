@@ -71,7 +71,7 @@ void Secret::setValue( const QVariant &value, const QString &contentType ) {
 
 void Secret::setValue( const QVariant &val ) {
     d->value = val;
-    d->contentType = "QVariant";
+    d->contentType = QStringLiteral( "QVariant" );
 }
 
 bool Secret::operator==(const Secret& that) const
