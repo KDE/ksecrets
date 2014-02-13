@@ -193,7 +193,7 @@ void FindCollectionJobPrivate::createFinished(QDBusPendingCallWatcher* watcher)
         
         if ( collPath.path().compare( QStringLiteral( "/" ) ) == 0 ) {
             // we need prompting
-            Q_ASSERT( promptPath.path().compare("/") ); // we should have a prompt path here other than "/"
+            Q_ASSERT( promptPath.path().compare( QStringLiteral( "/" ) ) ); // we should have a prompt path here other than "/"
             PromptJob *promptJob = new PromptJob( promptPath, collectionPrivate->promptParentId(), this );
             if ( findJob->addSubjob( promptJob ) ) {
                 connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(createPromptFinished(KJob*)) );
