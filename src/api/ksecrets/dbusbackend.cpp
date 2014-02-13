@@ -48,7 +48,6 @@ static bool s_initQCA = true;
 
 const QString DBusSession::encryptionAlgorithm = QStringLiteral( "dh-ietf1024-aes128-cbc-pkcs7" );
 OpenSessionJob *DBusSession::openSessionJob = 0;
-DBusSession DBusSession::staticInstance;
 
 DBusSession::DBusSession()
 {
