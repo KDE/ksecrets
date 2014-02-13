@@ -21,10 +21,12 @@
 #include "ksecretsapp.h"
 #include "ksecretsappjob.h"
 
+#include "ksecretsservicecollection.h"
+
 #include <QTimer>
-#include <kcmdlineargs.h>
-#include <ksecretsservice/ksecretsservicecollection.h>
-//#include <ksecretsservice/private/ksecretsservicedbustypes.h>
+
+#include <klocalizedstring.h>
+
 #include <iostream>
 
 using namespace KSecretsService;
@@ -32,53 +34,66 @@ using namespace std;
 
 Q_DECLARE_METATYPE( KSecretsService::ReadCollectionItemsJob::Item )
 
-ostream& operator << (ostream &out, const QString& str)
+ostream& operator << ( ostream &out, const QString& str )
 {
     out << qPrintable( str );
     return out;
 }
 
-ostream& operator << (ostream &out, const KLocalizedString &str )
+ostream& operator << ( ostream &out, const KLocalizedString &str )
 {
     out << str.toString();
     return out;
 }
 
-KSecretsApp::KSecretsApp()
+KSecretsApp::KSecretsApp( int argc, char **argv )
+    : QCoreApplication( argc, argv )
 {
-    QTimer::singleShot( 0, this, SLOT(slotParseArgs()) );
-}
+    m_parser.setApplicationDescription( i18n( "Plasma Secrets Service Manager") );
+    m_parser.addHelpOption();
+    m_parser.addVersionOption();
+    QCommandLineOption lc( QStringLiteral( "lc" ),
+                           i18n( "List existing secret collection" ) );
+    m_parser.addOption( lc );
+    QCommandLineOption l( QStringLiteral( "l" ),
+                          i18n( "List the contents of the collection named <secret collection>" ),
+                          i18n( "secret collection" ) );
 
-void KSecretsApp::slotParseArgs()
-{
-    KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
-
-    if ( args->isSet( "lc") ) {
-        listCollections();
-    }
-    else { 
-        if ( args->isSet( "l" ) ) {
-            QString collName = args->getOption( "l" );
-            listCollection( collName );
-        }
-        else {
-            KCmdLineArgs::usage();
-            quit();
-        }
-    }
+    m_parser.process( *this );
 }
 
 void KSecretsApp::listCollections()
 {
-    cout << ki18n("Listing secret collections...") << endl;
+    cout << i18n( "Listing secret collections..." ) << endl;
     ListCollectionsJob *listJob = Collection::listCollections();
-    connect( listJob, SIGNAL(finished(KJob*)), this, SLOT(slotListCollectionsDone(KJob*)) );
+    connect( listJob, SIGNAL( finished( KJob* ) ),
+             this, SLOT( slotListCollectionsDone( KJob* ) ) );
     listJob->start();
 }
 
-void KSecretsApp::slotListCollectionsDone(KJob* job)
+int KSecretsApp::exec()
 {
-    ListCollectionsJob *listJob = qobject_cast< ListCollectionsJob* >(job);
+    int status = QCoreApplication::exec();
+
+    if ( m_parser.isSet( QStringLiteral( "lc" ) ) )
+    {
+        listCollections();
+    }
+    else if ( m_parser.isSet( QStringLiteral( "l" ) ) )
+    {
+        QString collName = m_parser.value( QStringLiteral( "l" ) );
+        listCollection( collName );
+    }
+    else
+    {
+        m_parser.showHelp();
+    }
+    return status;
+}
+
+void KSecretsApp::slotListCollectionsDone( KJob* job )
+{
+    ListCollectionsJob *listJob = qobject_cast< ListCollectionsJob* >( job );
     if ( listJob->error() == 0 ) {
         foreach( const QString &collName, listJob->collections() ) {
             cout << collName << endl;
@@ -91,17 +106,18 @@ void KSecretsApp::slotListCollectionsDone(KJob* job)
     quit();
 }
 
-void KSecretsApp::listCollection(QString collName)
+void KSecretsApp::listCollection( const QString& collName )
 {
-    cout << ki18n("Listing secret collection ") << collName << "..." << endl;
+    cout << i18n( "Listing secret collection " ) << collName << "..." << endl;
     Collection *coll = Collection::findCollection( collName, Collection::OpenOnly );
     ReadCollectionItemsJob *listJob = coll->items();
-    connect( listJob, SIGNAL(finished(KJob*)), this, SLOT(slotListItemsDone(KJob*)) );
+    connect( listJob, SIGNAL( finished( KJob* ) ),
+             this, SLOT( slotListItemsDone( KJob* ) ) );
     listJob->start();
 }
 
 
-void KSecretsApp::slotListItemsDone(KJob* job)
+void KSecretsApp::slotListItemsDone( KJob* job )
 {
     ReadCollectionItemsJob *listJob = qobject_cast< ReadCollectionItemsJob* >(job);
     if ( listJob->error() == 0 ){
@@ -126,7 +142,7 @@ void KSecretsApp::slotListItemsDone(KJob* job)
     job->deleteLater();
 }
 
-void KSecretsApp::slotReadItemAttributesDone(KJob* job)
+void KSecretsApp::slotReadItemAttributesDone( KJob* job )
 {
     ReadItemPropertyJob *readJob = qobject_cast< ReadItemPropertyJob* >(job);
     if ( readJob->error() == 0 ) {
@@ -143,12 +159,12 @@ void KSecretsApp::slotReadItemAttributesDone(KJob* job)
     job->deleteLater();
 }
 
-void KSecretsApp::slotReadItemLabelDone(KJob* job)
+void KSecretsApp::slotReadItemLabelDone( KJob* job )
 {
     ReadItemPropertyJob *readJob = qobject_cast< ReadItemPropertyJob* >(job);
     if ( readJob->error() == 0 ) {
         cout << readJob->propertyValue().toString() << "" << endl;
-        cout << "    " << ki18n("attributes:") << endl;
+        cout << "    " << i18n( "attributes:" ) << endl;
         StringStringMap attrs = readJob->customData().value< StringStringMap >();
         StringStringMap::ConstIterator it = attrs.constBegin();
         for ( ; it != attrs.constEnd(); ++it ) {
@@ -160,7 +176,7 @@ void KSecretsApp::slotReadItemLabelDone(KJob* job)
     }
 }
 
-void KSecretsApp::slotReadAllItemsDone(KJob* job)
+void KSecretsApp::slotReadAllItemsDone( KJob* job )
 {
     if ( job->error() ) {
         cerr << job->errorString() << endl;

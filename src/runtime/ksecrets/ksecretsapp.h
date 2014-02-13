@@ -21,25 +21,30 @@
 #ifndef KSECRETSAPP_H
 #define KSECRETSAPP_H
 
-#include <kapplication.h>
+#include <QCoreApplication>
+#include <QCommandLineParser>
 
 class KJob;
 
-class KSecretsApp : public KApplication {
+class KSecretsApp : public QCoreApplication {
     Q_OBJECT
-     void listCollection(QString collName);
-      void listCollections();
 public:
-    KSecretsApp();
-    
-    
+    KSecretsApp( int argc, char** argv );
+
+    int exec();
+
 protected Q_SLOTS:
-    void slotParseArgs();
-    void slotListCollectionsDone(KJob*);
-    void slotListItemsDone(KJob*);
-    void slotReadItemAttributesDone(KJob*);
-    void slotReadAllItemsDone(KJob*);    
-    void slotReadItemLabelDone(KJob*);
+    void slotListCollectionsDone( KJob* );
+    void slotListItemsDone( KJob*);
+    void slotReadItemAttributesDone( KJob* );
+    void slotReadAllItemsDone( KJob* );
+    void slotReadItemLabelDone( KJob* );
+
+private:
+    void listCollection( const QString& collName );
+    void listCollections();
+
+    QCommandLineParser m_parser;
 };
 
 

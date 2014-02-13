@@ -20,31 +20,21 @@
 
 #include "ksecretsapp.h"
 
-#include <kaboutdata.h>
-#include <kcmdlineargs.h>
-#include <kapplication.h>
+#include "klocalizedstring.h"
 
+#include <QCommandLineParser>
 
-int main(int argc, char **argv)
+int main( int argc, char** argv )
 {
-    // FIXME: what version should we put here?
-    KAboutData aboutdata("ksecrets", 0, ki18n("ksecrets"),
-                         "0.1",
-                         ki18n("Secrets Service Handling Tool"),
-                         KAboutData::License_GPL, ki18n("(C) 2011 Valentin Rusu"));
-    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
-    aboutdata.setProgramIconName("ksecretsservice");
+    KLocalizedString::setApplicationDomain( "ksecrets_ksecrets" );
 
-    KLocale::setMainCatalog("ksecrets_ksecrets");
-    
-    KCmdLineArgs::init(argc, argv, &aboutdata);
-    
-    KCmdLineOptions options;
-    options.add( "lc", ki18n("List existing secret collection") );
-    options.add( "l <collection>", ki18n("List the contents of the collection named <secret collection>") );
-    KCmdLineArgs::addCmdLineOptions( options );
+    QCoreApplication::setApplicationName( QStringLiteral( "ksecrets" ) );
+    QCoreApplication::setApplicationVersion( QStringLiteral( "0.1" ) ); //FIXME: proper versioning
+    QCoreApplication::setOrganizationDomain( QStringLiteral( "kde.org") );
+    QCoreApplication::setOrganizationName( QStringLiteral( "KDE" ) );
 
-    KSecretsApp app;
+    KSecretsApp app( argc, argv );
+
     return app.exec();
 }
 
