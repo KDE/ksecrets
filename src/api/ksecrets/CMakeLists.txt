@@ -1,4 +1,4 @@
-PROJECT( KSecrets )
+project( KSecrets )
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 
