@@ -21,16 +21,30 @@
 #include "dialogaskunlockaclprefs.h"
 
 #include <klocalizedstring.h>
-#include <QLabel>
 
-DialogAskUnlockAclPrefs::DialogAskUnlockAclPrefs(QWidget* parent): 
-    KDialog(parent),
-    m_widget(0)
+#include <QLabel>
+#include <QDialogButtonBox>
+#include <QPushButton>
+
+DialogAskUnlockAclPrefs::DialogAskUnlockAclPrefs( QWidget* parent )
+    : QDialog( parent )
+    , m_widget( 0 )
 {
-    setCaption( i18n("Unlock Collection Access Policy") );
-    setButtons( KDialog::Ok );
-    m_widget = new AskUnlockAclPrefsWidget( this );    
-    setMainWidget( m_widget );
+    setWindowTitle( i18n("Unlock Collection Access Policy") );
+
+    m_widget = new AskUnlockAclPrefsWidget( this );
+
+    m_bb = new QDialogButtonBox( QDialogButtonBox::Ok, Qt::Horizontal, this );
+
+    QBoxLayout* mainLayout = new QVBoxLayout;
+    mainLayout->addWidget( m_widget );
+    mainLayout->addWidget( m_bb );
+    setLayout( mainLayout );
+
+    connect( m_bb->button( QDialogButtonBox::Ok ), SIGNAL( clicked() ),
+             this, SLOT( accept() ) );
+    m_bb->button( QDialogButtonBox::Ok )->setShortcut( Qt::CTRL | Qt::Key_Return );
+
 }
 
 void DialogAskUnlockAclPrefs::setApplication(QString exePath)

@@ -20,7 +20,7 @@
  */
 
 #include <kuniqueapplication.h>
-#include <kaboutdata.h>
+#include <k4aboutdata.h>
 #include <kcmdlineargs.h>
 #include <QDebug>
 #include <QtDBus/QDBusConnection>
@@ -38,7 +38,7 @@
 
 static bool userHasWallets() 
 {
-    QDir dir(KGlobal::dirs()->saveLocation("data", "kwallet", false), "*.kwl");
+    QDir dir(KGlobal::dirs()->saveLocation("data", QStringLiteral( "kwallet" ), false), "*.kwl");
     QStringList wallets;
 
     dir.setFilter(QDir::Files | QDir::Hidden);
@@ -49,15 +49,16 @@ static bool userHasWallets()
 int main(int argc, char **argv)
 {
     // FIXME: what version should we put here?
-    KAboutData aboutdata("ksecretsservice", 0, ki18n("KDE DaemonSecret Service"),
+    K4AboutData aboutdata("ksecretsservice", 0, ki18n("KDE DaemonSecret Service"),
                          "0.1",
                          ki18n("KDE DaemonSecret Service"),
-                         KAboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
+                         K4AboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
     aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
     aboutdata.setProgramIconName("ksecretsservice");
 
-    KLocale::setMainCatalog("ksecretsserviced");
+    KLocalizedString::setApplicationDomain( "ksecretsserviced" );
+
     KCmdLineArgs::init(argc, argv, &aboutdata);
     
     KCmdLineOptions options;

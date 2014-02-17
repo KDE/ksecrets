@@ -1,28 +1,28 @@
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 # involves dialogs, thus not an automatic test
-KDE4_ADD_EXECUTABLE (dialoguimanager_test dialoguimanagertest.cpp)
-TARGET_LINK_LIBRARIES (dialoguimanager_test
+add_executable( dialoguimanager_test dialoguimanagertest.cpp )
+target_link_libraries( dialoguimanager_test
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
-    ${KDE4_KDEUI_LIBS}
+    KF5::CoreAddons
+    Qt5::Test
 )
 
-KDE4_ADD_EXECUTABLE (nouimanager_test nouimanagertest.cpp)
-TARGET_LINK_LIBRARIES (nouimanager_test
+add_executable( nouimanager_test nouimanagertest.cpp )
+target_link_libraries( nouimanager_test
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
 
-KDE4_ADD_EXECUTABLE (dialogaskaclprefs_test dialogaskaclprefstest.cpp )
-TARGET_LINK_LIBRARIES( dialogaskaclprefs_test
+add_executable( dialogaskaclprefs_test dialogaskaclprefstest.cpp )
+target_link_libraries( dialogaskaclprefs_test
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
 
-ADD_TEST (NoUiManagerTest nouimanager_test)
+add_test( NoUiManagerTest nouimanager_test )
 #ADD_TEST (DialogUiManagerTest dialoguimanager_test)
 #ADD_TEST (DialogAskAclPrefsTest dialogaskaclprefs_test )

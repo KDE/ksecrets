@@ -23,7 +23,7 @@
 #include "dialogaskunlockaclprefs.h"
 #include <peer.h>
 
-#include <QtGui/QDialog>
+#include <QDialog>
 
 DialogAskCreateAclPrefsJob::DialogAskCreateAclPrefsJob(AbstractUiManager* manager,
         const CollectionCreateInfo& jobInfo):

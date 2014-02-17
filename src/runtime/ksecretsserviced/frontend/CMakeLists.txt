@@ -1,10 +1,11 @@
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../api/ksecrets
+)
 
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
+#add_subdirectory( tests )
 
-
-ADD_SUBDIRECTORY (tests)
-
-SET (ksecretservice_frontend_SRCS
+set( ksecretservice_frontend_SRCS
     # fd.o Secret Storage daemon
     secret/item.cpp
     secret/collection.cpp
@@ -22,13 +23,17 @@ SET (ksecretservice_frontend_SRCS
     secret/adaptors/daemonsecret.cpp
 )
 
-KDE4_ADD_LIBRARY (ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS})
-TARGET_LINK_LIBRARIES (ksecretservicefrontend 
-    ksecretsservice
+add_library( ksecretservicefrontend STATIC ${ksecretservice_frontend_SRCS} )
+
+target_link_libraries( ksecretservicefrontend
+    KF5::Secrets
+    Qt5::Core
+    Qt5::DBus
+    KF5::WidgetsAddons
     ${QCA2_LIBRARIES}
 )
 
-INSTALL(FILES 
+install( FILES
     secret/adaptors/daemonsecret.h
     secret/adaptors/dbustypes.h
     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel 

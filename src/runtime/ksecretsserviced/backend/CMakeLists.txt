@@ -1,9 +1,12 @@
+include_directories(
+    ${QCA2_INCLUDE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
+#add_subdirectory( tests )
 
-ADD_SUBDIRECTORY (tests)
-
-SET (ksecretservice_backend_SRCS
+set( ksecretservice_backend_SRCS
     # Backend
     backendjob.cpp
     backendcollection.cpp
@@ -24,5 +27,11 @@ SET (ksecretservice_backend_SRCS
     ../peer.cpp
 )
 
-KDE4_ADD_LIBRARY (ksecretservicebackend STATIC ${ksecretservice_backend_SRCS})
-TARGET_LINK_LIBRARIES (ksecretservicebackend ${KDE4_KDECORE_LIBS} ${QCA2_LIBRARIES})
+add_library( ksecretservicebackend STATIC ${ksecretservice_backend_SRCS} )
+
+target_link_libraries( ksecretservicebackend
+    KF5::CoreAddons
+    Qt5::Core
+    Qt5::Widgets
+    ${QCA2_LIBRARIES}
+)

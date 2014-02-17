@@ -43,7 +43,9 @@ void DialogAskPasswordJob::start()
     m_dialog = new KPasswordDialog;
     m_dialog->setAttribute(Qt::WA_DeleteOnClose, true);
     // TODO: needs proper string
-    m_dialog->setPrompt("Secret collection " + collection() + " wants password.");
+    m_dialog->setPrompt( QStringLiteral( "Secret collection " ) +
+                         collection() +
+                         QStringLiteral( " wants password." ) );
     connect(m_dialog, SIGNAL(finished(int)), this, SLOT(dialogFinished(int)));
     m_dialog->show();
 }
@@ -76,7 +78,9 @@ void DialogNewPasswordJob::start()
     m_dialog = new KNewPasswordDialog;
     m_dialog->setAttribute(Qt::WA_DeleteOnClose, true);
     // TODO: needs proper string
-    m_dialog->setPrompt("Secret collection " + collection() + " wants new password.");
+    m_dialog->setPrompt( QStringLiteral( "Secret collection " ) +
+                         collection() +
+                         QStringLiteral( " wants new password." ) );
     connect(m_dialog, SIGNAL(finished(int)), this, SLOT(dialogFinished(int)));
     m_dialog->show();
 }

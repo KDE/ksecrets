@@ -34,7 +34,7 @@ Item::Item(BackendItem *item, Collection *collection)
     m_item(item)
 {
     Q_ASSERT(item);
-    registerWithPath( collection->objectPath().path() + '/' + item->id() );
+    registerWithPath( collection->objectPath().path() + QChar::fromLatin1( '/' ) + item->id() );
 }
 
 bool Item::locked() const

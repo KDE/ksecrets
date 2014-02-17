@@ -23,9 +23,10 @@
 
 #include <QtCore/QTimer>
 
-NoUiAskPasswordJob::NoUiAskPasswordJob(AbstractUiManager *manager,
-                                       bool cancel)
-    : AbstractAskPasswordJob(manager, "", false), m_cancel(cancel)
+NoUiAskPasswordJob::NoUiAskPasswordJob( AbstractUiManager *manager,
+                                        bool cancel )
+    : AbstractAskPasswordJob( manager, QString(), false )
+    , m_cancel( cancel )
 {
 }
 
@@ -48,9 +49,10 @@ void NoUiAskPasswordJob::finish()
     emitResult();
 }
 
-NoUiNewPasswordJob::NoUiNewPasswordJob(AbstractUiManager *manager,
-                                       bool cancel)
-    : AbstractNewPasswordJob(manager, ""), m_cancel(cancel)
+NoUiNewPasswordJob::NoUiNewPasswordJob( AbstractUiManager *manager,
+                                        bool cancel)
+    : AbstractNewPasswordJob( manager, QString() )
+    , m_cancel( cancel )
 {
 }
 

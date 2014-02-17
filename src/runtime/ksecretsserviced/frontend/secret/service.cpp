@@ -45,7 +45,7 @@ Service::Service(BackendMaster *master, QObject *parent)
     m_master(master)
 {
     Q_ASSERT(master);
-    registerWithPath("/org/freedesktop/secrets");
+    registerWithPath( QStringLiteral( "/org/freedesktop/secrets" ) );
 
     connect(m_master, SIGNAL(collectionCreated(BackendCollection*)),
             SLOT(slotCollectionCreated(BackendCollection*)));
@@ -75,7 +75,7 @@ QVariant Service::openSession(const QString &algorithm, const QVariant &input,
     } else {
         result = QDBusObjectPath("/");
         if(dbusAdaptor()->calledFromDBus()) {
-            dbusAdaptor()->sendErrorReply("org.freedesktop.Secret.Error.NotSupported");
+            dbusAdaptor()->sendErrorReply( QStringLiteral( "org.freedesktop.Secret.Error.NotSupported" ) );
         }
         else {
             // TODO: how one could send an errorReply when not called over dbus ?
@@ -101,7 +101,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
                                           const QString& alias,
                                           QDBusObjectPath &prompt)
 {
-#define COLLECTION_PROPERTY(name) "org.freedesktop.Secret.Collection."name
+#define COLLECTION_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Collection."name)
 
     QString label;
     if ( alias.isEmpty() ) {
@@ -135,8 +135,8 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
             return QDBusObjectPath("/");
         } else {
             BackendCollection *coll = job->collection();
-            prompt.setPath("/");
-            QDBusObjectPath collPath(objectPath().path() + "/collection/" + coll->id());
+            prompt.setPath( QStringLiteral("/") );
+            QDBusObjectPath collPath(objectPath().path() + QStringLiteral( "/collection/" ) + coll->id());
             return collPath;
         }
     } else {
@@ -154,15 +154,15 @@ QList<QDBusObjectPath> Service::searchItems(const StringStringMap &attributes,
     // TODO: should we implement ACL handling on this call ? Maybe the collection unlocking ACL handling may have been sufficient
     QList<QDBusObjectPath> unlocked;
     Q_FOREACH(BackendCollection * collection, m_master->collections()) {
-        QString collPath = objectPath().path() + "/collection/" + collection->id();
+        QString collPath = objectPath().path() + QStringLiteral( "/collection/" ) + collection->id();
         BackendReturn<QList<BackendItem*> > rc = collection->searchItems(attributes);
         if(!rc.isError()) {
             QList<BackendItem*> items = rc.value();
             Q_FOREACH(BackendItem * item, items) {
                 if(item->isLocked()) {
-                    locked.append(QDBusObjectPath(collPath + '/' + item->id()));
+                    locked.append(QDBusObjectPath(collPath + QChar::fromLatin1( '/' ) + item->id()));
                 } else {
-                    unlocked.append(QDBusObjectPath(collPath + '/' + item->id()));
+                    unlocked.append(QDBusObjectPath(collPath + QChar::fromLatin1( '/' ) + item->id()));
                 }
             }
         }
@@ -241,7 +241,7 @@ QList<QDBusObjectPath> Service::unlock(const QList<QDBusObjectPath> &objects,
         ServiceMultiPrompt *p = new ServiceMultiPrompt(this, unlockJobs, this);
         prompt = p->objectPath();
     } else {
-        prompt.setPath("/");
+        prompt.setPath( QStringLiteral( "/" ) );
     }
 
     return rc;
@@ -316,7 +316,7 @@ QList<QDBusObjectPath> Service::lock(const QList<QDBusObjectPath> &objects,
         ServiceMultiPrompt *p = new ServiceMultiPrompt(this, lockJobs, this);
         prompt = p->objectPath();
     } else {
-        prompt.setPath("/");
+        prompt.setPath( QStringLiteral( "/" ) );
     }
 
     return rc;
@@ -333,7 +333,7 @@ QMap<QDBusObjectPath, SecretStruct> Service::getSecrets(const QList<QDBusObjectP
     object = QDBusConnection::sessionBus().objectRegisteredAt(session.path());
     if(!object || !(sessionObj = qobject_cast<Session*>(object))) {
         if(dbusAdaptor()->calledFromDBus()) {
-            dbusAdaptor()->sendErrorReply("org.freedesktop.Secret.Error.NoSession");
+            dbusAdaptor()->sendErrorReply( QStringLiteral( "org.freedesktop.Secret.Error.NoSession" ) );
         }
         return rc;
     }
@@ -365,7 +365,7 @@ void Service::slotCollectionDeleted(BackendCollection *collection)
 {
     Q_ASSERT(collection);
     // TODO: move collection path computing inside Collection class
-    QDBusObjectPath collPath(objectPath().path() + "/collection/" + collection->id());
+    QDBusObjectPath collPath(objectPath().path() + QStringLiteral( "/collection/" ) + collection->id());
     m_collections.removeAll(collPath);
     // TODO: make sure Daemon::Collection gets destroyed
     emit collectionDeleted(collPath);
@@ -374,7 +374,7 @@ void Service::slotCollectionDeleted(BackendCollection *collection)
 void Service::slotCollectionChanged(BackendCollection *collection)
 {
     Q_ASSERT(collection);
-    QDBusObjectPath collPath(objectPath().path() + "/collection/" + collection->id());
+    QDBusObjectPath collPath(objectPath().path() + QStringLiteral( "/collection/" ) + collection->id());
     emit collectionChanged(collPath);
 }
 

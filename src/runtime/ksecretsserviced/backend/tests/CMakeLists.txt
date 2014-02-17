@@ -1,36 +1,39 @@
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
-KDE4_ADD_EXECUTABLE (temporary_collection_test temporarytest.cpp)
-TARGET_LINK_LIBRARIES (temporary_collection_test
+
+add_executable( temporary_collection_test temporarytest.cpp )
+target_link_libraries( temporary_collection_test
     ksecretservicebackend
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
+add_test( TemporaryCollectionTest temporary_collection_test )
 
-ADD_TEST (TemporaryCollectionTest temporary_collection_test)
 
-KDE4_ADD_EXECUTABLE (ksecret_collection_test ksecrettest.cpp)
-TARGET_LINK_LIBRARIES (ksecret_collection_test
+add_executable( ksecret_collection_test ksecrettest.cpp )
+target_link_libraries( ksecret_collection_test
     ksecretservicebackend
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
+add_test( KSecretCollectionTest ksecret_collection_test )
 
-ADD_TEST (KSecretCollectionTest ksecret_collection_test)
 
-KDE4_ADD_EXECUTABLE (ksecret_collection_ui_test ksecretuitest.cpp)
-TARGET_LINK_LIBRARIES (ksecret_collection_ui_test
+add_executable( ksecret_collection_ui_test ksecretuitest.cpp )
+target_link_libraries( ksecret_collection_ui_test
     ksecretservicebackend
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
+add_test( KSecretCollectionUiTest ksecret_collection_ui_test )
 
-ADD_TEST (KSecretCollectionUiTest ksecret_collection_ui_test)
 
-KDE4_ADD_EXECUTABLE (securebuffer_test securebuffertest.cpp)
-TARGET_LINK_LIBRARIES (securebuffer_test ksecretservicebackend ${QT_QTTEST_LIBRARIES})
-
-ADD_TEST (SecureBufferTest securebuffer_test)
+add_executable( securebuffer_test securebuffertest.cpp )
+target_link_libraries( securebuffer_test
+    ksecretservicebackend
+    Qt5::Test
+)
+add_test( SecureBufferTest securebuffer_test )

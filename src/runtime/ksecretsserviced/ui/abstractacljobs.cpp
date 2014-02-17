@@ -20,7 +20,7 @@
 
 #include "abstractacljobs.h"
 #include <backend/backendcollection.h>
-#include <QtGui/QDialog>
+#include <QDialog>
 
 AbstractAskAclPrefsJob::AbstractAskAclPrefsJob(AbstractUiManager *manager,
         const CollectionCreateInfo &jobInfo) :

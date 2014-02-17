@@ -22,24 +22,36 @@
 
 #include <klocalizedstring.h>
 #include <QLabel>
+#include <QDialogButtonBox>
+#include <QPushButton>
 
-DialogAskCreateAclPrefs::DialogAskCreateAclPrefs(QWidget* parent): 
-    KDialog(parent),
-    m_widget(0)
+DialogAskCreateAclPrefs::DialogAskCreateAclPrefs( QWidget* parent )
+    : QDialog( parent )
+    , m_widget( 0 )
 {
-    setCaption( i18n("New Secret Collection Access Policy") );
-    setButtons( KDialog::Ok );
-    m_widget = new AskCreateAclPrefsWidget( this );    
-    setMainWidget( m_widget );
+    setWindowTitle( i18n( "New Secret Collection Access Policy" ) );
+
+    m_widget = new AskCreateAclPrefsWidget( this );
+
+    m_bb = new QDialogButtonBox( QDialogButtonBox::Ok, Qt::Horizontal, this );
+
+    QBoxLayout* mainLayout = new QVBoxLayout;
+    mainLayout->addWidget( m_widget );
+    mainLayout->addWidget( m_bb );
+    setLayout( mainLayout );
+
+    connect( m_bb->button( QDialogButtonBox::Ok ), SIGNAL( clicked() ),
+             this, SLOT( accept() ) );
+    m_bb->button( QDialogButtonBox::Ok )->setShortcut( Qt::CTRL | Qt::Key_Return );
 }
 
-void DialogAskCreateAclPrefs::setCollectionLabel(const QString& label)
+void DialogAskCreateAclPrefs::setCollectionLabel( const QString& label )
 {
     QString locString = i18n( "You just created a secret collection named '%1'.", label );
     m_widget->m_explainCollectionLabel->setText( locString );
 }
 
-void DialogAskCreateAclPrefs::setApplication(QString exePath)
+void DialogAskCreateAclPrefs::setApplication( QString exePath )
 {
     QString locString = i18n( "You used '%1' application to create this secret collection.", exePath );
     m_widget->m_explainApplicationLabel->setText( locString );
@@ -56,8 +68,8 @@ ApplicationPermission DialogAskCreateAclPrefs::permission() const
     return PermissionDeny;
 }
 
-AskCreateAclPrefsWidget::AskCreateAclPrefsWidget( QWidget *parent ) :
-    QWidget( parent )
+AskCreateAclPrefsWidget::AskCreateAclPrefsWidget( QWidget *parent )
+    : QWidget( parent )
 {
     setupUi( this );
 }

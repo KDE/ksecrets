@@ -24,9 +24,10 @@
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
 
-AbstractUiJob::AbstractUiJob(AbstractUiManager *manager) : 
-    m_cancelled(false)
+AbstractUiJob::AbstractUiJob( AbstractUiManager *manager )
+    : m_cancelled( false )
 {
+    Q_UNUSED( manager )
 }
 
 AbstractUiJob::~AbstractUiJob()

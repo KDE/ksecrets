@@ -33,7 +33,7 @@ Session::Session(Service *parent, SecretCodec *codec)
       m_secretCodec(codec)
 {
     // register on the bus
-    registerWithPath(parent->objectPath().path() + "/session/" + createId());
+    registerWithPath(parent->objectPath().path() + QStringLiteral( "/session/" ) + createId());
 }
 
 Session::~Session()
@@ -46,9 +46,9 @@ Session *Session::create(const QString &algorithm, const QVariant &input,
 {
     Session *session = 0;
 
-    if(algorithm == "plain") {
+    if( algorithm == QStringLiteral( "plain" ) ) {
         session = new Session(parent, 0);
-        output.setValue(QString(""));
+        output.setValue(QString());
     }
     else {
         SecretCodec *codec = new SecretCodec;

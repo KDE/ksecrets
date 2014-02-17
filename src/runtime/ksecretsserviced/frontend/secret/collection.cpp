@@ -38,7 +38,7 @@ Collection::Collection(BackendCollection *collection, Service *service)
     m_service(service), m_collection(collection), m_deleted(false)
 {
     Q_ASSERT(collection);
-    registerWithPath( service->objectPath().path() + "/collection/" + collection->id() );
+    registerWithPath( service->objectPath().path() + QStringLiteral( "/collection/" ) + collection->id() );
 
     connect(collection, SIGNAL(itemCreated(BackendItem*)),
             SLOT(slotItemCreated(BackendItem*)));
@@ -150,7 +150,7 @@ QList<QDBusObjectPath> Collection::searchItems(const QMap<QString, QString> &att
             dbusAdaptor()->sendErrorReply( QDBusError::Failed, br.errorMessage() );
         } else {
             Q_FOREACH(BackendItem * item, br.value()) {
-                rc.append(QDBusObjectPath(objectPath().path() + '/' + item->id()));
+                rc.append(QDBusObjectPath(objectPath().path() + QChar::fromLatin1( '/' ) + item->id()));
             }
         }
     }
@@ -185,7 +185,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         return QDBusObjectPath("/");
     }
 
-#define ITEM_PROPERTY(name) "org.freedesktop.Secret.Item."name
+#define ITEM_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Item."name)
 
     if(properties.contains(ITEM_PROPERTY("Locked"))) {
         locked = properties[ITEM_PROPERTY("Locked")].toBool();
@@ -216,8 +216,8 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         }
 
         // the Item is already created inside slotItemCreated()
-        prompt.setPath("/");
-        QDBusObjectPath itemPath(objectPath().path() + '/' + cij->item()->id());
+        prompt.setPath( QStringLiteral( "/" ) );
+        QDBusObjectPath itemPath(objectPath().path() + QChar::fromLatin1( '/' ) + cij->item()->id());
         return itemPath;
     } else {
         SingleJobPrompt *p = new SingleJobPrompt(m_service, cij, this);
@@ -256,7 +256,7 @@ void Collection::slotItemCreated(BackendItem *item)
 void Collection::slotItemDeleted(BackendItem *item)
 {
     Q_ASSERT(item);
-    QDBusObjectPath itmPath( objectPath().path() + '/' + item->id() );
+    QDBusObjectPath itmPath( objectPath().path() + QChar::fromLatin1( '/' ) + item->id() );
     m_itemPaths.removeAll( itmPath );
     m_items.take( itmPath );
     emit itemDeleted(itmPath);
@@ -265,7 +265,7 @@ void Collection::slotItemDeleted(BackendItem *item)
 void Collection::slotItemChanged(BackendItem *item)
 {
     Q_ASSERT(item);
-    QDBusObjectPath itmPath(objectPath().path() + '/' + item->id());
+    QDBusObjectPath itmPath(objectPath().path() + QChar::fromLatin1( '/' ) + item->id());
     if ( !m_itemPaths.contains( itmPath ) ) {
         m_itemPaths.append( itmPath );
         m_items.insert( itmPath, new Item( item, this ) );

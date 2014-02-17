@@ -1,25 +1,24 @@
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+set( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR} )
 
-INCLUDE_DIRECTORIES (
-    ${KDE4_INCLUDES}
+include_directories(
     ${QCA2_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-KDE4_ADD_EXECUTABLE (ksecretservice_frontend_test
+add_executable( ksecretservice_frontend_test
     servicetest.cpp
     tempblockingcollectionmanager.cpp
     tempblockingcollection.cpp
     tempblockingitem.cpp
     tempblockingjobs.cpp
 )
-TARGET_LINK_LIBRARIES (ksecretservice_frontend_test
+target_link_libraries( ksecretservice_frontend_test
     ksecretservicebackend
     ksecretservicefrontend
     ksecretserviceui
     daemonlib
-    ${QT_QTTEST_LIBRARIES}
+    Qt5::Test
 )
 
-ADD_TEST (FrontendSessionTest ksecretservice_frontend_test)
+add_test( FrontendSessionTest ksecretservice_frontend_test )

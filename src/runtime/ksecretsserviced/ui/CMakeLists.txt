@@ -1,9 +1,12 @@
+include_directories(
+    ${QCA2_INCLUDE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
+#add_subdirectory( tests )
 
-ADD_SUBDIRECTORY (tests)
-
-SET (ksecretservice_ui_SRCS
+set( ksecretservice_ui_SRCS
     abstractuijobs.cpp
     abstractacljobs.cpp
     dialogaskaclprefsjob.cpp
@@ -16,16 +19,20 @@ SET (ksecretservice_ui_SRCS
     ../peer.cpp
 )
 
-KDE4_ADD_UI_FILES( ksecretservice_ui_SRCS
+qt5_wrap_ui( ksecretservice_ui_SRCS
     dialogaskcreateaclprefs.ui
     dialogaskunlockaclprefs.ui
 )
-    
-KDE4_ADD_LIBRARY (ksecretserviceui STATIC ${ksecretservice_ui_SRCS})
 
-TARGET_LINK_LIBRARIES (
+add_library( ksecretserviceui STATIC ${ksecretservice_ui_SRCS} )
+
+target_link_libraries(
     ksecretserviceui 
     daemonlib
-    ${KDE4_KDEUI_LIBS} 
+    KF5::CoreAddons
+    KF5::WidgetsAddons
+    KF5::I18n
+    Qt5::Core
+    Qt5::Widgets
     ${QCA2_LIBRARIES}
 )

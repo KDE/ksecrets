@@ -72,7 +72,7 @@ Peer::~Peer()
 QString Peer::procFileName() const
 {
     Q_ASSERT(d->m_valid);
-    return QString("/proc/%1").arg(d->m_pid);
+    return QStringLiteral("/proc/%1").arg(d->m_pid);
 }
 
 QByteArray Peer::cmdLine() const
@@ -80,7 +80,7 @@ QByteArray Peer::cmdLine() const
     if(!d->m_valid) {
         return QByteArray();
     } else {
-        QFile procFile(QString("%1/cmd").arg(procFileName()));
+        QFile procFile(QStringLiteral("%1/cmd").arg(procFileName()));
         if(!procFile.open(QIODevice::ReadOnly | QIODevice::Text) ||
                 procFile.atEnd()) {
             // file doesn't exist or is empty
@@ -111,7 +111,7 @@ QString Peer::exePath() const
         return QString();
     } else {
         // TODO: add a watch an trigger signal when the peer process ends
-        return QFile::symLinkTarget(QString("%1/exe").arg(procFileName()));
+        return QFile::symLinkTarget(QStringLiteral("%1/exe").arg(procFileName()));
     }
 }
 

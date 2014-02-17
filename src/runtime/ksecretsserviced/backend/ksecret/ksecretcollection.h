@@ -212,7 +212,7 @@ public:
         if ( isLocked() )
             return m_secret.m_creatorApplication;
         else 
-            return "";
+            return QString();
     }
 
 private Q_SLOTS:

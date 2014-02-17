@@ -24,24 +24,26 @@
 #include <ui_dialogaskunlockaclprefs.h>
 #include <acl.h>
 
-#include <kdialog.h>
+#include <QDialog>
 
 class AskUnlockAclPrefsWidget;
+class QDialogButtonBox;
 
-class DialogAskUnlockAclPrefs : public KDialog
+class DialogAskUnlockAclPrefs : public QDialog
 {
     Q_OBJECT
 public:
-    explicit DialogAskUnlockAclPrefs(QWidget* parent = 0);
+    explicit DialogAskUnlockAclPrefs( QWidget* parent = 0 );
 
     void setCollectionLabel( const QString& label );
-    void setApplication(QString exePath);
+    void setApplication( QString exePath );
     void setOriginalApplication( const QString& exePath );
     
     ApplicationPermission permission() const;
 
 private:
     AskUnlockAclPrefsWidget* m_widget;
+    QDialogButtonBox* m_bb;
     QString m_collectionLabel;
 };
 

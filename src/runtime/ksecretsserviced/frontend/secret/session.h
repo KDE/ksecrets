@@ -29,7 +29,7 @@
 #include <QtCrypto>
 
 #include "ksecretobject.h"
-#include <ksecretsservicecodec.h>
+#include "ksecretsservicecodec.h"
 
 using namespace KSecretsService;
 

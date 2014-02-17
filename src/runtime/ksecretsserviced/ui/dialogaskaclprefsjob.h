@@ -22,7 +22,7 @@
 #define DIALOGASKACLPREFSJOB_H
 
 #include <abstractacljobs.h>
-#include <QtGui/QDialog>
+#include <QDialog>
 
 class DialogAskCreateAclPrefs;
 

@@ -29,7 +29,6 @@
 #include "ksecretstream.h"
 
 #include <klocalizedstring.h>
-#include <ksavefile.h>
 #include <kstandarddirs.h>
 
 #include <QtCore/QBuffer>
@@ -38,6 +37,7 @@
 #include <QtCore/QTimer>
 #include <QDebug>
 #include <QFileInfo>
+#include <QSaveFile>
 
 static QCA::SecureArray replaceWithDefaultIfEmpty( const QCA::SecureArray &password ) 
 {
@@ -53,7 +53,7 @@ KSecretCollection *KSecretCollection::create(const QString &id, const QCA::Secur
         BackendCollectionManager *parent, QString &errorMessage)
 {
     KSecretCollection *coll = new KSecretCollection(parent);
-    coll->m_path = KGlobal::dirs()->saveLocation("ksecret") + '/' + id + ".ksecret";
+    coll->m_path = KGlobal::dirs()->saveLocation( "ksecret" ) + QChar::fromLatin1( '/' ) + id + QStringLiteral( ".ksecret" );
     coll->m_encryptionFilter = new KSecretEncryptionFilter( replaceWithDefaultIfEmpty( password ) );
     
     coll->m_pub.m_id = id;
@@ -592,7 +592,7 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     
     Q_ASSERT( m_encryptionFilter != 0 );
 
-    KSecretDevice< KSaveFile > device( m_path, m_encryptionFilter );
+    KSecretDevice< QSaveFile > device( m_path, m_encryptionFilter );
     if ( !device.open( QIODevice::ReadWrite ) ) {
         errorMessage = i18nc("Error message: secret collection file could not be created",
                              "The disk may be full");
@@ -610,7 +610,7 @@ bool KSecretCollection::serialize(QString &errorMessage) const
         return false;
     }
     
-    if ( !device.finalize() ) {
+    if ( !device.commit() ) {
         errorMessage = i18nc("Error message: secret collection contents could not be written to disk",
                              "The disk may be full");
         return false;

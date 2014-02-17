@@ -9,9 +9,9 @@ SET( daemonlib_SRCS
     daemonjob.cpp
 )
 
-KDE4_ADD_LIBRARY( daemonlib STATIC ${daemonlib_SRCS} )
+add_library( daemonlib STATIC ${daemonlib_SRCS} )
 
 target_link_libraries( daemonlib
-    ${KDE4_KDECORE_LIBRARY}
-    ${QT_QTDBUS_LIBRARY}
+    KF5::CoreAddons
+    Qt5::DBus
 )

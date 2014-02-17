@@ -36,7 +36,7 @@ PromptBase::PromptBase(Service *service, QObject *parent)
     m_serviceObjectPath(service->objectPath())
 {
     Q_ASSERT(service);
-    registerWithPath(service->objectPath().path() + "/prompts/" + createId());
+    registerWithPath(service->objectPath().path() + QStringLiteral( "/prompts/" ) + createId());
 }
 
 PromptBase::~PromptBase()
@@ -91,12 +91,12 @@ void SingleJobPrompt::jobResult(KJob *job)
     Q_ASSERT(job == m_job);
     // check for errors first
     if(m_job->isDismissed()) {
-        emit completed(true, "");
+        emit completed(true, QString());
     } else if(m_job->error() != BackendNoError) {
         // TODO: figure out how to handle errors gracefully.
         // FIXME; should we use KMessage here instead of KMessageBox ?
         KMessageBox::error( 0, m_job->errorMessage() );
-        emit completed(false, "");
+        emit completed(false, QString());
     } else {
         switch(m_job->type()) {
 
@@ -120,7 +120,7 @@ void SingleJobPrompt::jobResult(KJob *job)
             QDBusObjectPath result("/");
             if(ccmj->collection()) {
                 BackendCollection *coll = ccmj->collection();
-                result.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+                result.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id());
             }
 
             emitCompleted(false, qVariantFromValue(result));
@@ -133,7 +133,7 @@ void SingleJobPrompt::jobResult(KJob *job)
             QDBusObjectPath result("/");
             if(ccj->collection()) {
                 BackendCollection *coll = ccj->collection();
-                result.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+                result.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id());
             }
 
             emitCompleted(false, qVariantFromValue(result));
@@ -146,8 +146,8 @@ void SingleJobPrompt::jobResult(KJob *job)
             QDBusObjectPath result("/");
             if(cij->item()) {
                 BackendItem *item = cij->item();
-                result.setPath(serviceObjectPath().path() + "/collection/" +
-                               cij->collection()->id() + '/' + item->id());
+                result.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) +
+                               cij->collection()->id() + QChar::fromLatin1( '/' ) + item->id());
             }
 
             emitCompleted(false, qVariantFromValue(result));
@@ -248,7 +248,7 @@ void ServiceMultiPrompt::jobResult(KJob *job)
             if(ucj->result()) {
                 BackendCollection *coll = ucj->collection();
                 QDBusObjectPath path;
-                path.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+                path.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id());
                 m_result.append(path);
                 // FIXME: find out why on my 64 bit system the m_result contains one empty string despite path is non-empty
             }
@@ -261,7 +261,7 @@ void ServiceMultiPrompt::jobResult(KJob *job)
             if(lcj->result()) {
                 BackendCollection *coll = lcj->collection();
                 QDBusObjectPath path;
-                path.setPath(serviceObjectPath().path() + "/collection/" + coll->id());
+                path.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id());
                 m_result.append(path);
             }
         }
@@ -275,8 +275,8 @@ void ServiceMultiPrompt::jobResult(KJob *job)
                 BackendCollection *coll = 0;
                 // TODO: I NEED THE COLLECTION DAMMIT
                 QDBusObjectPath path;
-                path.setPath(serviceObjectPath().path() + "/collection/" + coll->id() +
-                             '/' + item->id());
+                path.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id() +
+                             QChar::fromLatin1( '/' ) + item->id());
                 m_result.append(path);
             }
         }
@@ -290,8 +290,8 @@ void ServiceMultiPrompt::jobResult(KJob *job)
                 BackendCollection *coll = 0;
                 // TODO: I NEED THE COLLECTION DAMMIT
                 QDBusObjectPath path;
-                path.setPath(serviceObjectPath().path() + "/collection/" + coll->id() +
-                             '/' + item->id());
+                path.setPath(serviceObjectPath().path() + QStringLiteral( "/collection/" ) + coll->id() +
+                             QChar::fromLatin1( '/' ) + item->id());
                 m_result.append(path);
             }
         }

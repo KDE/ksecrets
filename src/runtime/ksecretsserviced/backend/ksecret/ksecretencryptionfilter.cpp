@@ -39,7 +39,7 @@ static QCA::SymmetricKey createKeyFromPassword(const QCA::SecureArray &password,
 //         return QCA::SymmetricKey();
 //     }
 
-    QCA::PBKDF2 deriv("sha1");
+    QCA::PBKDF2 deriv( QStringLiteral( "sha1" ) );
     return deriv.makeKey(password, QCA::InitializationVector(), keyLength, 10000);
 }
 
@@ -72,8 +72,8 @@ bool KSecretEncryptionFilter::setupAlgorithms()
                                  "The hashing algorithm SHA256 is not supported by your installation.");
             return false;
         }
-        m_hash = new QCA::Hash("sha256");
-        m_mac = new QCA::MessageAuthenticationCode("hmac(sha256)", QCA::SymmetricKey());
+        m_hash = new QCA::Hash( QStringLiteral( "sha256" ) );
+        m_mac = new QCA::MessageAuthenticationCode( QStringLiteral( "hmac(sha256)" ), QCA::SymmetricKey());
         break;
 
     default:
@@ -90,7 +90,7 @@ bool KSecretEncryptionFilter::setupAlgorithms()
                                  "The encryption algorithm AES256 is not supported by your installation.");
             return false;
         }
-        m_cipher = new QCA::Cipher("aes256", QCA::Cipher::CBC, QCA::Cipher::PKCS7);
+        m_cipher = new QCA::Cipher( QStringLiteral( "aes256" ), QCA::Cipher::CBC, QCA::Cipher::PKCS7);
         break;
 
     default:

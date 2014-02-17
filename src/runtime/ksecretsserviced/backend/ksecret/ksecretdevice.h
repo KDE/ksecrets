@@ -179,8 +179,9 @@ public:
             m_closing = true;
             stream << chunk; // do recursion
         }
-        
-        B::close();
+        if ( B::metaObject()->className() ==
+             QStringLiteral( "QFile" ) )
+            QMetaObject::invokeMethod( this, "B::close" );
     }
     
     
@@ -212,8 +213,8 @@ bool KSecretDevice<B>::readMagic()
         return false;
     }
     m_dataPos = B::pos();
-    QString strMagic( m_readBuffer );
-    return strMagic == KSECRET_MAGIC;
+    QString strMagic = QString::fromUtf8( m_readBuffer );
+    return strMagic == QString::fromUtf8( KSECRET_MAGIC );
 }
 
 template <class B>

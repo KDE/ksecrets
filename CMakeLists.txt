@@ -5,7 +5,7 @@ find_package(ECM 0.0.9 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 set(REQUIRED_QT_VERSION 5.2.0)
-find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Widgets DBus)
+find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui Widgets DBus Test)
 
 set(KF5_VERSION "5.0.0")
 include(KDEInstallDirs)
@@ -19,7 +19,15 @@ include(ECMGenerateHeaders)
 find_package(QCA2 REQUIRED)
 
 if(NOT kdelibs_SOURCE_DIR)
-    find_package(KF5 ${KF5_VERSION} REQUIRED CoreAddons Service Config WindowSystem I18n)
+    find_package(KF5 ${KF5_VERSION} REQUIRED
+        CoreAddons
+        WidgetsAddons
+        Service
+        Config
+        WindowSystem
+        I18n
+        KDE4Support #KUniqueApplication in ksecretsserviced
+    )
 endif()
 
 

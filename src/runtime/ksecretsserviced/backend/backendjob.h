@@ -21,13 +21,15 @@
 #ifndef BACKENDJOB_H
 #define BACKENDJOB_H
 
-#include <QtCore/QMap>
-#include <qca.h>
-#include <qwindowdefs.h>
 #include "../jobinfostructs.h"
 #include "backendreturn.h"
-#include <kcompositejob.h>
 #include "../lib/daemonjob.h"
+
+#include <kcompositejob.h>
+
+#include <qca.h>
+
+#include <QMap>
 
 /**
  * Queued job for implementing various backend actions which need queueing.

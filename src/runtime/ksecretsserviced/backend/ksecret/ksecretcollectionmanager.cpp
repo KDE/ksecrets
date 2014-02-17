@@ -59,7 +59,7 @@ void KSecretCollectionManager::addCollection(KSecretCollection *collection)
 {
     m_collections.insert(collection->path(), collection);
     emit collectionCreated( collection );
-    m_creatingCollectionId = "";
+    m_creatingCollectionId.clear();
 }
 
 void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
@@ -67,7 +67,7 @@ void KSecretCollectionManager::slotDirectoryChanged(const QString &path)
     // list all collections in the directory and check if there's a collection
     // which we don't know yet.
     QDir dir(path);
-    QStringList entries = dir.entryList(QStringList("*.ksecret"), QDir::Files);
+    QStringList entries = dir.entryList(QStringList(QStringLiteral("*.ksecret")), QDir::Files);
     Q_FOREACH(const QString & file, entries) {
         QFileInfo fi( dir.filePath( file ) );
         // avoid double inclusion and also avoid trying to read collections that are in the process of serialization

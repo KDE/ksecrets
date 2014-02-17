@@ -24,23 +24,25 @@
 #include <ui_dialogaskcreateaclprefs.h>
 #include <acl.h>
 
-#include <kdialog.h>
+#include <QDialog>
 
 class AskCreateAclPrefsWidget;
+class QDialogButtonBox;
 
-class DialogAskCreateAclPrefs : public KDialog
+class DialogAskCreateAclPrefs : public QDialog
 {
     Q_OBJECT
 public:
-    explicit DialogAskCreateAclPrefs(QWidget* parent = 0);
+    explicit DialogAskCreateAclPrefs( QWidget* parent = 0 );
 
     void setCollectionLabel( const QString& label );
-    void setApplication(QString exePath);
+    void setApplication( QString exePath );
     
     ApplicationPermission permission() const;
 
 private:
     AskCreateAclPrefsWidget* m_widget;
+    QDialogButtonBox* m_bb;
 };
 
 class AskCreateAclPrefsWidget : public QWidget, public Ui_AskCreateAclPrefsWidget

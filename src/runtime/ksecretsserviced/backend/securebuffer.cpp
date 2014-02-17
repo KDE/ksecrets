@@ -26,6 +26,8 @@
 #include "securebuffer.h"
 #include "securebuffer_p.h"
 
+#include <QMetaMethod>
+
 SecureBuffer::SecureBuffer(QObject *parent)
     : QIODevice(parent), d(new SecureBufferPrivate(this))
 {
@@ -167,18 +169,19 @@ bool SecureBuffer::canReadLine() const
     return ::memchr(d->buf->constData() + int(pos()), '\n', int(size())) != 0 || QIODevice::canReadLine();
 }
 
-void SecureBuffer::connectNotify(const char *signal)
+void SecureBuffer::connectNotify(const QMetaMethod& signal)
 {
-    if(strcmp(signal + 1, "readyRead()") == 0 ||
-            strcmp(signal + 1, "bytesWritten(qint64)") == 0) {
+    if(strcmp(signal.methodSignature().data(), "readyRead()") == 0 ||
+            strcmp(signal.methodSignature().data(), "bytesWritten(qint64)") == 0) {
         d->signalConnectionCount++;
     }
 }
 
-void SecureBuffer::disconnectNotify(const char *signal)
+void SecureBuffer::disconnectNotify(const QMetaMethod& signal)
 {
-    if(!signal || strcmp(signal + 1, "readyRead()") == 0 ||
-            strcmp(signal + 1, "bytesWritten(qint64)") == 0) {
+    if(!signal.methodSignature().data() ||
+            strcmp(signal.methodSignature().data(), "readyRead()") == 0 ||
+            strcmp(signal.methodSignature().data(), "bytesWritten(qint64)") == 0) {
         d->signalConnectionCount--;
     }
 }
@@ -218,4 +221,3 @@ qint64 SecureBuffer::writeData(const char *data, qint64 len)
 }
 
 #include "securebuffer.moc"
-#include "securebuffer_p.moc"

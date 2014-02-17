@@ -175,12 +175,12 @@ protected:
     /**
         Called when a connection is made to one of the buffer's signals.
       */
-    void connectNotify(const char*);
+    void connectNotify(const QMetaMethod&) Q_DECL_OVERRIDE;
 
     /**
         Called when a slot is disconnected from one of the buffer's signals.
       */
-    void disconnectNotify(const char*);
+    void disconnectNotify(const QMetaMethod&) Q_DECL_OVERRIDE;
 
     /**
         Read data from the buffer.
