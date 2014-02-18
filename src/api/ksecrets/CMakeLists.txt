@@ -84,10 +84,10 @@ set_target_properties(KF5Secrets PROPERTIES VERSION   ${KWALLET_VERSION_STRING}
 )
 
 ecm_generate_headers(
-  KSecretsServiceCollection
-
-  MODULE_NAME KSecrets
-  REQUIRED_HEADERS KSecrets_HEADERS
+    KSecrets_HEADERS
+    HEADER_NAMES
+        KSecretsServiceCollection
+    REQUIRED_HEADERS KSecrets_HEADERS
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/KSecrets DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
