@@ -28,7 +28,7 @@
 #include <peer.h>
 
 #include <kstandarddirs.h>
-#include <qtest_kde.h>
+#include <QtTestWidgets>
 
 Q_DECLARE_METATYPE(BackendCollection*)
 Q_DECLARE_METATYPE(BackendItem*)
@@ -145,5 +145,5 @@ void KSecretUiTest::cleanupTestCase()
     // TODO: delete stuff so this can also be used for valgrind leak-checking
 }
 
-QTEST_KDEMAIN(KSecretUiTest, GUI)
+QTEST_MAIN(KSecretUiTest)
 #include "ksecretuitest.moc"

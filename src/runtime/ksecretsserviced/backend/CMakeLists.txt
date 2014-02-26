@@ -4,7 +4,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-#add_subdirectory( tests )
+if(BUILD_TESTS)
+add_subdirectory( tests )
+endif()
 
 set( ksecretservice_backend_SRCS
     # Backend
@@ -30,7 +32,11 @@ set( ksecretservice_backend_SRCS
 add_library( ksecretservicebackend STATIC ${ksecretservice_backend_SRCS} )
 
 target_link_libraries( ksecretservicebackend
+    daemonlib
+    ksecretserviceui
     KF5::CoreAddons
+    KF5::I18n
+    KF5::KDE4Support #KGlobal+KStandardDirs
     Qt5::Core
     Qt5::Widgets
     ${QCA2_LIBRARIES}

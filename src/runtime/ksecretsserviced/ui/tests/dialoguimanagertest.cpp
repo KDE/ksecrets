@@ -21,7 +21,7 @@
 #include "dialoguimanagertest.h"
 
 #include <QtCrypto>
-#include <qtest_kde.h>
+#include <QtTestWidgets>
 
 #include "../dialoguimanager.h"
 
@@ -60,5 +60,5 @@ void DialogUiManagerTest::cleanupTestCase()
 {
 }
 
-QTEST_KDEMAIN(DialogUiManagerTest, GUI)
+QTEST_MAIN(DialogUiManagerTest)
 #include "dialoguimanagertest.moc"

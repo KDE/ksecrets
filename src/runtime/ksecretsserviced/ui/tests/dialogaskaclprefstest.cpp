@@ -22,7 +22,7 @@
 #include "../dialoguimanager.h"
 
 #include <QtCrypto>
-#include <qtest_kde.h>
+#include <QtTestWidgets>
 
 void DialogAskAclPrefsTest::initTestCase()
 {
@@ -47,5 +47,5 @@ void DialogAskAclPrefsTest::cleanupTestCase()
 }
 
 
-QTEST_KDEMAIN(DialogAskAclPrefsTest, GUI)
+QTEST_MAIN(DialogAskAclPrefsTest)
 #include "dialogaskaclprefstest.moc"

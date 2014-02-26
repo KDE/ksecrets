@@ -20,8 +20,9 @@ add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 add_subdirectory(icons)
 add_subdirectory(kcm)
 #add_subdirectory(applet)
+if(BUILD_TESTS)
 add_subdirectory(tests)
-
+endif()
 
 SET( ksecretsync_SRCS 
     statuswidget.cpp 

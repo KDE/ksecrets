@@ -36,8 +36,8 @@ QTEST_MAIN(KSecretServiceTest)
 
 using namespace KSecretsService;
 
-#define DONT_TEST_CREATEANDDELETE 
-#define DONT_TEST_RENAMECOLLECTION 
+#define DONT_TEST_CREATEANDDELETE
+#define DONT_TEST_RENAMECOLLECTION
 //#define DONT_TEST_CREATEITEM 
 
 KSecretServiceTest::KSecretServiceTest(QObject* parent): QObject(parent)

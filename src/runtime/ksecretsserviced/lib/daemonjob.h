@@ -21,7 +21,7 @@
 #ifndef DAEMONJOB_H
 #define DAEMONJOB_H
 
-#include <kcompositejob.h>
+#include <KCompositeJob>
 
 class DaemonJob : public KCompositeJob {
     Q_OBJECT
@@ -34,7 +34,7 @@ public:
     /**
      * This overrides KCompositeJob::addSubjob only to make it public
      */
-    bool addSubjob(KJob*);
+    bool addSubjob(KJob*) Q_DECL_HIDDEN;
 
 private Q_SLOTS:
     void slotJobFinished(KJob*);

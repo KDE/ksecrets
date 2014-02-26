@@ -22,7 +22,7 @@
 
 #include <QtCrypto>
 #include <QtTest/QTestEventLoop>
-#include <qtest_kde.h>
+#include <QtTest>
 
 #include "../nouimanager.h"
 
@@ -137,5 +137,5 @@ void NoUiManagerTest::cleanupTestCase()
 {
 }
 
-QTEST_KDEMAIN(NoUiManagerTest, GUI)
+QTEST_MAIN(NoUiManagerTest)
 #include "nouimanagertest.moc"

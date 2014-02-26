@@ -141,6 +141,7 @@ void OpenSessionJob::start()
 
 
             QCA::KeyGenerator keygen;
+
             dhDlgroup = new QCA::DLGroup(keygen.createDLGroup(QCA::IETF_1024));
             if ( dhDlgroup->isNull() ) {
                 QString errorTxt = i18n("Cannot create DL Group for dbus session open");

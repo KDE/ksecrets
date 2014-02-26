@@ -3,7 +3,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../api/ksecrets
 )
 
-#add_subdirectory( tests )
+if(BUILD_TESTS)
+add_subdirectory( tests )
+endif()
 
 set( ksecretservice_frontend_SRCS
     # fd.o Secret Storage daemon

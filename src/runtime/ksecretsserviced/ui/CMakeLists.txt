@@ -4,7 +4,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-#add_subdirectory( tests )
+if(BUILD_TESTS)
+add_subdirectory( tests )
+endif()
 
 set( ksecretservice_ui_SRCS
     abstractuijobs.cpp
