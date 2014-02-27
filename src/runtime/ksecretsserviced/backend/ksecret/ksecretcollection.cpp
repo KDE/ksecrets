@@ -592,10 +592,12 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     
     Q_ASSERT( m_encryptionFilter != 0 );
 
+    qDebug() << "About to create collection file at " << m_path;
     KSecretDevice< QSaveFile > device( m_path, m_encryptionFilter );
-    if ( !device.open( QIODevice::ReadWrite ) ) {
+    if ( !device.open( QIODevice::WriteOnly ) ) {
         errorMessage = i18nc("Error message: secret collection file could not be created",
                              "The disk may be full");
+        qDebug() << "Cannot create file at " << m_path;
         return false;
     }
     
@@ -607,12 +609,14 @@ bool KSecretCollection::serialize(QString &errorMessage) const
     if ( !ostream.isValid() ) {
         errorMessage = i18nc("Error message: secret collection contents could not be written to disk",
                              "The disk may be full");
+        qDebug() << "Cannot write into output stream for file at " << m_path;
         return false;
     }
     
     if ( !device.commit() ) {
         errorMessage = i18nc("Error message: secret collection contents could not be written to disk",
                              "The disk may be full");
+        qDebug() << "Cannot commit into file at " << m_path;
         return false;
     }
     
