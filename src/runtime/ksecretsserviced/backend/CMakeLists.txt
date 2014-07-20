@@ -36,7 +36,7 @@ target_link_libraries( ksecretservicebackend
     ksecretserviceui
     KF5::CoreAddons
     KF5::I18n
-    KF5::KDE4Support #KGlobal+KStandardDirs
+    KF5::KDELibs4Support #KGlobal+KStandardDirs
     Qt5::Core
     Qt5::Widgets
     ${QCA2_LIBRARIES}

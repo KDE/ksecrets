@@ -101,7 +101,7 @@ QDBusObjectPath Service::createCollection(const QMap<QString, QVariant> &propert
                                           const QString& alias,
                                           QDBusObjectPath &prompt)
 {
-#define COLLECTION_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Collection."name)
+#define COLLECTION_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Collection."#name)
 
     QString label;
     if ( alias.isEmpty() ) {

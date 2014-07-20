@@ -16,7 +16,7 @@ target_link_libraries( ksecret_collection_test
     ksecretservicebackend
     ksecretserviceui
     daemonlib
-    KF5::KDE4Support #KGlobal+KStandardDirs
+    KF5::KDELibs4Support #KGlobal+KStandardDirs
     Qt5::Test
 )
 add_test( KSecretCollectionTest ksecret_collection_test )
@@ -27,7 +27,7 @@ target_link_libraries( ksecret_collection_ui_test
     ksecretservicebackend
     ksecretserviceui
     daemonlib
-    KF5::KDE4Support #KGlobal+KStandardDirs
+    KF5::KDELibs4Support #KGlobal+KStandardDirs
     Qt5::Test
 )
 add_test( KSecretCollectionUiTest ksecret_collection_ui_test )

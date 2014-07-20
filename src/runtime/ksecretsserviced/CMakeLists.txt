@@ -29,7 +29,7 @@ target_link_libraries( ksecretsserviced
     ksecretservicefrontend
     ksecretserviceui
     KF5::Secrets
-    KF5::KDE4Support
+    KF5::KDELibs4Support
 )
 
 install( TARGETS ksecretsserviced ${INSTALL_TARGETS_DEFAULT_ARGS} )

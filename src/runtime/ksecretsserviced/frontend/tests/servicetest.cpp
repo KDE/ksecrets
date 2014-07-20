@@ -47,8 +47,8 @@
  * and not over the dbus and calling an eventually running daemon
  */
 #define DBUS_SERVICE "org.freedesktop.secrets.frontend.test"
-#define COLLECTION_PROPERTY(name) "org.freedesktop.Secret.Collection."name
-#define ITEM_PROPERTY(name) "org.freedesktop.Secret.Item."name
+#define COLLECTION_PROPERTY(name) "org.freedesktop.Secret.Collection."#name
+#define ITEM_PROPERTY(name) "org.freedesktop.Secret.Item."#name
 
 void ServiceTest::initTestCase()
 {

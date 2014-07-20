@@ -185,7 +185,7 @@ QDBusObjectPath Collection::createItem(const QMap<QString, QVariant> &properties
         return QDBusObjectPath("/");
     }
 
-#define ITEM_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Item."name)
+#define ITEM_PROPERTY(name) QStringLiteral("org.freedesktop.Secret.Item."#name)
 
     if(properties.contains(ITEM_PROPERTY("Locked"))) {
         locked = properties[ITEM_PROPERTY("Locked")].toBool();

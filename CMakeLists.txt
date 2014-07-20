@@ -28,13 +28,13 @@ if(NOT kdelibs_SOURCE_DIR)
         Config
         WindowSystem
         I18n
-        KDE4Support #KUniqueApplication in ksecretsserviced
+        KDELibs4Support #KUniqueApplication in ksecretsserviced
     )
 endif()
 
 
 add_subdirectory(src)
 
-if("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+#if("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
   feature_summary(WHAT ALL   FATAL_ON_MISSING_REQUIRED_PACKAGES)
-endif()
+#endif()

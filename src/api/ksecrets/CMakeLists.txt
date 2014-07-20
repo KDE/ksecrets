@@ -4,9 +4,9 @@ add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 
 include_directories(${QCA2_INCLUDE_DIR})
 
-ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KWALLET
-                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kwallet_version.h"
-                        PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5WalletConfigVersion.cmake")
+ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS
+                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_version.h"
+                        PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5SecretsConfigVersion.cmake")
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${CMAKECONFIG_INSTALL_PREFIX}/KF5Secrets")
@@ -78,8 +78,8 @@ target_link_libraries(KF5Secrets PUBLIC
     KF5::Service
 )
 
-set_target_properties(KF5Secrets PROPERTIES VERSION   ${KWALLET_VERSION_STRING}
-                                         SOVERSION ${KWALLET_SOVERSION}
+set_target_properties(KF5Secrets PROPERTIES VERSION   ${KSECRETS_VERSION_STRING}
+                                         SOVERSION ${KSECRETS_SOVERSION}
                                          EXPORT_NAME Secrets
 )
 
@@ -90,7 +90,7 @@ ecm_generate_headers(
     REQUIRED_HEADERS KSecrets_HEADERS
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/KSecrets DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
+#install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/KSecrets DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
 
 install(TARGETS KF5Secrets EXPORT KF5SecretsTargets ${INSTALL_TARGETS_DEFAULT_ARGS})
 
