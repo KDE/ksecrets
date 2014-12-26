@@ -20,6 +20,7 @@ Name[sk]=KSecretsService Secret Sync QML
 Name[sv]=KDE Secret Service-synkronisering QML
 Name[tr]=KSecretsService Gizli Eşzamn. QML
 Name[uk]=Засіб синхронізації паролів KSecretsService на основі QML
+Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
 Comment[bs]=KSecretsService sinhronizacijski alat
 Comment[ca]=Eina de sincronització del KSecretService
@@ -41,6 +42,7 @@ Comment[sk]=Nástroj synchronizácie KSecretService
 Comment[sv]=KDE Secret Service-synkroniseringsverktyg
 Comment[tr]=KSecretsService eşzamanlama aracı
 Comment[uk]=Засіб синхронізації KSecretsService
+Comment[x-test]=xxKSecretsService synchronization toolxx
 Icon=kwalletmanager
 
 X-Plasma-API=declarativeappletscript
