@@ -54,12 +54,12 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
     }
 
     m_mode = ModeServer;
-    
+
     if ( algorithm.compare( QString::fromLatin1( AlgorithmPlain ) ) == 0 ) {
         qDebug() << "Initializing a PLAIN (noencrypting) server codec";
     }
     else {
-    
+
         static QRegExp rxAlgorithm( QStringLiteral( "^dh-ietf(\\d+)-([^-]+)-([^-]+)-([^-]+)$" ),
                                 Qt::CaseInsensitive);
 
@@ -153,7 +153,7 @@ bool SecretCodec::initServer(const QString& algorithm, const QVariant& input, QV
             }
         }
     }
-    
+
     return false;
 }
 
@@ -165,9 +165,9 @@ bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutp
         Q_ASSERT(0);
         return false;
     }
-    
+
     m_mode = ModeClient;
-    
+
     if ( algorithm.compare( QString::fromLatin1( AlgorithmPlain ) ) == 0 ) {
         qDebug() << "Initializing a PLAIN (noencrypting) client codec";
     }
@@ -175,7 +175,7 @@ bool SecretCodec::initClient(const QString& algorithm, const QVariant serverOutp
         // TODO: implement other cases here
         Q_ASSERT(0);
     }
-    
+
     return true;
 }
 
@@ -207,7 +207,7 @@ bool SecretCodec::decryptServer(const QCA::SecureArray& encrypted, const QByteAr
 {
     Q_ASSERT( m_mode == ModeServer );
     if (m_cipher) {
-        if(! encryptedParams.size() == m_cipher->blockSize()) {
+        if(encryptedParams.size() != m_cipher->blockSize()) {
             return false;
         }
         QCA::InitializationVector iv(encryptedParams);
