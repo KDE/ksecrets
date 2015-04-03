@@ -22,6 +22,7 @@ Name[tr]=KSecretsService Gizli Eşzamn. QML
 Name[uk]=Засіб синхронізації паролів KSecretsService на основі QML
 Name[x-test]=xxKSecretsService Secret Sync QMLxx
 Comment=KSecretsService synchronization tool
+Comment[ast]=Ferramienta de sincronización KSecretsService
 Comment[bs]=KSecretsService sinhronizacijski alat
 Comment[ca]=Eina de sincronització del KSecretService
 Comment[ca@valencia]=Eina de sincronització del KSecretsService
