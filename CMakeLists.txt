@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-find_package(ECM 0.0.9 REQUIRED NO_MODULE)
+project(KSecrets)
+set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
+include(FeatureSummary)
+find_package(ECM 5.11.0 NO_MODULE)
+set_package_properties(ECM PROPERTIES TYPE REQUIRED DESCRIPTION "Extra CMake Modules." URL "https://projects.kde.org/projects/kdesupport/extra-cmake-modules")
+feature_summary(WHAT REQUIRED_PACKAGES_NOT_FOUND FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(REQUIRED_QT_VERSION 5.2.0)
 find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui Widgets DBus Test)
 
 option(BUILD_TESTS "Build KSecrets with unit tests" ON)
 
-set(KF5_VERSION "4.96.0")
+set(KF5_VERSION "5.12.0")
 include(KDEInstallDirs)
 include(KDEFrameworkCompilerSettings)
 include(KDECMakeSettings)
@@ -17,8 +23,6 @@ include(FeatureSummary)
 include(GenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
-
-find_package(QCA2 REQUIRED)
 
 if(NOT kdelibs_SOURCE_DIR)
     find_package(KF5 ${KF5_VERSION} REQUIRED
@@ -28,7 +32,6 @@ if(NOT kdelibs_SOURCE_DIR)
         Config
         WindowSystem
         I18n
-        KDELibs4Support #KUniqueApplication in ksecretsserviced
     )
 endif()
 
