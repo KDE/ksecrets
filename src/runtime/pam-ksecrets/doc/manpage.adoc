@@ -1,0 +1,9 @@
+
+
+.NOTE for ArchLinux users.
+
+In order to avoid password changing problems, you should add the module pam_ksecret.so in all the modules containing the _password_ token:
+
+  update /etc/pam.d/passwd
+
+
