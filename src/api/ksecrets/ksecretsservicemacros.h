@@ -21,12 +21,12 @@
 #ifndef KSECRETSSERVICECLIENTMACROS_H
 #define KSECRETSSERVICECLIENTMACROS_H
 
-#include <kdemacros.h>
+// #include <kdemacros.h>
 
 /**
  * @def KDESECRETSSERVICE_EXPORT
  * @ingroup KDEMacros
- * 
+ *
  * This macro marks the attached symbol as shared, so it can be used
  * from the outside of its library
  */
