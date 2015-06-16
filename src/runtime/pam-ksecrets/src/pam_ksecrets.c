@@ -17,6 +17,10 @@ int kss_can_change_password(pam_handle_t *pamh) {
   return PAM_IGNORE;
 }
 
+int kss_derive_auth_key( pam_handle_t *pamh) {
+  return PAM_SUCCESS;
+}
+
 int kss_change_password(
     pam_handle_t *pamh) {
   const char *password;
@@ -31,14 +35,14 @@ int kss_change_password(
   if (0 != password) {
     pam_syslog(pamh, LOG_INFO, "pam_sm_authenticate got the password, going to update kernel keyring.");
   } else {
+    /* FIXME we should return some error to indicate this failure upon session
+     * opening */
     pam_syslog(pamh, LOG_WARNING, "pam_sm_authenticate got NULL password! KSecret Service may prompt a password later.");
+    return kss_derive_auth_key(pamh);
   }
   return PAM_SUCCESS;
 }
 
-int kss_derive_auth_key( pam_handle_t *pamh) {
-  return PAM_SUCCESS;
-}
 
 PAM_EXTERN int pam_sm_authenticate(
     pam_handle_t *pamh,

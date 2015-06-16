@@ -1,0 +1,56 @@
+= pam-ksecrets PAM module =
+
+This module aims to handle secrets store unlocking by automatically using the
+user's linux session password. The module derives a key from the user's
+password and encrypts the store with it. When user changes the password, the
+module automatically re-encrypts the store with the given password.
+
+
+== Installing ==
+
+.IMPORTANT.
+====
+Before using, the user session must be restarted in order to correctly derive the secret store key from user's password.
+====
+
+.NOTE for ArchLinux users.
+====
+In order to avoid password changing problems, you should add the module
+pam_ksecrets.so in all the modules containing the _password_ token:
+
+  update /etc/pam.d/passwd
+====
+
+== Operation ==
+
+This module handles secret keys generation. Upon sucessful cration, the keys
+are put into the user's session kernel keyring. The ksecretsd daemon will find
+the keys in the keyring and pick them-up in order to decrypt the secrets.
+
+Use cases :
+
+- session opening
+- user changes the password
+
+=== Session opening ===
+
+The pam-ksecrets module will be called by PAM via the pam_sm_setcred entry point.
+
+Two keys will be derived from the password, one for secrets file
+encryption/decryption and the other for the MAC check. The keys are inserted
+int the user's kernely keyring.
+
+=== User changes the password ===
+
+The new password will be used to derive two new keys.
+The existing secrets will be decrypted using the old keys then re-encrypted
+with the new keys. The file will be updated accordingly. The kernel keyring keys will be replaced.
+The ksecretsd daemon would detect file change and will reload it next time
+secrets are needed. It'll use the new keys from the keyring to correctly
+decrypt the file.
+
+It results from this that the secrets file handling routines should be placed
+in a library, shared by the pam module and the ksecretsd daemon.
+
+= References =
+ http://stackoverflow.com/questions/14548748/encrypting-a-file-from-a-password-using-libgcrypt 

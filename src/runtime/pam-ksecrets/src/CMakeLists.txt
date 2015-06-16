@@ -13,6 +13,7 @@ set(pam_ksecret_SRC
 add_library(pam_ksecrets SHARED ${pam_ksecret_SRC})
 set_target_properties(pam_ksecrets PROPERTIES PREFIX "")
 target_link_libraries(pam_ksecrets
+  ksecretslib
   ${PAM_LIBRARIES})
 
 install(TARGETS pam_ksecrets DESTINATION /${CMAKE_INSTALL_LIBDIR}/security)
