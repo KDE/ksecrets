@@ -18,3 +18,38 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "ksecrets-crypt.h"
+
+#include <syslog.h>
+
+/*  http://stackoverflow.com/questions/14548748/encrypting-a-file-from-a-password-using-libgcrypt */
+
+#define KSS_LOG_INFO (LOG_AUTH | LOG_INFO)
+
+bool kss_set_credentials(const char* password)
+{
+  syslog(KSS_LOG_INFO, "kss_set_credentials");
+  if (0 == password) {
+    syslog(KSS_LOG_INFO, "NULL password given. ksecrets will not be available.");
+    return false;
+  }
+
+  return true;
+}
+
+void kss_delete_credentials()
+{
+  syslog(KSS_LOG_INFO, "kss_delete_credentials");
+}
+
+bool kss_can_change_password() {
+  /* nothing to do for the moment */
+  syslog(KSS_LOG_INFO, "kss_can_change_password");
+  return true;
+}
+
+bool kss_change_password(const char* password)
+{
+  syslog(LOG_INFO, "kss_change_password");
+  return true;
+}

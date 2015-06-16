@@ -34,11 +34,16 @@ Use cases :
 
 === Session opening ===
 
-The pam-ksecrets module will be called by PAM via the pam_sm_setcred entry point.
+The pam-ksecrets module will be called by PAM via the pam_sm_setcred entry
+point.
 
 Two keys will be derived from the password, one for secrets file
 encryption/decryption and the other for the MAC check. The keys are inserted
 int the user's kernely keyring.
+
+The entry point pam_sm_setcred is used instead of the pam_sm_authenticate to
+prevent user login problems in case of crypt operations failures. In these
+case, user should still be able to open the session.
 
 === User changes the password ===
 
