@@ -22,7 +22,8 @@ set_target_properties(pam_ksecrets PROPERTIES PREFIX "")
 target_link_libraries(pam_ksecrets
   ksecrets-crypt
   ${LIBGCRYPT_LIBRARIES}
-  ${PAM_LIBRARIES})
+  ${PAM_LIBRARIES}
+  keyutils)
 
 install(TARGETS pam_ksecrets DESTINATION /${CMAKE_INSTALL_LIBDIR}/security)
 

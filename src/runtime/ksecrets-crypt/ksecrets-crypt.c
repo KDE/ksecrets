@@ -28,12 +28,10 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <string.h>
+#include <keyutils.h>
 
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
-
-/*  http://stackoverflow.com/questions/14548748/encrypting-a-file-from-a-password-using-libgcrypt
- */
 
 #define GCRYPT_VERSION "1.6.0"
 
@@ -223,10 +221,33 @@ bool kss_derive_keys(const char* user_name, const char* password,
 
 bool kss_store_keys(const char* encryption_key, const char* mac_key)
 {
+  key_serial_t ks;
+  ks = add_key("user", "ksecrets:encrypting", encryption_key,
+      KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
+  if (-1 == ks) {
+    syslog(KSS_LOG_ERR,
+        "ksecrets: cannot store encryption key in kernel keyring: errno=%d",
+        errno);
+    return false;
+  }
+  syslog(KSS_LOG_DEBUG,
+      "ksecrets: encrpyting key now in kernel keyring with id %d", ks);
+
+  ks = add_key("user", "ksecrets:mac", mac_key,
+      KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
+  if (-1 == ks) {
+    syslog(KSS_LOG_ERR,
+        "ksecrets: cannot store mac key in kernel keyring: errno=%d",
+        errno);
+    return false;
+  }
+  syslog(KSS_LOG_DEBUG,
+      "ksecrets: mac key now in kernel keyring with id %d", ks);
   return true;
 }
 
-bool kss_set_credentials(const char* user_name, const char* password) {
+bool kss_set_credentials(const char* user_name, const char* password)
+{
   char encryption_key[KSECRETS_KEYSIZE];
   char mac_key[KSECRETS_KEYSIZE];
   if (!kss_derive_keys(user_name, password, encryption_key, mac_key))
