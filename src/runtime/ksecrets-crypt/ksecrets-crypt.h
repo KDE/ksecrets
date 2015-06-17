@@ -23,7 +23,7 @@
 
 #include <stdbool.h>
 
-bool kss_set_credentials(const char*);
+bool kss_set_credentials(const char* user_name, const char* password);
 
 void kss_delete_credentials();
 

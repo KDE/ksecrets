@@ -17,6 +17,7 @@ const char* password;
 PAM_EXTERN int pam_sm_authenticate(
     pam_handle_t* pamh, int flags, int argc, const char** argv)
 {
+  pam_syslog(pamh, LOG_INFO, "pam_sm_authenticate flags=%X", flags);
   UNUSED(flags);
   UNUSED(argc);
   UNUSED(argv);
@@ -37,12 +38,19 @@ PAM_EXTERN int pam_sm_setcred(
 {
   UNUSED(argc);
   UNUSED(argv);
-  pam_syslog(pamh, LOG_INFO, "pam_sm_setcred flags=%X, argc=%d", flags, argc);
+  pam_syslog(pamh, LOG_INFO, "pam_sm_setcred flags=%X", flags);
   if (flags & PAM_ESTABLISH_CRED) {
     if (0 == password)
       return PAM_CRED_UNAVAIL;
 
-    if (!kss_set_credentials(password)) {
+    const char* user_name;
+    user_name = 0;
+    int result = pam_get_item(pamh, PAM_USER, (const void**)&user_name);
+    if (result != PAM_SUCCESS) {
+      pam_syslog(pamh, LOG_ERR, "Couldn't get password %s",
+          pam_strerror(pamh, result));
+    }
+    if (!kss_set_credentials(user_name, password)) {
       pam_syslog(pamh, LOG_ERR, "ksecrets credentials could not be set.");
       return PAM_CRED_ERR;
     }
