@@ -62,7 +62,7 @@ OpenSessionJob* DBusSession::openSession()
     return openSessionJob;
 }
 
-OpenSessionJob::OpenSessionJob(QObject* parent): 
+OpenSessionJob::OpenSessionJob(QObject* parent):
             KJob(parent),
             sessionIf(0),
             serviceIf(0),
@@ -154,7 +154,7 @@ void OpenSessionJob::start()
                 dhPrivkey = new QCA::PrivateKey(keygen.createDH(*dhDlgroup));
                 QCA::PublicKey dhPubkey(*dhPrivkey);
                 QByteArray dhBytePub(dhPubkey.toDH().y().toArray().toByteArray());
-                
+
                 QDBusPendingReply< QDBusVariant, QDBusObjectPath > openSessionReply = serviceIf->OpenSession(
                     DBusSession::encryptionAlgorithm,
                     QDBusVariant(dhBytePub)
@@ -192,11 +192,11 @@ void OpenSessionJob::slotOpenSessionFinished(QDBusPendingCallWatcher* watcher)
         QDBusObjectPath sessionPath = reply.argumentAt<1>();
         qDebug() << "SESSION path is " << sessionPath.path();
         sessionIf = new OrgFreedesktopSecretSessionInterface( SERVICE_NAME, sessionPath.path(), QDBusConnection::sessionBus() );
-        
+
         connect( serviceIf, SIGNAL(CollectionChanged(const QDBusObjectPath &)), this, SLOT(slotCollectionChanged(const QDBusObjectPath&)) );
         connect( serviceIf, SIGNAL(CollectionCreated(const QDBusObjectPath &)), this, SLOT(slotCollectionCreated(const QDBusObjectPath&)) );
         connect( serviceIf, SIGNAL(CollectionDeleted(const QDBusObjectPath &)), this, SLOT(slotCollectionDeleted(const QDBusObjectPath&)) );
-        
+
         setError(0);
         setErrorText( i18n("OK") );
         emitResult();

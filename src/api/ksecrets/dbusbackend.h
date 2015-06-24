@@ -39,24 +39,24 @@ class OrgFreedesktopSecretItemInterface;
 class QDBusPendingCallWatcher;
 
 namespace KSecretsService {
-    
+
 class OpenSessionJob : public KJob {
     Q_OBJECT
 public:
     explicit OpenSessionJob( QObject *parent =0 );
     virtual ~OpenSessionJob();
-    
+
     virtual void start();
-    
+
     OrgFreedesktopSecretServiceInterface *serviceInterface() const;
     OrgFreedesktopSecretSessionInterface *sessionInterface() const;
-    
+
 private Q_SLOTS:
     void slotOpenSessionFinished(QDBusPendingCallWatcher*);
     void slotCollectionCreated( const QDBusObjectPath& );
     void slotCollectionDeleted( const QDBusObjectPath& );
     void slotCollectionChanged( const QDBusObjectPath& );
-    
+
 private:
     friend class DBusSession;
     OrgFreedesktopSecretSessionInterface *sessionIf;
@@ -69,7 +69,7 @@ private:
 /**
  * Current implementation of the client API uses the public DBus interface exposed by the
  * daemon. As such, it'll allow this library to interface with gnome-keyring if needed
- * 
+ *
  * NOTE: this class is not intended to be part of the client public API
  */
 class DBusSession {
@@ -79,7 +79,7 @@ public:
      * This @return a job allowing connection to the KSecretsService daemon via dbus
      */
     static OpenSessionJob * openSession();
-    
+
     static OrgFreedesktopSecretPromptInterface * createPromptIf( const QDBusObjectPath &path );
     static OrgFreedesktopSecretCollectionInterface * createCollectionIf( const QDBusObjectPath &path );
     static OrgFreedesktopSecretItemInterface * createItemIf( const QDBusObjectPath &path );
@@ -93,14 +93,14 @@ public:
      * @return true if the secret struct was successfully decrypted
      */
     static bool decrypt( const DBusSecretStruct &secretStruct, QVariant& value );
-    
+
 private:
     friend class OpenSessionJob;
 
     DBusSession();
 
     QEventLoopLocker locker;
-    
+
     static const QString        encryptionAlgorithm;
     static OpenSessionJob       *openSessionJob;
 };
