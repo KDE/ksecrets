@@ -5,4 +5,4 @@ KSecretsService client API
 This folder contains the client API of the KSecretsService infrastructure.
 KDE applications are supposed to use this API when storing/retrieving their secrets.
 Behind the scenes, this API will connect whatever service on the DBus implements the freedesktop.org secrets API.
-On a KDE environment, this would be ksecretsserviced but gnome-keyring is also known for implementing this API.
+On a KDE environment, this would be ksecretsd but gnome-keyring is also known for implementing this API.
