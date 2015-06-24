@@ -28,7 +28,7 @@
 #include <QtCore/QString>
 
 namespace KSecretsService {
-    
+
 /**
  * @internal
  * This is the basic Secret structure exchanged via the dbus API

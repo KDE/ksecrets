@@ -37,7 +37,7 @@ public:
 
     bool isValid() const;
     OrgFreedesktopSecretItemInterface* itemIf() const { return _itemIf; }
-    
+
 private:
     OrgFreedesktopSecretItemInterface   *_itemIf;
 };

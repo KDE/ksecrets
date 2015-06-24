@@ -47,7 +47,7 @@ class WriteCollectionPropertyJobPrivate;
 class ChangeCollectionPasswordJobPrivate;
 class LockCollectionJobPrivate;
 class UnlockCollectionJobPrivate;
-    
+
 class Collection;
 typedef QMap< QString, QString > QStringStringMap;
 
@@ -57,7 +57,7 @@ typedef QMap< QString, QString > QStringStringMap;
  * object is firstly instantiated but not yet connected to the back-end waiting
  * for it's first real use, indicated by some method call. All these methods
  * calls would return a CollectionJob inheritor
- * 
+ *
  * @note this class is for internal use only and should not be used by client applications
  */
 class KSECRETSSERVICE_EXPORT CollectionJob : public KCompositeJob {
@@ -84,12 +84,12 @@ public:
      * Get a pointer to the collection which started this job
      */
     Collection *collection() const;
-    
+
     /**
      * This override is intended to make it public and as such let subjob additions from other classes in this client implementation
      */
     virtual bool addSubjob( KJob* ); // override
-    
+
 protected:
     /**
      * Request job abort on error
@@ -97,17 +97,17 @@ protected:
      * @param errTxt is the internationalized error message user might see
      */
     void finishedWithError( CollectionError err, const QString &errTxt );
-    
+
     /**
      * Request job finish without error condition
      */
     void finishedOk();
-    
+
     /**
      * Start the actual collection search. Current implementation would trigger DBus connection to the daemon
      */
     virtual void startFindCollection();
-    virtual void slotResult( KJob* job ); /// override  of the KCompositeJob::slotResult 
+    virtual void slotResult( KJob* job ); /// override  of the KCompositeJob::slotResult
     virtual void unlockCollection();
     virtual void onFindCollectionFinished();
 
@@ -123,13 +123,13 @@ class KSECRETSSERVICE_EXPORT DeleteCollectionJob : public CollectionJob {
 public:
     explicit DeleteCollectionJob( Collection* collection, QObject* parent =0 );
     virtual ~DeleteCollectionJob();
-    
+
     virtual void start();
 
 protected Q_SLOTS:
     virtual void onFindCollectionFinished();
     void deleteIsDone( CollectionJob::CollectionError error, const QString &errorString );
-    
+
 private:
     QSharedPointer< DeleteCollectionJobPrivate > d;
 };
@@ -140,7 +140,7 @@ class KSECRETSSERVICE_EXPORT FindCollectionJob : public CollectionJob {
 public:
     explicit FindCollectionJob( Collection *collection, QObject *parent =0 );
     virtual ~FindCollectionJob();
-    
+
     virtual void start();
     virtual void foundCollection();
     virtual void createdCollection();
@@ -155,20 +155,20 @@ class KSECRETSSERVICE_EXPORT ListCollectionsJob : public KCompositeJob {
 public:
     ListCollectionsJob();
     virtual ~ListCollectionsJob();
-    
+
     virtual void start();
-    
+
     const QStringList &collections() const;
 
     /**
      * This override is intended to make it public and as such let subjob additions from other classes in this client implementation
      */
     virtual bool addSubjob( KJob* ); // override
-    
+
 protected Q_SLOTS:
     void slotListCollectionsDone();
     void slotListCollectionsError();
-    
+
 private:
     friend class ListCollectionsJobPrivate;
     QSharedPointer< ListCollectionsJobPrivate > d;
@@ -180,15 +180,15 @@ class KSECRETSSERVICE_EXPORT RenameCollectionJob : public CollectionJob {
 public:
     RenameCollectionJob( Collection *coll, const QString& newName, QObject *parent =0 );
     virtual ~RenameCollectionJob();
-    
+
     virtual void start();
 
 protected:
     virtual void onFindCollectionFinished();
-    
+
 protected Q_SLOTS:
     void renameIsDone( CollectionJob::CollectionError, const QString& );
-    
+
 private:
     friend class RenameCollectionJobPrivate;
     QSharedPointer< RenameCollectionJobPrivate > d;
@@ -200,7 +200,7 @@ class KSECRETSSERVICE_EXPORT SearchCollectionItemsJob : public CollectionJob {
 public:
     explicit SearchCollectionItemsJob( Collection* collection, const QStringStringMap &attributes, QObject *parent =0 );
     virtual ~SearchCollectionItemsJob();
-    
+
     typedef QExplicitlySharedDataPointer< SecretItem > Item;
     typedef QList< Item > ItemList;
     ItemList items() const;
@@ -220,14 +220,14 @@ class KSECRETSSERVICE_EXPORT SearchCollectionSecretsJob : public CollectionJob {
 public:
     explicit SearchCollectionSecretsJob( Collection* collection, const QStringStringMap &attributes, QObject* parent =0 );
     virtual ~SearchCollectionSecretsJob();
-    
+
     virtual void start();
     QList< Secret >  secrets() const;
-    
+
 protected Q_SLOTS:
     virtual void onFindCollectionFinished();
     void searchIsDone( CollectionJob::CollectionError, const QString& );
-    
+
 private:
     friend class SearchCollectionSecretsJobPrivate;
     QSharedPointer<SearchCollectionSecretsJobPrivate> d;
@@ -239,11 +239,11 @@ class KSECRETSSERVICE_EXPORT CreateCollectionItemJob : public CollectionJob {
 public:
     explicit CreateCollectionItemJob( Collection* collection, const QString& label, const QMap< QString, QString >& attributes, const Secret& secret, CreateItemOptions options = DoNotReplaceExistingItem );
     virtual ~CreateCollectionItemJob();
-    
+
     virtual void start();
     virtual void onFindCollectionFinished();
     SecretItem * item() const;
-    
+
 private:
     friend class CreateCollectionItemJobPrivate;
     QSharedPointer< CreateCollectionItemJobPrivate > d;
@@ -258,11 +258,11 @@ public:
 
     virtual void start();
     virtual void onFindCollectionFinished();
-    
+
     typedef QExplicitlySharedDataPointer< SecretItem > Item;
     typedef QList< Item > ItemList;
     ItemList items() const;
-    
+
 private:
     friend class ReadCollectionItemsJobPrivate;
     QSharedPointer< ReadCollectionItemsJobPrivate > d;
@@ -271,17 +271,17 @@ private:
 class KSECRETSSERVICE_EXPORT ReadCollectionPropertyJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(ReadCollectionPropertyJob)
-    
+
     explicit ReadCollectionPropertyJob( Collection *collection, const char *propName, QObject *parent =0 );
     ReadCollectionPropertyJob( Collection *collection, void (Collection::*propReadMember)( ReadCollectionPropertyJob* ), QObject *parent =0 );
     virtual ~ReadCollectionPropertyJob();
     friend class Collection; // only Collection class can instantiated us
 public:
-    
+
     virtual void start();
     virtual void onFindCollectionFinished();
     const QVariant& propertyValue() const;
-    
+
 private:
     friend class ReadCollectionPropertyJobPrivate;
     QSharedPointer< ReadCollectionPropertyJobPrivate > d;
@@ -294,10 +294,10 @@ class KSECRETSSERVICE_EXPORT WriteCollectionPropertyJob : public CollectionJob {
 public:
     explicit WriteCollectionPropertyJob( Collection *collection, const char *propName, const QVariant& value, QObject *parent =0 );
     virtual ~WriteCollectionPropertyJob();
-    
+
     virtual void start();
     virtual void onFindCollectionFinished();
-    
+
 private:
     friend class WriteCollectionPropertyJobPrivate;
     QSharedPointer< WriteCollectionPropertyJobPrivate > d;
@@ -308,10 +308,10 @@ class KSECRETSSERVICE_EXPORT ChangeCollectionPasswordJob : public CollectionJob 
     Q_DISABLE_COPY(ChangeCollectionPasswordJob)
 public:
     explicit ChangeCollectionPasswordJob( Collection *collection );
-    
+
     virtual void start();
     virtual void onFindCollectionFinished();
-    
+
 private:
     friend class ChangeCollectionPasswordJobPrivate;
     QSharedPointer< ChangeCollectionPasswordJobPrivate > d;
@@ -322,10 +322,10 @@ class KSECRETSSERVICE_EXPORT LockCollectionJob : public CollectionJob {
     Q_DISABLE_COPY(LockCollectionJob)
 public:
     LockCollectionJob( Collection *collection, const WId winId );
-    
+
     virtual void start();
     virtual void onFindCollectionFinished();
-    
+
 private:
     friend class LockCollectionJobPrivate;
     QSharedPointer< LockCollectionJobPrivate > d;
@@ -336,11 +336,11 @@ class KSECRETSSERVICE_EXPORT UnlockCollectionJob : public CollectionJob {
     Q_DISABLE_COPY(UnlockCollectionJob)
 public:
     UnlockCollectionJob( Collection* collection, const WId winId );
-    
+
     virtual void start();
     virtual void unlockCollection();
     virtual void onFindCollectionFinished();
-    
+
 private:
     friend class UnlockCollectionJobPrivate;
     QSharedPointer< UnlockCollectionJobPrivate > d;

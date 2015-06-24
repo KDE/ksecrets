@@ -44,8 +44,8 @@ CollectionJobPrivate::CollectionJobPrivate() :
 {
 }
 
-CollectionJob::CollectionJob(Collection *collection, QObject* parent) : 
-            KCompositeJob( parent ), 
+CollectionJob::CollectionJob(Collection *collection, QObject* parent) :
+            KCompositeJob( parent ),
             d( new CollectionJobPrivate() )
 {
     d->collection = collection;
@@ -55,9 +55,9 @@ CollectionJob::~CollectionJob()
 {
 }
 
-Collection *CollectionJob::collection() const 
-{ 
-    return d->collection; 
+Collection *CollectionJob::collection() const
+{
+    return d->collection;
 }
 
 void CollectionJob::finishedWithError( CollectionError err, const QString &errTxt )
@@ -93,7 +93,7 @@ void CollectionJob::startFindCollection()
         }
     }
     else {
-        // collection was already found or created, just trigger this 
+        // collection was already found or created, just trigger this
         unlockCollection();
     }
 }
@@ -134,8 +134,8 @@ void CollectionJob::onFindCollectionFinished()
 }
 
 
-FindCollectionJob::FindCollectionJob(   Collection *collection, 
-                                        QObject *parent ) : 
+FindCollectionJob::FindCollectionJob(   Collection *collection,
+                                        QObject *parent ) :
             CollectionJob( collection, parent ),
             d( new FindCollectionJobPrivate( this, collection->d.data() ) )
 {
@@ -147,7 +147,7 @@ FindCollectionJob::~FindCollectionJob()
 {
 }
 
-void FindCollectionJob::start() 
+void FindCollectionJob::start()
 {
     // meanwhile another findJob instance would have already connected our collection object
     if ( ! collection()->d->isValid() ) {
@@ -190,7 +190,7 @@ void FindCollectionJobPrivate::createFinished(QDBusPendingCallWatcher* watcher)
     else {
         QDBusObjectPath collPath = createReply.argumentAt<0>();
         QDBusObjectPath promptPath = createReply.argumentAt<1>();
-        
+
         if ( collPath.path().compare( QStringLiteral( "/" ) ) == 0 ) {
             // we need prompting
             Q_ASSERT( promptPath.path().compare( QStringLiteral( "/" ) ) ); // we should have a prompt path here other than "/"
@@ -250,7 +250,7 @@ void FindCollectionJobPrivate::startCreateOrOpenCollection()
 void FindCollectionJobPrivate::openSessionFinished(KJob* theJob)
 {
     if ( !theJob->error() ) {
-        
+
         QList< QDBusObjectPath > collPaths = DBusSession::serviceIf()->collections();
         foreach ( const QDBusObjectPath &collPath, collPaths ) {
             OrgFreedesktopSecretCollectionInterface *coll = DBusSession::createCollectionIf( collPath );
@@ -263,7 +263,7 @@ void FindCollectionJobPrivate::openSessionFinished(KJob* theJob)
         }
 
         // we get here because collection doesn't exist
-        
+
         if ( collectionPrivate->findOptions == Collection::CreateCollection ) {
             OpenSessionJob *openSessionJob = dynamic_cast< OpenSessionJob * >( theJob );
             QVariantMap creationProperties = collectionPrivate->collectionProperties;
@@ -314,7 +314,7 @@ void ListCollectionsJob::slotListCollectionsError()
     emitResult();
 }
 
-const QStringList &ListCollectionsJob::collections() const 
+const QStringList &ListCollectionsJob::collections() const
 {
     return d->collections;
 }
@@ -366,19 +366,19 @@ DeleteCollectionJob::DeleteCollectionJob( Collection* collection, QObject* paren
         d( new DeleteCollectionJobPrivate( collection->d.data(), this ) )
 {
 }
-    
+
 DeleteCollectionJob::~DeleteCollectionJob()
 {
 }
 
-void DeleteCollectionJob::start() 
+void DeleteCollectionJob::start()
 {
     // ensure we have the connection to the daemon and we have a valid collection
     // this will trigger onFindCollectionFinished
     startFindCollection();
 }
 
-void DeleteCollectionJob::onFindCollectionFinished() 
+void DeleteCollectionJob::onFindCollectionFinished()
 {
     connect( d.data(), SIGNAL(deleteIsDone(CollectionJob::CollectionError,QString)), this, SLOT(deleteIsDone(CollectionJob::CollectionError,QString)) );
     // now performe the real delete operation on the backend
@@ -391,27 +391,27 @@ void KSecretsService::DeleteCollectionJob::deleteIsDone(CollectionError err, con
     d->cp->setStatus( Collection::Deleted );
 }
 
-DeleteCollectionJobPrivate::DeleteCollectionJobPrivate( CollectionPrivate* collp, QObject* parent ) : 
+DeleteCollectionJobPrivate::DeleteCollectionJobPrivate( CollectionPrivate* collp, QObject* parent ) :
         QObject( parent ),
         cp( collp )
 {
 }
 
-void DeleteCollectionJobPrivate::startDelete() 
+void DeleteCollectionJobPrivate::startDelete()
 {
     QDBusPendingReply<QDBusObjectPath> deleteReply = cp->collectionInterface()->Delete();
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher( deleteReply, this );
     connect( watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(callFinished(QDBusPendingCallWatcher*)) );
 }
 
-void DeleteCollectionJobPrivate::callFinished( QDBusPendingCallWatcher*  watcher ) 
+void DeleteCollectionJobPrivate::callFinished( QDBusPendingCallWatcher*  watcher )
 {
     Q_ASSERT( watcher->isFinished() );
 
     QDBusPendingReply< QDBusObjectPath > deleteReply = *watcher;
     CollectionJob::CollectionError err = CollectionJob::NoError;
     QString msg;
-    
+
     if ( deleteReply.isError() ) {
         err = CollectionJob::DeleteError;
         const QDBusError &dbusErr = deleteReply.error();
@@ -424,7 +424,7 @@ void DeleteCollectionJobPrivate::callFinished( QDBusPendingCallWatcher*  watcher
 }
 
 
-RenameCollectionJob::RenameCollectionJob( Collection *coll, const QString &newName, QObject *parent ) : 
+RenameCollectionJob::RenameCollectionJob( Collection *coll, const QString &newName, QObject *parent ) :
             CollectionJob( coll, parent ),
             d( new RenameCollectionJobPrivate( coll->d.data(), this ) )
 {
@@ -468,7 +468,7 @@ void RenameCollectionJobPrivate::startRename()
     }
 }
 
-SearchCollectionItemsJob::SearchCollectionItemsJob( Collection *collection, 
+SearchCollectionItemsJob::SearchCollectionItemsJob( Collection *collection,
                                 const QStringStringMap &attributes,
                                 QObject *parent ) :
     CollectionJob( collection, parent ),
@@ -533,7 +533,7 @@ void SearchCollectionItemsJobPrivate::searchFinished(QDBusPendingCallWatcher* wa
 }
 
 
-SearchCollectionSecretsJob::SearchCollectionSecretsJob( Collection* collection, const QStringStringMap &attributes, QObject* parent ) : 
+SearchCollectionSecretsJob::SearchCollectionSecretsJob( Collection* collection, const QStringStringMap &attributes, QObject* parent ) :
     CollectionJob( collection, parent ),
     d( new SearchCollectionSecretsJobPrivate( collection->d.data(), attributes ) )
 {
@@ -632,7 +632,7 @@ void SearchCollectionSecretsJobPrivate::getSecretsReply(QDBusPendingCallWatcher*
 
 CreateCollectionItemJob::CreateCollectionItemJob( Collection *collection,
                               const QString& label,
-                              const QMap< QString, QString >& attributes, 
+                              const QMap< QString, QString >& attributes,
                               const Secret& secret,
                               CreateItemOptions options
                             ) :
@@ -650,7 +650,7 @@ CreateCollectionItemJob::~CreateCollectionItemJob()
 {
 }
 
-SecretItem * CreateCollectionItemJob::item() const 
+SecretItem * CreateCollectionItemJob::item() const
 {
     return d->item;
 }
@@ -762,7 +762,7 @@ void ReadCollectionItemsJob::onFindCollectionFinished()
     emitResult();
 }
 
-QList< QExplicitlySharedDataPointer< SecretItem > > ReadCollectionItemsJob::items() const 
+QList< QExplicitlySharedDataPointer< SecretItem > > ReadCollectionItemsJob::items() const
 {
     QList< QExplicitlySharedDataPointer< SecretItem > > result;
     foreach( QSharedDataPointer< SecretItemPrivate > ip, d->readItems() ) {
@@ -776,7 +776,7 @@ ReadCollectionItemsJobPrivate::ReadCollectionItemsJobPrivate( CollectionPrivate 
 {
 }
 
-QList< QSharedDataPointer< SecretItemPrivate > > ReadCollectionItemsJobPrivate::readItems() const 
+QList< QSharedDataPointer< SecretItemPrivate > > ReadCollectionItemsJobPrivate::readItems() const
 {
     QList< QSharedDataPointer< SecretItemPrivate > > result;
     if ( collectionPrivate->collectionInterface() ) {
@@ -832,7 +832,7 @@ ReadCollectionPropertyJobPrivate::ReadCollectionPropertyJobPrivate( CollectionPr
     readPropertyJob( job )
 {
 }
-    
+
 void ReadCollectionPropertyJobPrivate::startReadingProperty()
 {
     value = collectionPrivate->collectionInterface()->property( propertyName );
@@ -867,14 +867,14 @@ WriteCollectionPropertyJobPrivate::WriteCollectionPropertyJobPrivate( Collection
     writePropertyJob( job )
 {
 }
-    
+
 void WriteCollectionPropertyJobPrivate::startWritingProperty()
 {
     value = collectionPrivate->collectionInterface()->setProperty( propertyName, value );
     writePropertyJob->finishedOk();
 }
 
-ChangeCollectionPasswordJob::ChangeCollectionPasswordJob(Collection* collection): 
+ChangeCollectionPasswordJob::ChangeCollectionPasswordJob(Collection* collection):
     CollectionJob( collection ),
     d( new ChangeCollectionPasswordJobPrivate( collection->d.data(), this ) )
 {
@@ -984,7 +984,7 @@ void LockCollectionJobPrivate::slotLockFinished( QDBusPendingCallWatcher *watche
     if ( !reply.isError() ) {
         QDBusObjectPath promptPath = reply.argumentAt<1>();
         if ( promptPath.path().compare( QStringLiteral( "/" ) ) ) {
-            PromptJob *promptJob = new PromptJob( promptPath, windowId, this ); 
+            PromptJob *promptJob = new PromptJob( promptPath, windowId, this );
             connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(slotPromptFinished(KJob*)) );
             if ( theJob->addSubjob( promptJob ) ) {
                 promptJob->start();
@@ -1041,7 +1041,7 @@ void LockCollectionJobPrivate::checkResult( const QList< QDBusObjectPath > & obj
     }
 }
 
-UnlockCollectionJob::UnlockCollectionJob( Collection* collection, const WId winId  ) : 
+UnlockCollectionJob::UnlockCollectionJob( Collection* collection, const WId winId  ) :
     CollectionJob( collection ),
     d( new UnlockCollectionJobPrivate( collection->d.data(), this ) )
 {
@@ -1080,14 +1080,14 @@ void UnlockCollectionJobPrivate::startUnlockingCollection()
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), this, SLOT(slotUnlockFinished(QDBusPendingCallWatcher*)) );
 }
 
-void UnlockCollectionJobPrivate::slotUnlockFinished( QDBusPendingCallWatcher *watcher ) 
+void UnlockCollectionJobPrivate::slotUnlockFinished( QDBusPendingCallWatcher *watcher )
 {
     Q_ASSERT(watcher);
     QDBusPendingReply<QList<QDBusObjectPath> , QDBusObjectPath> reply = *watcher;
     if ( !reply.isError() ) {
         QDBusObjectPath promptPath = reply.argumentAt<1>();
         if ( promptPath.path().compare( QStringLiteral( "/" ) ) ) {
-            PromptJob *promptJob = new PromptJob( promptPath, windowId, this ); 
+            PromptJob *promptJob = new PromptJob( promptPath, windowId, this );
             connect( promptJob, SIGNAL(finished(KJob*)), this, SLOT(slotPromptFinished(KJob*)) );
             if ( theJob->addSubjob( promptJob ) ) {
                 promptJob->start();

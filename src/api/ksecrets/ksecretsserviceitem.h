@@ -38,16 +38,16 @@ class ReadItemPropertyJob;
 class WriteItemPropertyJob;
 class SecretItemPrivate;
 class CreateItemJobPrivate;
-   
+
 /**
  * KSecretsService aims to let application store sensitive pieces of information as SecretItem(s).
  * The central part of a SecretItem is the secret it holds. The secret is actually a structure named @ref SecretStruct["(SecretStruct)"]
  * SecretItems can be qualified using attributes. These attributes are used internally by KSecretsService to uniquely identify them inside the collection.
  * The attributes list always contain at least one item, named "Label". It's content is up to the client application.
  * The "Label" attribute can also be read by calling the @ref attribute method and set by @ref setLabel method.
- * 
+ *
  * Please note that all the jobs returned by this class autodelete themselbes when done. If you application
- * need to access the returned items, then it should copy them away before returning from the job's done 
+ * need to access the returned items, then it should copy them away before returning from the job's done
  * signal handling method.
  */
 class KSECRETSSERVICE_EXPORT SecretItem : public QSharedData {
@@ -56,7 +56,7 @@ public:
     SecretItem();
     SecretItem( const SecretItem& );
     virtual ~SecretItem();
-    
+
     /**
      * @return SecretItemJob which will attempt to delete this item upon it's start() method call
      */
@@ -76,7 +76,7 @@ public:
      * @note returned ReadItemPropertyJob::value is a QMap< QString, QString>
      */
     ReadItemPropertyJob * attributes() const;
-    
+
     /**
      * @param attributes a map containing the new attributes; it must contain at least one attribute, under the name "Label"
      */
@@ -86,27 +86,27 @@ public:
      * @note returned ReadItemPropertyJob::value is a bool
      */
     ReadItemPropertyJob * isLocked() const;
-    
+
     /**
      * @note returned ReadItemPropertyJob::value is a QString
      */
     ReadItemPropertyJob * label() const;
-    
+
     /**
      * @note returned ReadItemPropertyJob::value is a time_t
      */
     ReadItemPropertyJob * createdTime() const;
-    
+
     /**
      * @note returned ReadItemPropertyJob::value is a time_t
      */
     ReadItemPropertyJob * modifiedTime() const;
-    
+
     /**
      * Sets the item's label
      */
     WriteItemPropertyJob * setLabel( const QString &label );
-    
+
 private:
     friend class SecretItemPrivate;
     friend class GetSecretItemSecretJob;
@@ -119,7 +119,7 @@ private:
     friend class SearchCollectionItemsJob;
     friend class CreateCollectionItemJobPrivate;
     friend class ReadCollectionItemsJob;
-    
+
     QSharedDataPointer< SecretItemPrivate > d;
 };
 

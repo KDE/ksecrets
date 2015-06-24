@@ -29,7 +29,7 @@ namespace KSecretsService {
 /**
  * @class SecretCodec
  * @internal
- * 
+ *
  * This class is used internally by the KSecretsService infrastructure for communicating between the
  * client API and the ksecretsserviced daemon. This communication is done over the DBus in the
  * current implementation. As such, messages payload need encryption to avoid eavesdropping.
@@ -40,19 +40,19 @@ public:
     ~SecretCodec();
 
     static const char* AlgorithmPlain;
-    
+
     bool initServer( const QString &algorithm, const QVariant &input, QVariant &output );
     bool initClient( const QString &algorithm, const QVariant serverOutput );
     bool encryptServer( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
     bool decryptServer( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
     bool encryptClient( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
     bool decryptClient( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
-    
+
 private:
-    enum Mode { 
+    enum Mode {
         ModeUnitialized =0,
-        ModeServer, 
-        ModeClient 
+        ModeServer,
+        ModeClient
     };
     QCA::Cipher         *m_cipher;
     QCA::SymmetricKey   m_symmetricKey;

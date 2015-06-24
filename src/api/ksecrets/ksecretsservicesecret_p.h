@@ -36,9 +36,9 @@ public:
     SecretPrivate( const DBusSecretStruct& secretStruct );
     ~SecretPrivate();
 
-    
+
     /**
-     * This will obtain a properly encrypted SecretStruct ready to be transmitted over the dbus 
+     * This will obtain a properly encrypted SecretStruct ready to be transmitted over the dbus
      * to the daemon
      *
      * @return true if the secretStruct was correctly initialized
@@ -46,13 +46,13 @@ public:
     bool toSecretStruct( DBusSecretStruct &secretStruct ) const;
 
     /**
-     * This method attempts to decrypt the secretStruct given and to allocate and initialize 
+     * This method attempts to decrypt the secretStruct given and to allocate and initialize
      * SecretPrivate instance with it.
      *
      * @return true if the secret struct was successfully decrypted into the SecretPrivate object
      */
     static bool fromSecretStruct( const DBusSecretStruct &secretStruct, SecretPrivate*& );
-    
+
     bool operator == ( const SecretPrivate &that ) const;
 
     QString contentType;

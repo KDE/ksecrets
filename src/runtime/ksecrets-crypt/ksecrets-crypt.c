@@ -43,6 +43,9 @@
 #define KSECRETS_KEYSIZE 256
 #define KSECRETS_ITERATIONS 50000
 
+#define KSS_KEY_TYPE_ENCRYPT "ksecrets:encrypting"
+#define KSS_KEY_TYPE_MAC "ksecrets:mac"
+
 int mkpath(char* path, struct passwd* user_info)
 {
   struct stat sb;
@@ -222,8 +225,8 @@ bool kss_derive_keys(const char* user_name, const char* password,
 bool kss_store_keys(const char* encryption_key, const char* mac_key)
 {
   key_serial_t ks;
-  ks = add_key("user", "ksecrets:encrypting", encryption_key,
-      KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
+  ks = add_key("user", KSS_KEY_TYPE_ENCRYPT, encryption_key, KSECRETS_KEYSIZE,
+      KEY_SPEC_SESSION_KEYRING);
   if (-1 == ks) {
     syslog(KSS_LOG_ERR,
         "ksecrets: cannot store encryption key in kernel keyring: errno=%d",
@@ -233,21 +236,35 @@ bool kss_store_keys(const char* encryption_key, const char* mac_key)
   syslog(KSS_LOG_DEBUG,
       "ksecrets: encrpyting key now in kernel keyring with id %d", ks);
 
-  ks = add_key("user", "ksecrets:mac", mac_key,
-      KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
+  ks = add_key("user", KSS_KEY_TYPE_MAC, mac_key, KSECRETS_KEYSIZE,
+      KEY_SPEC_SESSION_KEYRING);
   if (-1 == ks) {
     syslog(KSS_LOG_ERR,
-        "ksecrets: cannot store mac key in kernel keyring: errno=%d",
-        errno);
+        "ksecrets: cannot store mac key in kernel keyring: errno=%d", errno);
     return false;
   }
-  syslog(KSS_LOG_DEBUG,
-      "ksecrets: mac key now in kernel keyring with id %d", ks);
+  syslog(KSS_LOG_DEBUG, "ksecrets: mac key now in kernel keyring with id %d",
+      ks);
+  return true;
+}
+
+bool kss_keys_already_there()
+{
+  struct key* key;
+  key = request_key(KSS_KEY_TYPE_ENCRYPT, 0, 0, KEY_SPEC_SESSION_KEYRING);
+  if (-1 == key) {
+    syslog(KSS_LOG_DEBUG, "request_key failed with errno %d", errno);
+    return false;
+  }
+  syslog(KSS_LOG_DEBUG, "ksecrets: keys already in keyring");
   return true;
 }
 
 bool kss_set_credentials(const char* user_name, const char* password)
 {
+  if (kss_keys_already_there())
+    return true;
+
   char encryption_key[KSECRETS_KEYSIZE];
   char mac_key[KSECRETS_KEYSIZE];
   if (!kss_derive_keys(user_name, password, encryption_key, mac_key))

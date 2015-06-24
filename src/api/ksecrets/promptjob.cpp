@@ -28,7 +28,7 @@
 
 using namespace KSecretsService;
 
-PromptJob::PromptJob( const QDBusObjectPath &path, const WId &parentId, QObject *parent ) : 
+PromptJob::PromptJob( const QDBusObjectPath &path, const WId &parentId, QObject *parent ) :
             KJob( parent ),
             promptPath( path ),
             parentWindowId( parentId )
@@ -43,7 +43,7 @@ void PromptJob::start()
         // TODO: place a timer here to avoid hanging up if the prompt never calls promptCompleted
         // NOTE: however, care should be taken to avoid problems when user is too slow interacting with the prompt.
         //       a sensible timeout value should be chosen
-        
+
         QDBusPendingReply<> promptReply = promptIf->Prompt( QStringLiteral("%1").arg( parentWindowId ) );
         // NOTE: ne need to wait for promptReply to finish. The prompt will call promptCompleted when user interaction takes end
     }

@@ -35,7 +35,7 @@ class SecretPrivate;
 class CollectionJobPrivate {
 public:
     CollectionJobPrivate();
-    
+
     Collection      *collection;
 };
 
@@ -49,12 +49,12 @@ public:
     explicit DeleteCollectionJobPrivate( CollectionPrivate *coll, QObject *parent =0 );
 
     void startDelete();
-    
+
     friend class DeleteCollectionJob;
-    
+
 Q_SIGNALS:
     void deleteIsDone( CollectionJob::CollectionError error, const QString& message );
-    
+
 protected Q_SLOTS:
     void callFinished( QDBusPendingCallWatcher* );
 
@@ -67,16 +67,16 @@ class FindCollectionJobPrivate : public QObject {
     Q_DISABLE_COPY(FindCollectionJobPrivate)
 public:
     friend class FindCollectionJob;
-    
+
     FindCollectionJobPrivate( FindCollectionJob*, CollectionPrivate* );
 
     void startCreateOrOpenCollection();
-    
+
 private Q_SLOTS:
     void openSessionFinished(KJob*);
     void createFinished(QDBusPendingCallWatcher*);
     void createPromptFinished(KJob*);
-    
+
 public:
     FindCollectionJob                                    *findJob;
     QString                                              collectionName;
@@ -89,16 +89,16 @@ class ListCollectionsJobPrivate : public QObject {
     Q_DISABLE_COPY(ListCollectionsJobPrivate)
 public:
     ListCollectionsJobPrivate( ListCollectionsJob* );
-    
+
     void startListingCollections();
 
 private Q_SLOTS:
     void slotOpenSessionFinished(KJob*);
-    
+
 Q_SIGNALS:
     void listingDone();
     void listingError();
-    
+
 public:
     ListCollectionsJob  *listCollectionsJob;
     QStringList         collections;
@@ -109,13 +109,13 @@ class RenameCollectionJobPrivate : public QObject {
     Q_DISABLE_COPY(RenameCollectionJobPrivate)
 public:
     friend class RenameCollectionJob;
-    
+
     explicit RenameCollectionJobPrivate( CollectionPrivate*, QObject *parent =0 );
     void startRename();
 
 Q_SIGNALS:
     void renameIsDone( CollectionJob::CollectionError error, const QString& message );
-    
+
 public:
     CollectionPrivate   *collectionPrivate;
     QString             newName;
@@ -126,15 +126,15 @@ class SearchCollectionItemsJobPrivate : public QObject {
     Q_DISABLE_COPY(SearchCollectionItemsJobPrivate)
 public:
     SearchCollectionItemsJobPrivate( CollectionPrivate*, SearchCollectionItemsJob* );
-    
+
     void startSearchItems();
-    
+
 Q_SIGNALS:
     void searchIsDone(CollectionJob::CollectionError, const QString& );
 
 protected Q_SLOTS:
     void searchFinished(QDBusPendingCallWatcher*);
-    
+
 public:
     CollectionPrivate                   *collectionPrivate;
     SearchCollectionItemsJob            *searchItemJob;
@@ -149,11 +149,11 @@ public:
     explicit CreateCollectionItemJobPrivate( CollectionPrivate*, QObject *parent =0 );
 
     void startCreateItem();
-    
+
 protected Q_SLOTS:
     void createItemReply(QDBusPendingCallWatcher*);
     void createPromptFinished(KJob*);
-    
+
 public:
     CollectionPrivate                   *collectionPrivate;
     CreateCollectionItemJob             *createItemJob;
@@ -169,16 +169,16 @@ class SearchCollectionSecretsJobPrivate : public QObject {
     Q_DISABLE_COPY(SearchCollectionSecretsJobPrivate)
 public:
     explicit SearchCollectionSecretsJobPrivate( CollectionPrivate*, const QStringStringMap &attrs, QObject *parent =0);
-    
+
     void startSearchSecrets();
-    
+
 protected Q_SLOTS:
     void searchSecretsReply(QDBusPendingCallWatcher*);
     void getSecretsReply(QDBusPendingCallWatcher*);
-    
+
 Q_SIGNALS:
     void searchIsDone( CollectionJob::CollectionError, const QString& );
-    
+
 public:
     CollectionPrivate   *collectionPrivate;
     QStringStringMap    attributes;
@@ -192,7 +192,7 @@ public:
     explicit ReadCollectionItemsJobPrivate( CollectionPrivate* );
 
     QList< QSharedDataPointer< SecretItemPrivate > > readItems() const;
-    
+
 public:
     CollectionPrivate   *collectionPrivate;
 };
@@ -202,9 +202,9 @@ class ReadCollectionPropertyJobPrivate : public QObject {
     Q_DISABLE_COPY(ReadCollectionPropertyJobPrivate)
 public:
     ReadCollectionPropertyJobPrivate( CollectionPrivate* cp, ReadCollectionPropertyJob* );
-    
+
     void startReadingProperty();
-    
+
     CollectionPrivate *collectionPrivate;
     ReadCollectionPropertyJob *readPropertyJob;
     const char *propertyName;
@@ -216,9 +216,9 @@ class WriteCollectionPropertyJobPrivate : public QObject {
     Q_DISABLE_COPY(WriteCollectionPropertyJobPrivate)
 public:
     WriteCollectionPropertyJobPrivate( CollectionPrivate *cp, WriteCollectionPropertyJob* );
-    
+
     void startWritingProperty();
-    
+
     CollectionPrivate *collectionPrivate;
     WriteCollectionPropertyJob *writePropertyJob;
     const char *propertyName;
@@ -230,13 +230,13 @@ class ChangeCollectionPasswordJobPrivate : public QObject {
     Q_DISABLE_COPY(ChangeCollectionPasswordJobPrivate)
 public:
     explicit ChangeCollectionPasswordJobPrivate( CollectionPrivate *cp, ChangeCollectionPasswordJob* );
-    
+
     void startChangingPassword();
 
 protected Q_SLOTS:
     void changePasswordStarted( QDBusPendingCallWatcher* );
     void promptFinished( KJob* );
-    
+
 public:
     CollectionPrivate            *collectionPrivate;
     ChangeCollectionPasswordJob  *theJob;
@@ -247,16 +247,16 @@ class LockCollectionJobPrivate : public QObject {
     Q_DISABLE_COPY(LockCollectionJobPrivate)
 public:
     explicit LockCollectionJobPrivate( CollectionPrivate *cp, LockCollectionJob* );
-    
+
     void startLockingCollection();
-    
+
 protected Q_SLOTS:
     void slotLockFinished( QDBusPendingCallWatcher* );
     void slotPromptFinished( KJob* );
-    
+
 private:
     void checkResult( const QList< QDBusObjectPath > & ) const;
-    
+
 public:
     CollectionPrivate *collectionPrivate;
     LockCollectionJob *theJob;
@@ -268,16 +268,16 @@ class UnlockCollectionJobPrivate : public QObject {
     Q_DISABLE_COPY(UnlockCollectionJobPrivate)
 public:
     explicit UnlockCollectionJobPrivate( CollectionPrivate *cp, UnlockCollectionJob* );
-    
+
     void startUnlockingCollection();
-    
+
 protected Q_SLOTS:
     void slotUnlockFinished( QDBusPendingCallWatcher* );
     void slotPromptFinished( KJob* );
-    
+
 private:
     void checkResult( const QList< QDBusObjectPath > & ) const;
-    
+
 public:
     CollectionPrivate   *collectionPrivate;
     UnlockCollectionJob *theJob;

@@ -53,9 +53,9 @@ public:
     Collection::FindCollectionOptions       findOptions;
     Collection::Status                      collectionStatus;
     QDBusObjectPath                         dbusPath;
-    static QMap< QDBusObjectPath, CollectionPrivate* > 
+    static QMap< QDBusObjectPath, CollectionPrivate* >
                                             collectionMap;
-    
+
 private:
     OrgFreedesktopSecretCollectionInterface *collectionIf;
 };

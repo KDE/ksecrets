@@ -34,7 +34,7 @@
 
 namespace KSecretsService {
 
-Collection::Collection(): 
+Collection::Collection():
         QObject(),
         d( new CollectionPrivate( this ) )
 {
@@ -166,9 +166,9 @@ CollectionPrivate::~CollectionPrivate()
 }
 
 void CollectionPrivate::setPendingFindCollection( const WId &promptParentId,
-                                                  const QString &collName, 
+                                                  const QString &collName,
                                                   const QVariantMap &collProps,
-                                                  Collection::FindCollectionOptions opts ) 
+                                                  Collection::FindCollectionOptions opts )
 {
     collectionName = collName;
     collectionProperties = collProps;
@@ -186,7 +186,7 @@ void CollectionPrivate::setStatus( Collection::Status newStatus )
 bool CollectionPrivate::isValid()
 {
     // NOTE: do not call collectionInterface() to get the interface pointer, if not you'll get an infinite recursive call
-    return 
+    return
         collectionIf && collectionIf->isValid() && (
             collectionStatus == Collection::FoundExisting ||
             collectionStatus == Collection::NewlyCreated );
@@ -206,7 +206,7 @@ void CollectionPrivate::setDBusPath( const QDBusObjectPath &path )
     }
 }
 
-const WId & CollectionPrivate::promptParentId() const 
+const WId & CollectionPrivate::promptParentId() const
 {
     return promptParentWindowId;
 }
@@ -262,5 +262,5 @@ void CollectionPrivate::notifyCollectionDeleted( const QDBusObjectPath& path )
 
 #include "ksecretsservicecollection.moc"
 
-    
+
 };

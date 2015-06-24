@@ -28,21 +28,21 @@
 class OrgFreedesktopSecretPromptInterface;
 
 namespace KSecretsService {
-    
+
 class PromptJob : public KJob {
     Q_OBJECT
     Q_DISABLE_COPY(PromptJob)
 public:
     PromptJob( const QDBusObjectPath &path, const WId &parentWindowId, QObject *parent );
-    
+
     virtual void start();
 
     bool isDismissed() const { return dismissed; }
     const QDBusVariant & result() const { return opResult; }
-    
+
 private Q_SLOTS:
     void promptCompleted(bool dismissed, const QDBusVariant &result);
-    
+
 private:
     QDBusObjectPath promptPath;
     WId             parentWindowId;

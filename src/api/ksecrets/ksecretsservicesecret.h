@@ -47,19 +47,19 @@ public:
      * @return true if this Secret instance is not correctly initialized
      */
     bool operator ! () const;
-    
+
     Secret& operator = (const Secret& that);
 
     /**
      * Returns a QVariant containing the secret value
      */
     QVariant value() const;
-    
+
     /**
      * Returns the content type of the value stored inside this secret
      */
     QString contentType() const;
-    
+
     /**
      * Convenience string used to qualify the content type when storing password secrets
      */
@@ -69,7 +69,7 @@ public:
      * Set this secrets value alongside with it's content type
      */
     void setValue( const QVariant &value, const QString &contentType );
-    
+
     /**
      * Convenience method used when no content type is available
      * @see setValue( const QVariant &value, const QString &contentType )
@@ -80,7 +80,7 @@ public:
      * Tests equality between this secret's value and content type and that's secret same properties
      */
     bool operator == ( const Secret& that ) const;
-    
+
 private:
     friend class CreateCollectionItemJob;
     friend class SetSecretItemSecretJob;

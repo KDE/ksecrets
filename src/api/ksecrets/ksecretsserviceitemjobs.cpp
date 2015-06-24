@@ -143,7 +143,7 @@ SetSecretItemSecretJobPrivate::SetSecretItemSecretJobPrivate( SetSecretItemSecre
     secret( s )
 {
 }
-    
+
 void SetSecretItemSecretJobPrivate::start()
 {
     DBusSecretStruct secretStruct;
@@ -193,7 +193,7 @@ SecretItemDeleteJobPrivate::SecretItemDeleteJobPrivate( SecretItemDeleteJob *j )
     job( j )
 {
 }
-    
+
 void SecretItemDeleteJobPrivate::startDelete()
 {
     QDBusPendingReply< QDBusObjectPath > reply =  secretItemPrivate->itemIf()->Delete();
@@ -288,7 +288,7 @@ ReadItemPropertyJobPrivate::ReadItemPropertyJobPrivate( QSharedDataPointer<Secre
     readPropertyJob( job )
 {
 }
-    
+
 void ReadItemPropertyJobPrivate::startReadingProperty()
 {
     value = itemPrivate->itemIf()->property( propertyName );

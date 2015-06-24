@@ -47,23 +47,23 @@ class ChangeCollectionPasswordJob;
 class LockCollectionJob;
 
 /**
- * This is the main KSecretsService entry class, used by the applications that need to store secrets, 
+ * This is the main KSecretsService entry class, used by the applications that need to store secrets,
  * like passwords or other sensitive data, in a secured and encrypted storage.
- * 
- * All the methods of this class are performing asynchronously. That is, calling them immediatley return 
+ *
+ * All the methods of this class are performing asynchronously. That is, calling them immediatley return
  * a KJob descendant class. The actual action will be asynchronously done by this job only when it's start()
  * or exec() method is called. Note that exec() method usage is discouraged though.
- * 
+ *
  * The client application is responsible for KJob start() or exec() method calling. Upon job finish, the
  * client application should check KJob error() status to know if the requested operation was successufully done.
- * 
+ *
  * The KJob descendant classes returned by the methods also provide custom members, depending on the operation
  * they are intented to execute. Upon successuful execution, these members hold the corresponding return values.
- * 
+ *
  * Please note that all the jobs returned by this class autodelete themselbes when done. If you application
- * need to access the returned items, then it should copy them away before returning from the job's done 
+ * need to access the returned items, then it should copy them away before returning from the job's done
  * signal handling method.
- * 
+ *
  * @see KJob
  */
 class KSECRETSSERVICE_EXPORT Collection : public QObject {
@@ -79,7 +79,7 @@ public:
         OpenOnly         =0,    /// this will only try to open the collection without creating it if not found
         CreateCollection =1     /// the collection will be created if not found
     };
-    
+
     /**
      * @see status()
      * @see statusChanged()
@@ -119,33 +119,33 @@ public:
      * Use this method to find out the names of all known secret service collections on the running system
      */
     static ListCollectionsJob * listCollections();
-    
+
     /**
      * This will get the actual findStatus of this collection
      * @return Status
      */
     Status status() const;
-    
+
     /**
-     * Try to delete this collection. The user might be prompted to confirm that 
+     * Try to delete this collection. The user might be prompted to confirm that
      * and as such he/she may choose not to confirm that operation.
-     * 
+     *
      * Please note that after successufully calling this method, this object
      * is no longer valid and calling other methods on it would lead to undefined
      * behaviour
-     * 
+     *
      * @return KJob. Check it's error() member to confirm that the collection hase been deleted
      */
     KJob * deleteCollection();
-    
+
     /**
      * Change the name of this collection
      * @param newName is the new collection's name
      * @return KJob. Check it's error() member to confirm that the rename was effectively done.
      */
     KJob * renameCollection( const QString& newName );
-    
-    
+
+
     /**
      * Search for the items matching the specified attributes
      * KSecretsService uses overall the following standard attributes:
@@ -159,7 +159,7 @@ public:
      * attrs["Key"] = "";
      * @endcode
      * This will match all attributes having the key "Key"
-     * @li use search string as values, 
+     * @li use search string as values,
      * @code
      * StrinStringMap attrs;
      * attrs["Key"] = "string";
@@ -172,16 +172,16 @@ public:
      * @endcode
      * This will find items having "Key" attribute, then will use the expr to do a QRegExp match
      * against attribute values
-     * 
+     *
      * @return SearchCollectionItemsJob which is a KJob inheritor
      */
     SearchCollectionItemsJob * searchItems( const StringStringMap &attributes );
-    
+
     /**
      * Use this method to get several secrets without getting through getting items
      */
     SearchCollectionSecretsJob * searchSecrets( const StringStringMap &attributes );
-    
+
     /**
      * Create a new item inside the current collection
      * @param label holds the item's label; this label will be automatically added to the attributes map under the index "Label" and it'll eventually replace an existing item on that slot
@@ -194,7 +194,7 @@ public:
      */
     CreateCollectionItemJob * createItem( const QString& label, const StringStringMap &attributes, const Secret &secret, CreateItemOptions options = DoNotReplaceExistingItem );
 
-    /** 
+    /**
      * Retrieve items stored inside this collection
      * @return ReadItemJob instance that will hold the returned items upon successuful execution
      */
@@ -205,19 +205,19 @@ public:
      * @Note returned ReadCollectionPropertyJob::propertyValue is boolean
      */
     ReadCollectionPropertyJob* isLocked() const;
-    
+
     /**
      * Retrieve this collection's label
      * @Note returned ReadCollectionPropertyJob::propertyValue is QString
      */
     ReadCollectionPropertyJob* label() const;
-    
+
     /**
      * Get the creation timestamps of this collection
      * @Note returned ReadCollectionPropertyJob::propertyValue is a time_t
      */
     ReadCollectionPropertyJob* createdTime() const;
-    
+
     /**
      * Get the last modified timestamp of this collection
      * @Note returned ReadCollectionPropertyJob::propertyValue is a time_t
@@ -229,25 +229,25 @@ public:
      * @return WriteCollectionPropertyJob instance. Check it's error() status after executing it to confirm collection label change.
      */
     WriteCollectionPropertyJob* setLabel( const QString &label );
-    
+
     /**
      * @return ReadCollectionPropertyJob instance. It's propertyValue() holds the status (true or false) upon job execution finish.
      */
     ReadCollectionPropertyJob* isValid();
-    
+
     /**
      * Request current collection's password change. A dialog box will pop-up during the returned job execution
      * @return change password job
      */
     ChangeCollectionPasswordJob* changePassword();
-    
+
     /**
      * Request collection lock. Locked collection's contents cannot be changed.
      * @note Accessing the other methods will trigger collection unlocking and as such the user may be prompted for the password
      * @return LockCollectionJob
      */
     LockCollectionJob* lock( const WId =0 );
-   
+
 Q_SIGNALS:
     /**
      * This signal is emmited with any collection status change.
@@ -269,7 +269,7 @@ Q_SIGNALS:
     /**
      * TODO: not yet implemented
      */
-    void itemCreated( const KSecretsService::SecretItem& ); 
+    void itemCreated( const KSecretsService::SecretItem& );
     /**
      * TODO: not yet implemented
      */
@@ -282,7 +282,7 @@ Q_SIGNALS:
 
 protected:
     explicit Collection();
-    
+
 private:
     explicit Collection( CollectionPrivate* );
 
@@ -302,7 +302,7 @@ private:
     friend class ChangeCollectionPasswordJob;
     friend class LockCollectionJob;
     friend class UnlockCollectionJob;
-    
+
     /** @internal */
     void readIsValid( ReadCollectionPropertyJob* );
     /** @internal */
@@ -311,7 +311,7 @@ private:
     void emitContentsChanged();
     /** @internal */
     void emitDeleted();
-    
+
     QSharedPointer< CollectionPrivate > d;
 };
 

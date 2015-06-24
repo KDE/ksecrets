@@ -44,7 +44,7 @@ Secret::Secret( const Secret& that ) :
 Secret::~Secret() {
 }
 
-bool Secret::operator ! () const 
+bool Secret::operator ! () const
 {
     return !d;
 }
@@ -79,7 +79,7 @@ bool Secret::operator==(const Secret& that) const
     return *d == *that.d;
 }
 
-SecretPrivate::SecretPrivate() 
+SecretPrivate::SecretPrivate()
 {
 }
 
@@ -96,11 +96,11 @@ SecretPrivate::SecretPrivate( const DBusSecretStruct &that )
     contentType = that.m_contentType;
 }
 
-SecretPrivate::~SecretPrivate() 
+SecretPrivate::~SecretPrivate()
 {
 }
 
-bool SecretPrivate::toSecretStruct( DBusSecretStruct &secretStruct ) const 
+bool SecretPrivate::toSecretStruct( DBusSecretStruct &secretStruct ) const
 {
     secretStruct.m_session = DBusSession::sessionPath();
     secretStruct.m_contentType = contentType;

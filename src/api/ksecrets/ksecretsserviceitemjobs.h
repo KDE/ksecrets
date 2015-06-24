@@ -41,7 +41,7 @@ class WriteItemPropertyJobPrivate;
 /**
  * @class SecretItemJob
  * @internal
- * 
+ *
  * Base class for the SecretItem related jobs. Your application is not supposed
  * to use this class directly.
  */
@@ -60,7 +60,7 @@ public:
         RenameError,
         MissingParameterError
     };
-    
+
     explicit SecretItemJob( SecretItem * item );
     virtual ~SecretItemJob();
 
@@ -71,10 +71,10 @@ public:
      */
     void setCustomData( const QVariant& data );
     const QVariant& customData() const;
-    
+
 protected:
     void finished( ItemJobError, const QString& msg = QString() );
-    
+
 private:
     friend class SecretItemJobPrivate;
     QSharedPointer< SecretItemJobPrivate > d;
@@ -88,7 +88,7 @@ public:
     virtual ~GetSecretItemSecretJob();
     virtual void start();
     Secret secret() const;
-    
+
 private:
     friend class GetSecretItemSecretJobPrivate;
     QSharedPointer< GetSecretItemSecretJobPrivate > d;
@@ -100,9 +100,9 @@ class KSECRETSSERVICE_EXPORT SetSecretItemSecretJob : public SecretItemJob {
 public:
     SetSecretItemSecretJob( SecretItem*, const Secret& );
     virtual ~SetSecretItemSecretJob();
-    
+
     virtual void start();
-    
+
 private:
     friend class SetSecretItemSecretJobPrivate;
     QSharedPointer< SetSecretItemSecretJobPrivate > d;
@@ -114,9 +114,9 @@ class KSECRETSSERVICE_EXPORT SecretItemDeleteJob : public SecretItemJob {
 public:
     SecretItemDeleteJob( SecretItem*, const WId &promptParentWindowId );
     virtual ~SecretItemDeleteJob();
-    
+
     virtual void start();
-    
+
 private:
     friend class SecretItemDeleteJobPrivate;
     QSharedPointer< SecretItemDeleteJobPrivate > d;
@@ -129,10 +129,10 @@ public:
     ReadItemPropertyJob( SecretItem *, const char *propName);
     ReadItemPropertyJob( SecretItem *, void (SecretItem::*propReadMember)( ReadItemPropertyJob * ) );
     virtual ~ReadItemPropertyJob();
-    
+
     virtual void start();
     const QVariant& propertyValue() const;
-    
+
 private:
     friend class ReadItemPropertyJobPrivate;
     QSharedDataPointer<ReadItemPropertyJobPrivate> d;
@@ -145,9 +145,9 @@ class KSECRETSSERVICE_EXPORT WriteItemPropertyJob : public SecretItemJob {
 public:
     explicit WriteItemPropertyJob(SecretItem* item, const char *propName, const QVariant &value);
     virtual ~WriteItemPropertyJob();
-    
+
     virtual void start();
-    
+
 private:
     friend class WriteItemPropertyJobPrivate;
     QSharedDataPointer<WriteItemPropertyJobPrivate> d;
