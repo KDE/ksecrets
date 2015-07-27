@@ -21,12 +21,12 @@
 #include "ksecretsservicecollectionjobs.h"
 #include "ksecretsservicecollectionjobs_p.h"
 #include "ksecretsservicecollection_p.h"
-#include "ksecretsserviceitem_p.h"
+#include "ksecretsitem_p.h"
 #include "service_interface.h"
 #include "collection_interface.h"
 #include "item_interface.h"
 #include "ksecretsservicedbustypes.h"
-#include "ksecretsservicesecret_p.h"
+#include "ksecretssecret_p.h"
 #include "promptjob.h"
 
 #include <QDBusPendingCallWatcher>
@@ -37,7 +37,7 @@
 #include <QWidget>
 #include <klocalizedstring.h>
 
-using namespace KSecretsService;
+using namespace KSecrets;
 
 CollectionJobPrivate::CollectionJobPrivate() :
     collection( 0 )
@@ -385,7 +385,7 @@ void DeleteCollectionJob::onFindCollectionFinished()
     d->startDelete();
 }
 
-void KSecretsService::DeleteCollectionJob::deleteIsDone(CollectionError err, const QString& errMsg )
+void KSecrets::DeleteCollectionJob::deleteIsDone(CollectionError err, const QString& errMsg )
 {
     finishedWithError( err, errMsg );
     d->cp->setStatus( Collection::Deleted );

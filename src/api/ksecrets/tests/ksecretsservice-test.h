@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSSERVICE_TEST_H
-#define KSECRETSSERVICE_TEST_H
+#ifndef KSECRETS_TEST_H
+#define KSECRETS_TEST_H
 #include <qobject.h>
 
 class KSecretServiceTest : public QObject {
@@ -36,4 +36,4 @@ private Q_SLOTS:
     void cleanupTestCase();
 
 };
-#endif // KSECRETSSERVICE_TEST_H
+#endif // KSECRETS_TEST_H

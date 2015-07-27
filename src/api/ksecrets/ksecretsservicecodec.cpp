@@ -19,25 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "ksecretsservicecodec.h"
-
-#include <qca_keystore.h>
-
 #include <QDebug>
 
-using namespace KSecretsService;
-
-const char* SecretCodec::AlgorithmPlain = "plain";
+using namespace KSecrets;
 
 SecretCodec::SecretCodec() :
     m_cipher(0),
     m_mode(ModeUnitialized)
 {
-//     static bool qcaInitialized = false;
-//     if ( !qcaInitialized ) {
-//         QCA::init();
-//         qcaInitialized = true;
-//     }
 }
 
 SecretCodec::~SecretCodec()

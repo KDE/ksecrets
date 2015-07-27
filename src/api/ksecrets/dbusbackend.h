@@ -26,8 +26,6 @@
 
 #include <kjob.h>
 
-#include <qca_publickey.h>
-
 #include <QDBusObjectPath>
 #include <QEventLoopLocker>
 
@@ -38,33 +36,7 @@ class OrgFreedesktopSecretPromptInterface;
 class OrgFreedesktopSecretItemInterface;
 class QDBusPendingCallWatcher;
 
-namespace KSecretsService {
-
-class OpenSessionJob : public KJob {
-    Q_OBJECT
-public:
-    explicit OpenSessionJob( QObject *parent =0 );
-    virtual ~OpenSessionJob();
-
-    virtual void start();
-
-    OrgFreedesktopSecretServiceInterface *serviceInterface() const;
-    OrgFreedesktopSecretSessionInterface *sessionInterface() const;
-
-private Q_SLOTS:
-    void slotOpenSessionFinished(QDBusPendingCallWatcher*);
-    void slotCollectionCreated( const QDBusObjectPath& );
-    void slotCollectionDeleted( const QDBusObjectPath& );
-    void slotCollectionChanged( const QDBusObjectPath& );
-
-private:
-    friend class DBusSession;
-    OrgFreedesktopSecretSessionInterface *sessionIf;
-    OrgFreedesktopSecretServiceInterface *serviceIf;
-    SecretCodec             secretCodec;
-    QCA::DLGroup            *dhDlgroup;
-    QCA::PrivateKey         *dhPrivkey;
-};
+namespace KSecrets {
 
 /**
  * Current implementation of the client API uses the public DBus interface exposed by the
@@ -76,9 +48,9 @@ class DBusSession {
 public:
 
     /**
-     * This @return a job allowing connection to the KSecretsService daemon via dbus
+     * This @return a job allowing connection to the KSecrets daemon via dbus
      */
-    static OpenSessionJob * openSession();
+    static QFuture<DBusSession*> openSession();
 
     static OrgFreedesktopSecretPromptInterface * createPromptIf( const QDBusObjectPath &path );
     static OrgFreedesktopSecretCollectionInterface * createCollectionIf( const QDBusObjectPath &path );
@@ -95,14 +67,12 @@ public:
     static bool decrypt( const DBusSecretStruct &secretStruct, QVariant& value );
 
 private:
-    friend class OpenSessionJob;
-
     DBusSession();
 
     QEventLoopLocker locker;
 
     static const QString        encryptionAlgorithm;
-    static OpenSessionJob       *openSessionJob;
+    // static OpenSessionJob       *openSessionJob;
 };
 
 } // namespace

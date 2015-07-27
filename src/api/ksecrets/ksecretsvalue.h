@@ -18,24 +18,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICESECRET_H
-#define KSECRETSSERVICESECRET_H
+#ifndef KSECRETSVALUE_H
+#define KSECRETSVALUE_H
 
-#include "ksecretsservicemacros.h"
-
+#include <ksecrets_export.h>
 #include <QVariant>
 #include <QSharedDataPointer>
 
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class SecretPrivate;
+class Secret;
+typedef QSharedPointer<Secret> SecretPtr;
 
 /**
  * This class holds the secret information your application wants to store
  * inside a secrets collection.
  */
-class KSECRETSSERVICE_EXPORT Secret {
+class KSECRETS_EXPORT Secret {
     explicit Secret( SecretPrivate* sp );
 public:
     Secret();
@@ -82,13 +83,9 @@ public:
     bool operator == ( const Secret& that ) const;
 
 private:
-    friend class CreateCollectionItemJob;
-    friend class SetSecretItemSecretJob;
-    friend class GetSecretItemSecretJob;
-    friend class SearchCollectionSecretsJob;
     QSharedDataPointer< SecretPrivate > d;
 };
 
 };
 
-#endif // KSECRETSSERVICESECRET_H
+#endif // KSECRETSVALUE_H

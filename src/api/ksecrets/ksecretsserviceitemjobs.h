@@ -18,17 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICEITEMJOBS_H
-#define KSECRETSSERVICEITEMJOBS_H
+#ifndef KSECRETSITEMJOBS_H
+#define KSECRETSITEMJOBS_H
 
-#include "ksecretsservicesecret.h"
+#include "ksecretsvalue.h"
 #include "ksecretsservicemacros.h"
 
 #include <QSharedPointer>
 #include <kcompositejob.h>
 #include <qwindowdefs.h>
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class SecretItem;
 class SecretItemJobPrivate;
@@ -45,7 +45,7 @@ class WriteItemPropertyJobPrivate;
  * Base class for the SecretItem related jobs. Your application is not supposed
  * to use this class directly.
  */
-class KSECRETSSERVICE_EXPORT SecretItemJob : public KCompositeJob {
+class KSECRETS_EXPORT SecretItemJob : public KCompositeJob {
     Q_OBJECT
     Q_DISABLE_COPY(SecretItemJob)
 public:
@@ -80,7 +80,7 @@ private:
     QSharedPointer< SecretItemJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT GetSecretItemSecretJob : public SecretItemJob {
+class KSECRETS_EXPORT GetSecretItemSecretJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(GetSecretItemSecretJob)
 public:
@@ -94,7 +94,7 @@ private:
     QSharedPointer< GetSecretItemSecretJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT SetSecretItemSecretJob : public SecretItemJob {
+class KSECRETS_EXPORT SetSecretItemSecretJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(SetSecretItemSecretJob)
 public:
@@ -108,7 +108,7 @@ private:
     QSharedPointer< SetSecretItemSecretJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT SecretItemDeleteJob : public SecretItemJob {
+class KSECRETS_EXPORT SecretItemDeleteJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(SecretItemDeleteJob)
 public:
@@ -122,7 +122,7 @@ private:
     QSharedPointer< SecretItemDeleteJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT ReadItemPropertyJob : public SecretItemJob {
+class KSECRETS_EXPORT ReadItemPropertyJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(ReadItemPropertyJob)
 public:
@@ -139,7 +139,7 @@ private:
     void (SecretItem::*propertyReadMember)( ReadItemPropertyJob * );
 };
 
-class KSECRETSSERVICE_EXPORT WriteItemPropertyJob : public SecretItemJob {
+class KSECRETS_EXPORT WriteItemPropertyJob : public SecretItemJob {
     Q_OBJECT
     Q_DISABLE_COPY(WriteItemPropertyJob)
 public:
@@ -156,4 +156,4 @@ private:
 
 }; // namespace
 
-#endif // KSECRETSSERVICEITEMJOBS_H
+#endif // KSECRETSITEMJOBS_H

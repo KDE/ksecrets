@@ -18,31 +18,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICEITEM_H
-#define KSECRETSSERVICEITEM_H
+#ifndef KSECRETSITEM_H
+#define KSECRETSITEM_H
 
-#include "ksecretsservicesecret.h"
-#include "ksecretsserviceitemjobs.h"
-#include "ksecretsservicemacros.h"
+#include "ksecretsvalue.h"
 #include <QSharedData>
+#include <QFuture>
+#include <QDateTime>
+#include <ksecrets_export.h>
+#include <qwindowdefs.h>
 
-
-namespace KSecretsService {
+namespace KSecrets {
 
 typedef QMap< QString, QString > QStringStringMap;
 
-class GetSecretItemSecretJob;
-class SetSecretItemSecretJob;
-class SecretItemDeleteJob;
-class ReadItemPropertyJob;
-class WriteItemPropertyJob;
 class SecretItemPrivate;
-class CreateItemJobPrivate;
+class SecretItem;
+typedef QSharedPointer<SecretItem> SecretItemPtr;
 
 /**
- * KSecretsService aims to let application store sensitive pieces of information as SecretItem(s).
+ * KSecrets aims to let application store sensitive pieces of information as SecretItem(s).
  * The central part of a SecretItem is the secret it holds. The secret is actually a structure named @ref SecretStruct["(SecretStruct)"]
- * SecretItems can be qualified using attributes. These attributes are used internally by KSecretsService to uniquely identify them inside the collection.
+ * SecretItems can be qualified using attributes. These attributes are used internally by KSecrets to uniquely identify them inside the collection.
  * The attributes list always contain at least one item, named "Label". It's content is up to the client application.
  * The "Label" attribute can also be read by calling the @ref attribute method and set by @ref setLabel method.
  *
@@ -50,7 +47,7 @@ class CreateItemJobPrivate;
  * need to access the returned items, then it should copy them away before returning from the job's done
  * signal handling method.
  */
-class KSECRETSSERVICE_EXPORT SecretItem : public QSharedData {
+class KSECRETS_EXPORT SecretItem : public QSharedData {
     SecretItem( SecretItemPrivate * );
 public:
     SecretItem();
@@ -58,73 +55,62 @@ public:
     virtual ~SecretItem();
 
     /**
-     * @return SecretItemJob which will attempt to delete this item upon it's start() method call
      */
-    SecretItemDeleteJob * deleteItem( const WId &promptParentWindowId =0 );
+    QFuture<bool> deleteItem( const WId &promptParentWindowId =0 );
 
     /**
      * Read the data held by the SecretItem
      */
-    GetSecretItemSecretJob * getSecret() const;
+    QFuture<SecretPtr> getSecret() const;
 
     /**
      * Modify the item's stored data
      */
-    SetSecretItemSecretJob* setSecret( const Secret &secret );
+    QFuture<bool> setSecret( const Secret &secret );
 
     /**
      * @note returned ReadItemPropertyJob::value is a QMap< QString, QString>
      */
-    ReadItemPropertyJob * attributes() const;
+    QFuture< QMap<QString, QString> > attributes() const;
 
     /**
      * @param attributes a map containing the new attributes; it must contain at least one attribute, under the name "Label"
      */
-    WriteItemPropertyJob * setAttributes( const QMap< QString, QString > &attributes );
+    QFuture<bool> setAttributes( const QMap< QString, QString > &attributes );
 
     /**
      * @note returned ReadItemPropertyJob::value is a bool
      */
-    ReadItemPropertyJob * isLocked() const;
+    QFuture<bool> isLocked() const;
 
     /**
      * @note returned ReadItemPropertyJob::value is a QString
      */
-    ReadItemPropertyJob * label() const;
+    QFuture<QString> label() const;
 
     /**
      * @note returned ReadItemPropertyJob::value is a time_t
      */
-    ReadItemPropertyJob * createdTime() const;
+    QFuture<QDateTime> createdTime() const;
 
     /**
      * @note returned ReadItemPropertyJob::value is a time_t
      */
-    ReadItemPropertyJob * modifiedTime() const;
+    QFuture<QDateTime> modifiedTime() const;
 
     /**
      * Sets the item's label
      */
-    WriteItemPropertyJob * setLabel( const QString &label );
+    QFuture<bool> setLabel( const QString &label );
 
 private:
     friend class SecretItemPrivate;
-    friend class GetSecretItemSecretJob;
-    friend class GetSecretItemSecretJobPrivate;
-    friend class SetSecretItemSecretJob;
-    friend class SecretItemDeleteJob;
-    friend class ReadItemPropertyJob;
-    friend class WriteItemPropertyJob;
-    friend class CreateItemJobPrivate;
-    friend class SearchCollectionItemsJob;
-    friend class CreateCollectionItemJobPrivate;
-    friend class ReadCollectionItemsJob;
 
     QSharedDataPointer< SecretItemPrivate > d;
 };
 
 };
 
-Q_DECLARE_METATYPE( KSecretsService::SecretItem )
+Q_DECLARE_METATYPE( KSecrets::SecretItem )
 
-#endif // KSECRETSSERVICEITEM_H
+#endif // KSECRETSITEM_H

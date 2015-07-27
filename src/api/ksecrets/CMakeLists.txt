@@ -1,8 +1,10 @@
-project( KSecrets )
+project(KSecrets)
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=285)
 
-include_directories(${QCA2_INCLUDE_DIR})
+include(GenerateExportHeader)
+include(ECMGenerateHeaders)
+include(CMakePackageConfigHelpers)
 
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_version.h"
@@ -10,8 +12,6 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${CMAKECONFIG_INSTALL_PREFIX}/KF5Secrets")
-
-include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/KF5SecretsConfig.cmake.in"
@@ -39,17 +39,18 @@ endif()
 
 
 set (ksecrets_SRCS
-    ksecretsserviceitem.cpp
-    ksecretsserviceitemjobs.cpp
-    ksecretsservicesecret.cpp
-    ksecretsservicecollection.cpp
-    ksecretsservicecollectionjobs.cpp
-    ksecretsservicecodec.cpp
-    dbusbackend.cpp
-    promptjob.cpp
+  ksecretsservice.cpp
+    # ksecretsitem.cpp
+    # ksecretsserviceitemjobs.cpp
+    # ksecretsvalue.cpp
+    ksecretscollection.cpp
+    # ksecretsservicecollectionjobs.cpp
+    # ksecretsservicecodec.cpp
+    # dbusbackend.cpp
+    # promptjob.cpp
 )
 
-set_source_files_properties( 
+set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Collection.xml
     ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Item.xml
     ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Prompt.xml
@@ -72,7 +73,7 @@ target_include_directories(KF5Secrets INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_I
 target_link_libraries(KF5Secrets PUBLIC
     Qt5::Widgets
     Qt5::DBus
-    ${QCA2_LIBRARIES}
+    Qt5::Concurrent
     KF5::I18n
     KF5::CoreAddons
     KF5::Service
@@ -86,7 +87,7 @@ set_target_properties(KF5Secrets PROPERTIES VERSION   ${KSECRETS_VERSION_STRING}
 ecm_generate_headers(
     KSecrets_HEADERS
     HEADER_NAMES
-        KSecretsServiceCollection
+        KSecretsCollection
     REQUIRED_HEADERS KSecrets_HEADERS
 )
 
@@ -100,8 +101,8 @@ install(FILES
   DESTINATION ${INCLUDE_INSTALL_DIR}/KSecrets COMPONENT Devel
 )
 
-INSTALL(FILES 
-    ${ksecretsservice_xml} 
+INSTALL(FILES
+    ${ksecretsservice_xml}
     DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 
 # INSTALL(FILES
@@ -112,13 +113,13 @@ INSTALL(FILES
 #     ksecretsservicesecret.h
 #     ksecretsservicedbustypes.h
 #     ksecretsservicecodec.h
-#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel 
+#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel
 # )
-# 
+#
 # INSTALL(FILES
 #     ksecretsservicedbustypes.h
 #     ksecretsservicecodec.h
-#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice/private COMPONENT Devel 
+#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice/private COMPONENT Devel
 # )
 
 if(BUILD_TESTS)

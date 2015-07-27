@@ -18,20 +18,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICEITEMJOBS_P_H
-#define KSECRETSSERVICEITEMJOBS_P_H
+#ifndef KSECRETSITEMJOBS_P_H
+#define KSECRETSITEMJOBS_P_H
 
 #include "ksecretsserviceitemjobs.h"
 #include "ksecretsservicedbustypes.h"
-#include "ksecretsserviceitem_p.h"
-#include "ksecretsservicesecret_p.h"
+#include "ksecretsitem_p.h"
+#include "ksecretsvalue_p.h"
 
 #include <qdbusconnection.h>
 #include <qwindowdefs.h>
 
 class QDBusPendingCallWatcher;
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class GetSecretItemSecretJob;
 class SecretItemPrivate;
@@ -57,7 +57,7 @@ private Q_SLOTS:
     void getSecretReply( QDBusPendingCallWatcher* watcher );
 
 Q_SIGNALS:
-    void getSecretFinished( KSecretsService::SecretItemJob::ItemJobError, const QString& );
+    void getSecretFinished( KSecrets::SecretItemJob::ItemJobError, const QString& );
 
 public:
     GetSecretItemSecretJob *job;
@@ -127,4 +127,4 @@ public:
 
 } // namespace
 
-#endif // KSECRETSSERVICEITEMJOBS_P_H
+#endif // KSECRETSITEMJOBS_P_H

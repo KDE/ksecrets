@@ -27,7 +27,7 @@
 
 class OrgFreedesktopSecretPromptInterface;
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class PromptJob : public KJob {
     Q_OBJECT

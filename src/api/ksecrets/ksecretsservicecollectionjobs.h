@@ -18,11 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICECOLLECTIONJOBS_H
-#define KSECRETSSERVICECOLLECTIONJOBS_H
+#ifndef KSECRETSCOLLECTIONJOBS_H
+#define KSECRETSCOLLECTIONJOBS_H
 
-#include "ksecretsservicecollection.h"
-#include "ksecretsserviceitem.h"
+#include "ksecretscollection.h"
+#include "ksecretsitem.h"
 #include "ksecretsserviceglobals.h"
 #include "ksecretsservicemacros.h"
 
@@ -31,7 +31,7 @@
 #include <qsharedpointer.h>
 
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class CollectionJobPrivate;
 class DeleteCollectionJobPrivate;
@@ -60,7 +60,7 @@ typedef QMap< QString, QString > QStringStringMap;
  *
  * @note this class is for internal use only and should not be used by client applications
  */
-class KSECRETSSERVICE_EXPORT CollectionJob : public KCompositeJob {
+class KSECRETS_EXPORT CollectionJob : public KCompositeJob {
     Q_OBJECT
     Q_DISABLE_COPY(CollectionJob)
 public:
@@ -117,7 +117,7 @@ protected:
     QSharedPointer< CollectionJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT DeleteCollectionJob : public CollectionJob {
+class KSECRETS_EXPORT DeleteCollectionJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(DeleteCollectionJob)
 public:
@@ -134,7 +134,7 @@ private:
     QSharedPointer< DeleteCollectionJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT FindCollectionJob : public CollectionJob {
+class KSECRETS_EXPORT FindCollectionJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(FindCollectionJob)
 public:
@@ -149,7 +149,7 @@ private:
     QSharedPointer< FindCollectionJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT ListCollectionsJob : public KCompositeJob {
+class KSECRETS_EXPORT ListCollectionsJob : public KCompositeJob {
     Q_OBJECT
     Q_DISABLE_COPY(ListCollectionsJob)
 public:
@@ -174,7 +174,7 @@ private:
     QSharedPointer< ListCollectionsJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT RenameCollectionJob : public CollectionJob {
+class KSECRETS_EXPORT RenameCollectionJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(RenameCollectionJob)
 public:
@@ -194,7 +194,7 @@ private:
     QSharedPointer< RenameCollectionJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT SearchCollectionItemsJob : public CollectionJob {
+class KSECRETS_EXPORT SearchCollectionItemsJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(SearchCollectionItemsJob)
 public:
@@ -214,7 +214,7 @@ private:
     QSharedPointer<SearchCollectionItemsJobPrivate> d;
 };
 
-class KSECRETSSERVICE_EXPORT SearchCollectionSecretsJob : public CollectionJob {
+class KSECRETS_EXPORT SearchCollectionSecretsJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(SearchCollectionSecretsJob)
 public:
@@ -233,7 +233,7 @@ private:
     QSharedPointer<SearchCollectionSecretsJobPrivate> d;
 };
 
-class KSECRETSSERVICE_EXPORT CreateCollectionItemJob : public CollectionJob {
+class KSECRETS_EXPORT CreateCollectionItemJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(CreateCollectionItemJob)
 public:
@@ -249,7 +249,7 @@ private:
     QSharedPointer< CreateCollectionItemJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT ReadCollectionItemsJob : public CollectionJob {
+class KSECRETS_EXPORT ReadCollectionItemsJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(ReadCollectionItemsJob)
 public:
@@ -268,7 +268,7 @@ private:
     QSharedPointer< ReadCollectionItemsJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT ReadCollectionPropertyJob : public CollectionJob {
+class KSECRETS_EXPORT ReadCollectionPropertyJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(ReadCollectionPropertyJob)
 
@@ -288,7 +288,7 @@ private:
     void (Collection::*propertyReadMember)( ReadCollectionPropertyJob* );
 };
 
-class KSECRETSSERVICE_EXPORT WriteCollectionPropertyJob : public CollectionJob {
+class KSECRETS_EXPORT WriteCollectionPropertyJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(WriteCollectionPropertyJob)
 public:
@@ -303,7 +303,7 @@ private:
     QSharedPointer< WriteCollectionPropertyJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT ChangeCollectionPasswordJob : public CollectionJob {
+class KSECRETS_EXPORT ChangeCollectionPasswordJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(ChangeCollectionPasswordJob)
 public:
@@ -317,7 +317,7 @@ private:
     QSharedPointer< ChangeCollectionPasswordJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT LockCollectionJob : public CollectionJob {
+class KSECRETS_EXPORT LockCollectionJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(LockCollectionJob)
 public:
@@ -331,7 +331,7 @@ private:
     QSharedPointer< LockCollectionJobPrivate > d;
 };
 
-class KSECRETSSERVICE_EXPORT UnlockCollectionJob : public CollectionJob {
+class KSECRETS_EXPORT UnlockCollectionJob : public CollectionJob {
     Q_OBJECT
     Q_DISABLE_COPY(UnlockCollectionJob)
 public:
@@ -348,4 +348,4 @@ private:
 
 }
 
-#endif // KSECRETSSERVICECOLLECTIONJOBS_H
+#endif // KSECRETSCOLLECTIONJOBS_H

@@ -17,24 +17,20 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef KSECRETSSERVICECODEC_H
-#define KSECRETSSERVICECODEC_H
+#ifndef KSECRETSCODEC_H
+#define KSECRETSCODEC_H
 
-#include "ksecretsservicemacros.h"
-
-#include <qca_basic.h>
-
-namespace KSecretsService {
+namespace KSecrets {
 
 /**
  * @class SecretCodec
  * @internal
  *
- * This class is used internally by the KSecretsService infrastructure for communicating between the
+ * This class is used internally by the KSecrets infrastructure for communicating between the
  * client API and the ksecretsserviced daemon. This communication is done over the DBus in the
  * current implementation. As such, messages payload need encryption to avoid eavesdropping.
  */
-class KSECRETSSERVICE_EXPORT SecretCodec {
+class KSECRETS_EXPORT SecretCodec {
 public:
     SecretCodec();
     ~SecretCodec();
@@ -43,10 +39,10 @@ public:
 
     bool initServer( const QString &algorithm, const QVariant &input, QVariant &output );
     bool initClient( const QString &algorithm, const QVariant serverOutput );
-    bool encryptServer( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
-    bool decryptServer( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
-    bool encryptClient( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
-    bool decryptClient( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
+    // bool encryptServer( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
+    // bool decryptServer( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
+    // bool encryptClient( const QCA::SecureArray &value, QCA::SecureArray &encrypted, QByteArray &encryptedParams );
+    // bool decryptClient( const QCA::SecureArray &encrypted, const QByteArray &encryptedParams, QCA::SecureArray &value );
 
 private:
     enum Mode {
@@ -54,11 +50,11 @@ private:
         ModeServer,
         ModeClient
     };
-    QCA::Cipher         *m_cipher;
-    QCA::SymmetricKey   m_symmetricKey;
+    // QCA::Cipher         *m_cipher;
+    // QCA::SymmetricKey   m_symmetricKey;
     Mode                m_mode;
 };
 
 }; // namespace
 
-#endif // KSECRETSSERVICECODEC_H
+#endif // KSECRETSCODEC_H

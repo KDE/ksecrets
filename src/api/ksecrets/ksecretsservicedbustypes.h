@@ -19,15 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KSECRETSSERVICEDBUSTYPES_H
-#define KSECRETSSERVICEDBUSTYPES_H
+#ifndef KSECRETSDBUSTYPES_H
+#define KSECRETSDBUSTYPES_H
 
 #include <QtDBus/QDBusObjectPath>
 #include <QtDBus/QDBusArgument>
 #include <QtCore/QMap>
 #include <QtCore/QString>
 
-namespace KSecretsService {
+namespace KSecrets {
 
 /**
  * @internal
@@ -71,13 +71,13 @@ inline const QDBusArgument &operator>>(const QDBusArgument &argument, DBusSecret
 } // namespace
 
 #ifndef STRINGSTRINGMAP_METATYPE_DEFINED
-Q_DECLARE_METATYPE( KSecretsService::DBusStringStringMap );
+Q_DECLARE_METATYPE( KSecrets::DBusStringStringMap );
 #define STRINGSTRINGMAP_METATYPE_DEFINED
 #endif // STRINGSTRINGMAP_METATYPE_DEFINED
 
-Q_DECLARE_METATYPE( KSecretsService::DBusObjectPathSecretMap );
-Q_DECLARE_METATYPE( KSecretsService::DBusStringVariantMap );
-Q_DECLARE_METATYPE( KSecretsService::DBusSecretStruct )
+Q_DECLARE_METATYPE( KSecrets::DBusObjectPathSecretMap );
+Q_DECLARE_METATYPE( KSecrets::DBusStringVariantMap );
+Q_DECLARE_METATYPE( KSecrets::DBusSecretStruct )
 
-#endif // KSECRETSSERVICEDBUSTYPES_H
+#endif // KSECRETSDBUSTYPES_H
 

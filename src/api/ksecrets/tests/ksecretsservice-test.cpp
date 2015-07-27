@@ -34,7 +34,7 @@ QTEST_MAIN(KSecretServiceTest)
 
 #define SERVICE_NAME "org.freedesktop.secrets"
 
-using namespace KSecretsService;
+using namespace KSecrets;
 
 #define DONT_TEST_CREATEANDDELETE
 #define DONT_TEST_RENAMECOLLECTION
@@ -101,11 +101,11 @@ void KSecretServiceTest::testCreateItem()
     attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
     Secret newSecret;
     newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
+    KSecrets::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
     QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
     
     // first method, try to directly read the SecretStruct
-    KSecretsService::SearchCollectionSecretsJob *searchJob = coll->searchSecrets( attributes );
+    KSecrets::SearchCollectionSecretsJob *searchJob = coll->searchSecrets( attributes );
     QVERIFY2( searchJob->exec(), qPrintable( searchJob->errorText() ) );
 
     bool found = false;
@@ -118,11 +118,11 @@ void KSecretServiceTest::testCreateItem()
     QVERIFY2( found, "The new secret was not found in the collection (via searchSecrets()) !");
     
     // second method, try to read the SecretItem
-    KSecretsService::SearchCollectionItemsJob *searchItemsJob = coll->searchItems( attributes );
+    KSecrets::SearchCollectionItemsJob *searchItemsJob = coll->searchItems( attributes );
     QVERIFY2( searchItemsJob->exec(), qPrintable( searchItemsJob->errorText() ) );
     
     foreach ( QExplicitlySharedDataPointer< SecretItem > item, searchItemsJob->items() ) {
-        KSecretsService::GetSecretItemSecretJob *getSecretJob = item->getSecret();
+        KSecrets::GetSecretItemSecretJob *getSecretJob = item->getSecret();
         QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
         if ( getSecretJob->secret() == newSecret ) {
             found = true;
@@ -132,11 +132,11 @@ void KSecretServiceTest::testCreateItem()
     QVERIFY2( found, "The new secret was not found in the collection (via searchItems()) !");
     
     // third method, use the items() method
-    KSecretsService::ReadCollectionItemsJob *readItemsJob = coll->items();
+    KSecrets::ReadCollectionItemsJob *readItemsJob = coll->items();
     QVERIFY2( readItemsJob->exec(), qPrintable( readItemsJob->errorText() ) );
     
     foreach ( QExplicitlySharedDataPointer< SecretItem > item, readItemsJob->items() ) {
-        KSecretsService::GetSecretItemSecretJob *getSecretJob = item->getSecret();
+        KSecrets::GetSecretItemSecretJob *getSecretJob = item->getSecret();
         QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
         if ( getSecretJob->secret() == newSecret ) {
             found = true;
@@ -160,7 +160,7 @@ void KSecretServiceTest::testItems()
     attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
     Secret newSecret;
     newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecretsService::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
+    KSecrets::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
     QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
 
     SecretItem * createdItem = createItemJob->item();
@@ -168,20 +168,20 @@ void KSecretServiceTest::testItems()
     QVERIFY( readLabelJob->exec() );
     QVERIFY( readLabelJob->propertyValue() == QStringLiteral( "test label" ) );
     
-    KSecretsService::GetSecretItemSecretJob *getSecretJob = createdItem->getSecret();
+    KSecrets::GetSecretItemSecretJob *getSecretJob = createdItem->getSecret();
     QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
     QVERIFY( getSecretJob->secret() == newSecret );
     
     Secret secondSecret;
     secondSecret.setValue( QVariant( QStringLiteral( "second secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecretsService::SetSecretItemSecretJob * setSecretJob = createdItem->setSecret( secondSecret );
+    KSecrets::SetSecretItemSecretJob * setSecretJob = createdItem->setSecret( secondSecret );
     QVERIFY2( setSecretJob->exec(), qPrintable( setSecretJob->errorText() ) );
     getSecretJob = createdItem->getSecret();
     QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
     QVERIFY( getSecretJob->secret() == secondSecret );
     
     // try to delete the item
-    KSecretsService::SecretItemDeleteJob *itemDeleteJob = createdItem->deleteItem( 0 );
+    KSecrets::SecretItemDeleteJob *itemDeleteJob = createdItem->deleteItem( 0 );
     QVERIFY2( itemDeleteJob->exec(), qPrintable( itemDeleteJob->errorText() ) );
     
     // finally, delete the collection

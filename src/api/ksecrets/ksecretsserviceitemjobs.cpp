@@ -27,7 +27,7 @@
 #include <QDBusPendingCallWatcher>
 #include "promptjob.h"
 
-using namespace KSecretsService;
+using namespace KSecrets;
 
 
 SecretItemJob::SecretItemJob(SecretItem* item) :

@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICECOLLECTIONJOBS_P_H
-#define KSECRETSSERVICECOLLECTIONJOBS_P_H
+#ifndef KSECRETSCOLLECTIONJOBS_P_H
+#define KSECRETSCOLLECTIONJOBS_P_H
 
 #include "ksecretsservicecollectionjobs.h"
 #include "ksecretsservicedbustypes.h"
@@ -27,7 +27,7 @@
 #include <QObject>
 #include <QDBusPendingReply>
 
-namespace KSecretsService {
+namespace KSecrets {
 class SecretItem;
 
 class SecretPrivate;
@@ -80,7 +80,7 @@ private Q_SLOTS:
 public:
     FindCollectionJob                                    *findJob;
     QString                                              collectionName;
-    KSecretsService::Collection::FindCollectionOptions   findCollectionOptions;
+    KSecrets::Collection::FindCollectionOptions   findCollectionOptions;
     CollectionPrivate                                    *collectionPrivate;
 };
 
@@ -286,4 +286,4 @@ public:
 
 } // namespace
 
-#endif // KSECRETSSERVICECOLLECTIONJOBS_P_H
+#endif // KSECRETSCOLLECTIONJOBS_P_H

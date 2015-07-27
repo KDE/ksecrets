@@ -1,6 +1,7 @@
 /* This file is part of the KDE project
  *
  * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2015 Valentin Rusu <kde@rusu.info>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,10 +19,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICEGLOBALS_H
-#define KSECRETSSERVICEGLOBALS_H
+#ifndef KSECRETSGLOBALS_H
+#define KSECRETSGLOBALS_H
 
-namespace KSecretsService {
+namespace KSecrets {
 
     /**
      * @enum CreateItemOptions
@@ -37,8 +38,8 @@ namespace KSecretsService {
 } // namespace
 
 #ifndef STRINGSTRINGMAP_METATYPE_DEFINED
-Q_DECLARE_METATYPE( KSecretsService::StringStringMap );
+Q_DECLARE_METATYPE( KSecrets::StringStringMap );
 #define STRINGSTRINGMAP_METATYPE_DEFINED
 #endif // STRINGSTRINGMAP_METATYPE_DEFINED
 
-#endif // KSECRETSSERVICEGLOBALS_H
+#endif // KSECRETSGLOBALS_H

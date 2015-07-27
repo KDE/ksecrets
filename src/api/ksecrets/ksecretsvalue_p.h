@@ -18,16 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef KSECRETSSERVICESECRET_P_H
-#define KSECRETSSERVICESECRET_P_H
+#ifndef KSECRETSSECRET_P_H
+#define KSECRETSSECRET_P_H
 
-#include "ksecretsservicesecret.h"
+#include "ksecretsvalue.h"
 #include "ksecretsservicedbustypes.h"
 
 #include <QtDBus/QDBusObjectPath>
 #include <QSharedData>
 
-namespace KSecretsService {
+namespace KSecrets {
 
 class SecretPrivate : public QSharedData {
 public:
@@ -61,4 +61,4 @@ public:
 
 } // namespace
 
-#endif // KSECRETSSERVICESECRET_P_H
+#endif // KSECRETSSECRET_P_H

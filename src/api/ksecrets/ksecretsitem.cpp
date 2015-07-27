@@ -18,15 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "ksecretsserviceitem.h"
-#include "ksecretsserviceitem_p.h"
+#include "ksecretsitem.h"
+#include "ksecretsitem_p.h"
 #include "ksecretsserviceitemjobs.h"
 #include "dbusbackend.h"
 #include "item_interface.h"
 
 #include <QDateTime>
 
-using namespace KSecretsService;
+using namespace KSecrets;
 
 SecretItem::SecretItem() :
     d( new SecretItemPrivate() )
@@ -123,4 +123,4 @@ bool SecretItemPrivate::isValid() const
 }
 
 
-#include "ksecretsserviceitem.moc"
+#include "ksecretsitem.moc"

@@ -18,11 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "ksecretsservicesecret.h"
-#include "ksecretsservicesecret_p.h"
+#include "ksecretsvalue.h"
+#include "ksecretsvalue_p.h"
 #include "dbusbackend.h"
 
-using namespace KSecretsService;
+using namespace KSecrets;
 
 const char* Secret::CONTENT_TYPE_PASSWORD = "password";
 
@@ -129,4 +129,4 @@ bool SecretPrivate::operator == ( const SecretPrivate &that )  const
 }
 
 
-#include "ksecretsservicesecret.moc"
+#include "ksecretsvalue.moc"
