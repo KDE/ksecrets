@@ -7,11 +7,11 @@ Valentin Rusu
 
 * KSecret Service development started several years ago
 
-** Specified in collaboration with gnome and a fd.o draft exists
+** fd.o draft specified in collaboration with gnome
 
 *** http://standards.freedesktop.org/secret-service/
 
-** gnome-keyring already implemented this specification
+** gnome-keyring already implements this specification
 
 ** KSecret Service have been put on hold during kdelibs splitting into KDE Framewworks
 
@@ -78,7 +78,7 @@ Top slide
 
 * Many users do not really care how and where the secrets are stored. They just need the computer to remember them and correctly re-enter them when needed
 
-* What should be done to keep this even more out of the way ?
+* What should be done to keep this even more out of the way?
 
 === Being secure
 
@@ -117,7 +117,7 @@ Top slide
 
 ** The derived keys are then stored into the user session's kernel keyring
 
-* ksecrets framework will offer the API KDE applications should use, instead of the KWallet API
+* ksecrets framework will offer the API KDE applications should use, instead of the KWallet API - more on this later
 
 ** the framework will contain the decrypting library
 
@@ -126,8 +126,6 @@ Top slide
 *** No security issues related to a daemon keeping secrets file opened around
 
 === Secrets file
-
-* Custom format
 
 * Encrypted with gcrypt using the keys prepared by the pam_ksecrets module
 
@@ -142,6 +140,8 @@ Top slide
 * Concurrency will be allowed by the use of a .lock file
 
 ** A second lock file would be considered only if performances are to be optimised
+
+** It could stay in an owncloud synced folder
 
 === KSecrets Manager
 
@@ -171,15 +171,31 @@ Top slide
 
 === Proposed architecture
 
-* KDE App -> KSecrets Framework -> KSecrets library -> Secrets file
+* KDE App -> KSecrets Framework -> Secrets file
 
-* Non KDE App -> DBus -> ksecretsd -> KSecrets library -> Secrets file
+* Non KDE App -> DBus -> ksecretsd -> KSecrets Framework -> Secrets file
+
+** This should be offered via system alternatives in order to allow users switch between ksecretsd and gnome-keyring
 
 * KSecrets Manager -> KSecrets Framework -> Secrets file
 
 ** Should it provide a QML interface? Or better stick with the QWidget infrastructure?
 
 *** Either ways, the model will be separated from the UI
+
+=== The API
+
+* Hosted into a new "KSecrets Framework"
+
+* Should be compatible with the freedesktop.org interface
+
+** A future release will provide ability to connect to the freedesktop.org interface, e.g. to the gnome-keyring
+
+* Will be implemented as a library and would not call the daemon at all
+
+* Will expect finding the encryption keys into the kernel keyring
+
+* Will also be used by the ksecrets
 
 == Migrating from KWallet
 
@@ -189,9 +205,37 @@ Top slide
 
 * First, get the pam_ksecrets module configured on user systems
 
-** This should be activated, even if no application still uses KSecrets
+** This should be activated beforehand
 
 * A migration agent will be triggered upon session start asking user permission to proceed
 
 * KWallet API should be modified in order to first try to get the secrets from the KSecrets and only to get it from kwalletd if not found
+
+** The same should be done for the other way around, when writing, so new items should get into KSecrets file
+
+[NOTE.speaker]
+The KSecrets API handles secrets grouped into collections. KWallet, on the other hand, gets information about the opening application by the means of the winID given upon openWallet. So perhaps it'll be a good idea to try to use the process name for collection manipulation. And KSecrets API should automatically construct collection name from the calling process name. If doing that, the new API will automatically find secrets written by callin KWallet API.
+
+== Roadmap
+
+* [code currently in plaground/util/ksecrets]
+
+. pam_ksecrets
+
+** This one is already done
+
+. KSecrets Framework
+
+** Will contain ksecrets-cli => tool useful for script addicts
+
+. KSecrets Manager
+
+. ksecretsd
+
+** This would allow GNOME applications integrate with KDE
+
+. KSecrets Framework interface with gnome-keyring
+
+[NOTE.speaker]
+When this framework is done, it'll go through kdereview in order to be included into the frameworks tree
 
