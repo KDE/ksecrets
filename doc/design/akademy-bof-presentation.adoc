@@ -46,6 +46,7 @@ Top slide
 
 === KWallet Manager
 
+
 * KWallet Manager is somewhat designed for technical guys
 
 * We have some bug reports about people worried that their colleagues could stole their passwords if they left away forgetting their computer unattended and with both their KDE session and the kwalletd unlocked
@@ -153,6 +154,8 @@ Top slide
 
 * The user interface will be designed with the help of the VDG in order to make it more user-friendly
 
+* KSecrets Manager is an advanced tool and should be a settings module. It would be analogous to the cookies management KCM.
+
 === A word about the ACL
 
 * The secrets file will be split into "collections"
@@ -177,11 +180,16 @@ Top slide
 
 ** This should be offered via system alternatives in order to allow users switch between ksecretsd and gnome-keyring
 
+** the fd.o draft should specify where to config the alternative
+
 * KSecrets Manager -> KSecrets Framework -> Secrets file
 
 ** Should it provide a QML interface? Or better stick with the QWidget infrastructure?
 
 *** Either ways, the model will be separated from the UI
+
+[NOTE.speaker]
+The API should be async from the start to provide for dbus integration.
 
 === The API
 
@@ -213,8 +221,14 @@ Top slide
 
 ** The same should be done for the other way around, when writing, so new items should get into KSecrets file
 
+** The migration should be done entirely done per application and NOT secret by secret.
+
+* Applications ported from KWallet to KSecrets will specify a flag that would provide for a dialog inviting user to select where was the old informations in KWallet
+
+** The KSecrets API would directly connect to kwalletd to get that information, without using KWallet, to avoid depending on it
+
 [NOTE.speaker]
-The KSecrets API handles secrets grouped into collections. KWallet, on the other hand, gets information about the opening application by the means of the winID given upon openWallet. So perhaps it'll be a good idea to try to use the process name for collection manipulation. And KSecrets API should automatically construct collection name from the calling process name. If doing that, the new API will automatically find secrets written by callin KWallet API.
+The KSecrets API handles secrets grouped into collections. KWallet, on the other hand, gets information about the opening application by the means of the parameters given upon openWallet. So perhaps it'll be a good idea to try to use the process name for collection manipulation. And KSecrets API should automatically construct collection name from the calling process name. If doing that, the new API will automatically find secrets written by callin KWallet API.
 
 == Roadmap
 
@@ -228,6 +242,8 @@ The KSecrets API handles secrets grouped into collections. KWallet, on the other
 
 ** Will contain ksecrets-cli => tool useful for script addicts
 
+. KWallet API adapting for KSecrets
+
 . KSecrets Manager
 
 . ksecretsd
@@ -235,7 +251,4 @@ The KSecrets API handles secrets grouped into collections. KWallet, on the other
 ** This would allow GNOME applications integrate with KDE
 
 . KSecrets Framework interface with gnome-keyring
-
-[NOTE.speaker]
-When this framework is done, it'll go through kdereview in order to be included into the frameworks tree
 
