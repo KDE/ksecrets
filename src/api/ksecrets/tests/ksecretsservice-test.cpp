@@ -24,6 +24,9 @@
 #include "../ksecretsvalue.h"
 #include "../ksecretsitem.h"
 
+#include <QtTest/QTest>
+#include <QDebug>
+
 QTEST_MAIN(KSecretServiceTest)
 
 using namespace KSecrets;
