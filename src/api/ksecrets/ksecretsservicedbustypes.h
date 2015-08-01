@@ -1,6 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
- * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2011 Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

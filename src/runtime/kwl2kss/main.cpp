@@ -1,6 +1,6 @@
 /* This file is part of the KDE project
  *
- * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2011 Valentin Rusu <valir@kde.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
                          "0.1",
                          ki18n("KWallet to KSecretsService import utility"),
                          KAboutData::License_GPL, ki18n("(C) 2011 Valentin Rusu"));
-    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
+    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "valir@kde.org");
     aboutdata.setProgramIconName("ksecretsservice");
 
     KLocale::setMainCatalog("kwl2kss");

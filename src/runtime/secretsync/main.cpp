@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, Valentin Rusu <kde@rusu.info>
+ * Copyright 2010, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     KAboutData aboutdata("ksecretsync", 0, ki18n("KDE Secret Service Synchronization Daemon"),
                          "0.0", ki18n("KDE Secret Service"),
                          KAboutData::License_GPL, ki18n("(C) 2010 Valentin Rusu"));
-    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
+    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "valir@kde.org");
     aboutdata.setProgramIconName("ksecretsyncd");
 
     KLocale::setMainCatalog("ksecretsync");

@@ -53,7 +53,7 @@ X-Plasma-MainScript=ui/main.qml
 X-Plasma-DefaultSize=200,200
 
 X-KDE-PluginInfo-Author=Valentin Rusu
-X-KDE-PluginInfo-Email=kde@rusu.info
+X-KDE-PluginInfo-Email=valir@kde.org
 X-KDE-PluginInfo-Website=http://plasma.kde.org/
 X-KDE-PluginInfo-Category=Utilities
 X-KDE-PluginInfo-Name=secretsync-qml

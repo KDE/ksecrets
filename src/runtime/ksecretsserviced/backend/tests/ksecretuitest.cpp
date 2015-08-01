@@ -1,6 +1,6 @@
 /*
  * Copyright 2010, Dario Freddi <dario.freddi@collabora.co.uk>
- * Copyright 2010, Valentin Rusu <kde@rusu.info>
+ * Copyright 2010, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

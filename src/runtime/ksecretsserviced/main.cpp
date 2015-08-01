@@ -1,6 +1,6 @@
 /*
  * Copyright 2010, Michael Leupold <lemma@confuego.org>
- * Copyright 2011, Valentin Rusu <kde@rusu.info>
+ * Copyright 2011, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
                          ki18n("KDE DaemonSecret Service"),
                          K4AboutData::License_GPL, ki18n("(C) 2010 Michael Leupold"));
     aboutdata.addAuthor(ki18n("Michael Leupold"), ki18n("Maintainer"), "lemma@confuego.org");
-    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "kde@rusu.info");
+    aboutdata.addAuthor(ki18n("Valentin Rusu"), ki18n("Maintainer"), "valir@kde.org");
     aboutdata.setProgramIconName("ksecretsservice");
 
     KLocalizedString::setApplicationDomain( "ksecretsserviced" );

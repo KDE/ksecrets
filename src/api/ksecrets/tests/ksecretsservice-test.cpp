@@ -1,5 +1,5 @@
 /*
- * Copyright 2011, Valentin Rusu <kde@rusu.info>
+ * Copyright 2011, Valentin Rusu <valir@kde.org>
  * Copyright 2015, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or

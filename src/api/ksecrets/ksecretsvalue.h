@@ -1,6 +1,6 @@
 /* This file is part of the KDE project
  *
- * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2011 Valentin Rusu <valir@kde.org>
  * Copyright (C) 2015 Valentin Rusu <valir@kde.org>
  *
  * This library is free software; you can redistribute it and/or
