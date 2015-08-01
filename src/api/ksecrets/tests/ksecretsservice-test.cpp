@@ -1,5 +1,6 @@
 /*
  * Copyright 2011, Valentin Rusu <kde@rusu.info>
+ * Copyright 2015, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,10 +20,9 @@
  */
 
 #include "ksecretsservice-test.h"
-#include "../ksecretsservicecollection.h"
-#include "../ksecretsservicecollectionjobs.h"
-#include "../ksecretsservicesecret.h"
-#include "../ksecretsserviceitem.h"
+#include "../ksecretscollection.h"
+#include "../ksecretsvalue.h"
+#include "../ksecretsitem.h"
 
 #include <ktoolinvocation.h>
 #include <QtDBus/QDBusConnection>
@@ -32,13 +32,7 @@
 
 QTEST_MAIN(KSecretServiceTest)
 
-#define SERVICE_NAME "org.freedesktop.secrets"
-
 using namespace KSecrets;
-
-#define DONT_TEST_CREATEANDDELETE
-#define DONT_TEST_RENAMECOLLECTION
-//#define DONT_TEST_CREATEITEM 
 
 KSecretServiceTest::KSecretServiceTest(QObject* parent): QObject(parent)
 {
@@ -47,151 +41,32 @@ KSecretServiceTest::KSecretServiceTest(QObject* parent): QObject(parent)
 
 void KSecretServiceTest::initTestCase()
 {
-    // launch the daemon if it's not yet started
-    if (!QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME )))
-    {
-        QString error;
-        
-        int ret = KToolInvocation::startServiceByDesktopPath( QStringLiteral( "ksecretsserviced.desktop" ), QStringList(), &error);
-        QVERIFY2( ret == 0, qPrintable( error ) );
-        
-        QVERIFY2( QDBusConnection::sessionBus().interface()->isServiceRegistered(QString::fromLatin1( SERVICE_NAME )),
-                 "Secret Service was started but the service is not registered on the DBus");
-    }
+    // TODO
 }
 
 void KSecretServiceTest::testCreateAndDelete()
 {
-    Collection *createdColl = Collection::findCollection( QStringLiteral( "test collection" ) );
-    ReadCollectionPropertyJob *isValidJob = createdColl->isValid();
-    QVERIFY2( isValidJob->exec(), qPrintable( isValidJob->errorText() ) );
-    
-    Collection *existingColl = Collection::findCollection( QStringLiteral( "test collection" ) );
-    isValidJob = existingColl->isValid();
-    QVERIFY2( isValidJob->exec(), qPrintable( isValidJob->errorText() ) );
-    
-    ChangeCollectionPasswordJob *passwordJob = isValidJob->collection()->changePassword();
-    QVERIFY2( passwordJob->exec(), qPrintable( passwordJob->errorText() ) );
-    
-    KJob* deleteJob = existingColl->deleteCollection();
-    deleteJob->exec();
-    QVERIFY2( (deleteJob->error() == 0), qPrintable( deleteJob->errorText() ) );
+    // TODO
 }
 
 void KSecretServiceTest::testRenameCollection()
 {
-    Collection *coll = Collection::findCollection( QStringLiteral( "test name1" ) );
-    KJob *renameJob = coll->renameCollection( QStringLiteral( "test name2" ) );
-    renameJob->exec();
-    QVERIFY2( (renameJob->error() == 0), qPrintable( renameJob->errorText() ) );
-    ReadCollectionPropertyJob *readLabelJob = coll->label();
-    QVERIFY2( readLabelJob->exec(), qPrintable( readLabelJob->errorText() ) );
-    QVERIFY2( (readLabelJob->propertyValue() == QStringLiteral( "test name2" ) ), "Collection won't change it's name!" );
-    
-    // finally, delete the collection
-    KJob *deleteJob = coll->deleteCollection();
-    deleteJob->exec();
-    QVERIFY2( (deleteJob->error() == 0), qPrintable( deleteJob->errorText() ) );
+    // TODO
 }
 
 void KSecretServiceTest::testCreateItem()
 {
-    Collection *coll = Collection::findCollection( QStringLiteral( "test collection" ) );
-    QStringStringMap attributes;
-    attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
-    Secret newSecret;
-    newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecrets::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
-    QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
-    
-    // first method, try to directly read the SecretStruct
-    KSecrets::SearchCollectionSecretsJob *searchJob = coll->searchSecrets( attributes );
-    QVERIFY2( searchJob->exec(), qPrintable( searchJob->errorText() ) );
-
-    bool found = false;
-    foreach( Secret secret, searchJob->secrets() ) {
-        if ( secret == newSecret ) {
-            found = true;
-            break;
-        }
-    }
-    QVERIFY2( found, "The new secret was not found in the collection (via searchSecrets()) !");
-    
-    // second method, try to read the SecretItem
-    KSecrets::SearchCollectionItemsJob *searchItemsJob = coll->searchItems( attributes );
-    QVERIFY2( searchItemsJob->exec(), qPrintable( searchItemsJob->errorText() ) );
-    
-    foreach ( QExplicitlySharedDataPointer< SecretItem > item, searchItemsJob->items() ) {
-        KSecrets::GetSecretItemSecretJob *getSecretJob = item->getSecret();
-        QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
-        if ( getSecretJob->secret() == newSecret ) {
-            found = true;
-            break;
-        }
-    }
-    QVERIFY2( found, "The new secret was not found in the collection (via searchItems()) !");
-    
-    // third method, use the items() method
-    KSecrets::ReadCollectionItemsJob *readItemsJob = coll->items();
-    QVERIFY2( readItemsJob->exec(), qPrintable( readItemsJob->errorText() ) );
-    
-    foreach ( QExplicitlySharedDataPointer< SecretItem > item, readItemsJob->items() ) {
-        KSecrets::GetSecretItemSecretJob *getSecretJob = item->getSecret();
-        QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
-        if ( getSecretJob->secret() == newSecret ) {
-            found = true;
-            break;
-        }
-    }
-    QVERIFY2( found, "The new secret was not found in the collection (via items()) !");
-    
-    //bool collLocked = coll->isLocked();
-    
-    // finally, delete the collection
-    KJob *deleteJob = coll->deleteCollection();
-    deleteJob->exec();
-    QVERIFY2( (deleteJob->error() == 0), qPrintable( deleteJob->errorText() ) );
+    // TODO
 }
 
 void KSecretServiceTest::testItems()
 {
-    Collection *coll = Collection::findCollection( QStringLiteral( "test collection" ) );
-    QStringStringMap attributes;
-    attributes.insert( QStringLiteral( "test-attribute" ), QStringLiteral( "test-attribute-value" ) );
-    Secret newSecret;
-    newSecret.setValue( QVariant( QStringLiteral( "test-secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecrets::CreateCollectionItemJob *createItemJob = coll->createItem( QStringLiteral( "test label" ), attributes, newSecret );
-    QVERIFY2( createItemJob->exec(), qPrintable( createItemJob->errorText() ) );
-
-    SecretItem * createdItem = createItemJob->item();
-    ReadItemPropertyJob * readLabelJob = createdItem->label();
-    QVERIFY( readLabelJob->exec() );
-    QVERIFY( readLabelJob->propertyValue() == QStringLiteral( "test label" ) );
-    
-    KSecrets::GetSecretItemSecretJob *getSecretJob = createdItem->getSecret();
-    QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
-    QVERIFY( getSecretJob->secret() == newSecret );
-    
-    Secret secondSecret;
-    secondSecret.setValue( QVariant( QStringLiteral( "second secret" ) ), QStringLiteral( "stringVariant" ) );
-    KSecrets::SetSecretItemSecretJob * setSecretJob = createdItem->setSecret( secondSecret );
-    QVERIFY2( setSecretJob->exec(), qPrintable( setSecretJob->errorText() ) );
-    getSecretJob = createdItem->getSecret();
-    QVERIFY2( getSecretJob->exec(), qPrintable( getSecretJob->errorText() ) );
-    QVERIFY( getSecretJob->secret() == secondSecret );
-    
-    // try to delete the item
-    KSecrets::SecretItemDeleteJob *itemDeleteJob = createdItem->deleteItem( 0 );
-    QVERIFY2( itemDeleteJob->exec(), qPrintable( itemDeleteJob->errorText() ) );
-    
-    // finally, delete the collection
-    KJob *deleteJob = coll->deleteCollection();
-    deleteJob->exec();
-    QVERIFY2( (deleteJob->error() == 0), qPrintable( deleteJob->errorText() ) );
+    // TODO
 }
 
 void KSecretServiceTest::cleanupTestCase()
 {
+    // TODO (if needed)
 }
 
 #include "ksecretsservice-test.moc"

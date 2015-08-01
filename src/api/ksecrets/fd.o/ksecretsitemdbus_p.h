@@ -18,36 +18,25 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
+#ifndef KSECRETSITEMDBUS_P_H
+#define KSECRETSITEMDBUS_P_H
 
-#include "ksecretsservice.h"
-#include "ksecretsservice_p.h"
-#include "ksecretscollection.h"
-#include "ksecretscollection_p.h"
-#include <QtConcurrent/QtConcurrent>
+#include "../ksecretsitem_p.h"
 
+class OrgFreedesktopSecretItemInterface;
 namespace KSecrets {
-typedef QSharedPointer<Collection> CollectionPtr;
 
-CollectionPtr ServicePrivate::findCollection(const QString& collName,
-    Service::FindCollectionOptions opts,
-    const QVariantMap& collProps,
-    QWidget* promptParent)
-{
-  // TODO
-  return CollectionPtr(new Collection, &QObject::deleteLater);
+class SecretItemPrivateDbus : public KSecretsItemPrivate {
+  SecretItemPrivateDbus();
+  SecretItemPrivateDbus(const QDBusObjectPath& dbusPath);
+  SecretItemPrivateDbus(const SecretItemPrivate& that);
+  ~SecretItemPrivateDbus();
+  OrgFreedesktopSecretItemInterface* itemIf() const { return _itemIf; }
+  virtual bool isValid() const;
+
+  private:
+  OrgFreedesktopSecretItemInterface* _itemIf;
+};
 }
 
-Service::~Service()
-{
-}
-
-QFuture<CollectionPtr> Service::findCollection(const QString& collectionName, FindCollectionOptions options /* = CreateCollection */,
-    const QVariantMap& collectionProperties /* = QVariantMap() */,
-    QWidget* promptParent /* =0 */)
-{
-  return QtConcurrent::run(&ServicePrivate::findCollection, collectionName,
-      options, collectionProperties, promptParent);
-}
-
-#include "ksecretsservice.moc"
-} // namespace
+#endif

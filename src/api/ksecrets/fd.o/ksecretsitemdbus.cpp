@@ -18,24 +18,27 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETSSERVICE_P_H
-#define KSECRETSSERVICE_P_H
 
-namespace KSecrets {
+#include "ksecretsitemdbus_p.h"
 
-class ServicePrivate {
-  public:
-  ServicePrivate(Service* service)
-      : service(service)
-  {
-  }
-
-  static CollectionPtr findCollection(const QString& collName,
-      Service::FindCollectionOptions options,
-      const QVariantMap& collProps,
-      QWidget* promptParent);
-
-  Service* service;
-};
+SecretItemPrivateDbus::SecretItemPrivateDbus()
+    : _itemIf(0)
+{
 }
-#endif
+
+SecretItemPrivateDbus::SecretItemPrivateDbus(const QDBusObjectPath& dbusPath)
+    : _itemIf(0)
+{
+  _itemIf = DBusSession::createItemIf(dbusPath);
+}
+
+SecretItemPrivateDbus::SecretItemPrivateDbus(
+    const SecretItemPrivateDbus& that)
+    : _itemIf(that.itemIf)
+{
+}
+
+bool SecretItemPrivateDbus::isValid() const
+{
+  return _itemIf && _itemIf->isValid();
+}

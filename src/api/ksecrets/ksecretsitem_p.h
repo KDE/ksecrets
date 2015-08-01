@@ -25,21 +25,28 @@
 #include <QDBusObjectPath>
 #include <QSharedData>
 
-class OrgFreedesktopSecretItemInterface;
-
 namespace KSecrets {
 
 class SecretItemPrivate : public QSharedData {
 public:
+
     SecretItemPrivate();
-    SecretItemPrivate( const QDBusObjectPath &dbusPath );
     SecretItemPrivate( const SecretItemPrivate& that );
+    virtual ~SecretItemPrivate();
 
-    bool isValid() const;
-    OrgFreedesktopSecretItemInterface* itemIf() const { return _itemIf; }
 
-private:
-    OrgFreedesktopSecretItemInterface   *_itemIf;
+    bool deleteItem(QWidget*);
+    SecretPtr getSecret() const;
+    bool setSecret(const Secret& secret);
+    AttributesMap attributes() const;
+    bool setAttributes(const AttributesMap &attributes);
+    bool isLocked() const;
+    QString label() const;
+    bool setLabel(const QString&);
+    QDateTime createdTime() const;
+    QDateTime modifiedTime() const;
+
+    virtual bool isValid() const;
 };
 
 } // namespace

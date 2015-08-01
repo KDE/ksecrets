@@ -22,7 +22,6 @@
 #define KSECRETSITEMJOBS_H
 
 #include "ksecretsvalue.h"
-#include "ksecretsservicemacros.h"
 
 #include <QSharedPointer>
 #include <kcompositejob.h>

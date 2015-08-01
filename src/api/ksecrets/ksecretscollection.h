@@ -1,6 +1,7 @@
 /* This file is part of the KDE project
  *
  * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2015 Valentin Rusu <kde@rusu.info>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -132,13 +133,13 @@ class KSECRETS_EXPORT Collection : public QObject {
    * @return QFuture whose method results() will bring all the items found
    *
    */
-  QFuture<SecretItemPtr> searchItems(const StringStringMap &attributes);
+  QFuture<QList<SecretItemPtr> > searchItems(const StringStringMap &attributes);
 
   /**
    * Use this method to get several secrets without getting through getting
    * items
    */
-  QFuture<SecretPtr> searchSecrets(
+  QFuture<QList<SecretPtr> > searchSecrets(
       const StringStringMap& attributes);
 
   /**
@@ -160,7 +161,7 @@ class KSECRETS_EXPORT Collection : public QObject {
   /**
    * Retrieve items stored inside this collection
    */
-  QFuture<SecretItemPtr> items() const;
+  QFuture<QList<SecretItemPtr> > items() const;
 
   /**
    * Retrieve the lock status of this collection

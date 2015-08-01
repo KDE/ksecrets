@@ -21,7 +21,6 @@
 
 #include "ksecretscollection.h"
 #include "ksecretscollection_p.h"
-#include "dbusbackend.h"
 #include "collection_interface.h"
 
 #include <QDateTime>
@@ -41,7 +40,7 @@ Collection::Collection()
 
 Collection::~Collection() {}
 
-QFuture< QList<CollectionPtr> > Collection::listCollections()
+QFuture<QList<CollectionPtr> > Collection::listCollections()
 {
   return QtConcurrent::run(&CollectionPrivate::listCollections);
 }
@@ -50,68 +49,71 @@ Collection::Status Collection::status() const { return d->collectionStatus; }
 
 QFuture<bool> Collection::deleteCollection()
 {
-  return QtConcurrent::run(d, &CollectionPrivate::deleteCollection);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::deleteCollection);
 }
 
 QFuture<bool> Collection::renameCollection(const QString& newName)
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::renameCollection, newName);
+  return QtConcurrent::run(
+      d.data(), &CollectionPrivate::renameCollection, newName);
 }
 
-QFuture<SecretItemPtr> Collection::searchItems(
-    const QStringStringMap& attributes)
+QFuture<QList<SecretItemPtr> > Collection::searchItems(
+    const AttributesMap& attributes)
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::searchItems, attributes);
+  return QtConcurrent::run(
+      d.data(), &CollectionPrivate::searchItems, attributes);
 }
 
-QFuture<SecretPtr> Collection::searchSecrets(
-    const QStringStringMap& attributes)
+QFuture<QList<SecretPtr> > Collection::searchSecrets(
+    const AttributesMap& attributes)
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::searchSecrets, attributes);
+  return QtConcurrent::run(
+      d.data(), &CollectionPrivate::searchSecrets, attributes);
 }
 
 QFuture<bool> Collection::createItem(const QString& label,
     const QMap<QString, QString>& attributes, const Secret& secret,
     CreateItemOptions options /* = DoNotReplaceExistingItem */)
 {
-  return QtConcurrent::run(
-      &d, &CollectionPrivate::createItem(label, attributes, secret, options));
+  return QtConcurrent::run(d.data(), &CollectionPrivate::createItem, label,
+      attributes, secret, options);
 }
 
-QFuture<SecretItemPtr> Collection::items() const
+QFuture<QList<SecretItemPtr> > Collection::items() const
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::items);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::items);
 }
 
 QFuture<bool> Collection::isLocked() const
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::isLocked);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::isLocked);
 }
 
 QFuture<QString> Collection::label() const
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::label);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::label);
 }
 
 QFuture<QDateTime> Collection::createdTime() const
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::createdTime);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::createdTime);
 }
 
 QFuture<QDateTime> Collection::modifiedTime() const
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::modifiedTime);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::modifiedTime);
 }
 
 QFuture<bool> Collection::setLabel(const QString& label)
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::writeProperty,
-      QString("Label"), QVariant(label));
+  return QtConcurrent::run(d.data(), &CollectionPrivate::writeProperty,
+      QLatin1Literal("Label"), QVariant(label));
 }
 
 QFuture<bool> Collection::lock()
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::lock);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::lock);
 }
 
 void Collection::emitStatusChanged()
@@ -123,21 +125,13 @@ void Collection::emitContentsChanged() { emit contentsChanged(); }
 
 void Collection::emitDeleted() { emit deleted(); }
 
-QMap<QDBusObjectPath, CollectionPrivate*> CollectionPrivate::collectionMap;
-
 CollectionPrivate::CollectionPrivate(Collection* coll)
     : collection(coll)
     , collectionStatus(Collection::Invalid)
-    , collectionIf(0)
 {
 }
 
-CollectionPrivate::~CollectionPrivate()
-{
-  if (collectionMap.contains(dbusPath)) {
-    collectionMap.remove(dbusPath);
-  }
-}
+CollectionPrivate::~CollectionPrivate() {}
 
 void CollectionPrivate::setStatus(Collection::Status newStatus)
 {
@@ -147,65 +141,109 @@ void CollectionPrivate::setStatus(Collection::Status newStatus)
 
 bool CollectionPrivate::isValid()
 {
-  // NOTE: do not call collectionInterface() to get the interface pointer, if
-  // not you'll get an infinite recursive call
-  return collectionIf && collectionIf->isValid()
-      && (collectionStatus == Collection::FoundExisting
-             || collectionStatus == Collection::NewlyCreated);
-}
-
-void CollectionPrivate::setDBusPath(const QDBusObjectPath& path)
-{
-  collectionIf = DBusSession::createCollectionIf(path);
-  if (collectionIf->isValid()) {
-    qDebug() << "SUCCESS opening collection " << path.path();
-    collectionMap.insert(path, this);
-    dbusPath = path;
-  }
-  else {
-    setStatus(Collection::NotFound);
-    qDebug() << "ERROR opening collection " << path.path();
-  }
-}
-
-OrgFreedesktopSecretCollectionInterface*
-CollectionPrivate::collectionInterface()
-{
-  if ((collectionIf == 0) || (!collectionIf->isValid())) {
-  }
-  return collectionIf;
+  // TODO figure out if something should be checked here
+  // otherways, let this like this as it'll be overriden in the dbus related
+  // class
+  return true;
 }
 
 QFuture<bool> Collection::isValid()
 {
-  return QtConcurrent::run(&d, &CollectionPrivate::isValid);
+  return QtConcurrent::run(d.data(), &CollectionPrivate::isValid);
 }
 
-void CollectionPrivate::notifyCollectionChanged(const QDBusObjectPath& path)
+bool CollectionPrivate::writeProperty(
+    const QString& propName, const QVariant& propVal)
 {
-  if (collectionMap.contains(path)) {
-    CollectionPrivate* cp = collectionMap[path];
-    cp->collection->emitContentsChanged();
-  }
-  else {
-    qDebug() << "Ignoring notifyCollectionChanged for " << path.path();
-  }
-}
-
-void CollectionPrivate::notifyCollectionDeleted(const QDBusObjectPath& path)
-{
-  if (collectionMap.contains(path)) {
-    CollectionPrivate* cp = collectionMap[path];
-    cp->collection->emitDeleted();
-  }
-  else {
-    qDebug() << "Ignoring notifyCollectionDeleted for " << path.path();
-  }
-}
-
-bool CollectionPrivate::writeProperty(const QString& propName, const QVariant& propVal) {
   // TODO
   return false;
 }
+
+bool CollectionPrivate::isNewlyCreated() const
+{
+  // TODO
+  return false;
+}
+
+bool CollectionPrivate::lock()
+{
+  // TODO
+  return true;
+}
+
+QList<CollectionPtr> CollectionPrivate::listCollections()
+{
+  // TODO
+  return QList<CollectionPtr>();
+}
+
+bool CollectionPrivate::deleteCollection()
+{
+  // TODO
+  return true;
+}
+
+bool CollectionPrivate::renameCollection(const QString&)
+{
+  // TODO
+  return true;
+}
+
+QList<SecretItemPtr> CollectionPrivate::searchItems(const QStringMap&)
+{
+  // TODO
+  return QList<SecretItemPtr>();
+}
+
+QList<SecretPtr> CollectionPrivate::searchSecrets(const QStringMap&)
+{
+  // TODO
+  return QList<SecretPtr>();
+}
+
+bool CollectionPrivate::createItem(const QString& label,
+    const AttributesMap& attributes, const Secret& secret,
+    CreateItemOptions options)
+{
+  // TODO
+  return true;
+}
+
+bool CollectionPrivate::isLocked()
+{
+  // TODO
+  return false;
+}
+
+QString CollectionPrivate::label()
+{
+  // TODO
+  return QLatin1Literal("");
+}
+
+bool CollectionPrivate::setLabel(const QString&)
+{
+  // TODO
+  return true;
+}
+
+QDateTime CollectionPrivate::createdTime()
+{
+  // TODO
+  return QDateTime();
+}
+
+QDateTime CollectionPrivate::modifiedTime()
+{
+  // TODO
+  return QDateTime();
+}
+
+QList<SecretItemPtr> CollectionPrivate::items() const
+{
+  // TODO
+  return QList<SecretItemPtr>();
+}
+
 #include "ksecretscollection.moc"
 } // namespace

@@ -1,7 +1,7 @@
 /*
     This file is part of the KDE Libraries
 
-    Copyright (C) 2015 Valentin Rusu (kde@rusu.info)
+    Copyright (C) 2015 Valentin Rusu (valir@kde.org)
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -18,24 +18,19 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETSSERVICE_P_H
-#define KSECRETSSERVICE_P_H
+#ifndef KSECRETSVALUE_P_H
+#define KSECRETSVALUE_P_H
+
+#include "../ksecretsvalue_p.h"
 
 namespace KSecrets {
 
-class ServicePrivate {
-  public:
-  ServicePrivate(Service* service)
-      : service(service)
-  {
-  }
+class SecretValuePrivate : public SecretValue {
+    bool SecretPrivate::toSecretStruct( DBusSecretStruct &secretStruct ) const;
 
-  static CollectionPtr findCollection(const QString& collName,
-      Service::FindCollectionOptions options,
-      const QVariantMap& collProps,
-      QWidget* promptParent);
-
-  Service* service;
+    bool SecretPrivate::fromSecretStruct( const DBusSecretStruct &secretStruct, SecretPrivate*& sp);
 };
-}
+
+} // namespace KSecrets
+
 #endif

@@ -1,6 +1,7 @@
 /* This file is part of the KDE project
  *
  * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2015 Valentin Rusu <kde@rusu.info>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,7 +23,6 @@
 #define KSECRETSCOLLECTION_P_H
 
 #include "ksecretscollection.h"
-#include "dbusbackend.h"
 
 #include <QDBusObjectPath>
 #include <QString>
@@ -35,18 +35,14 @@ namespace KSecrets {
 typedef QMap<QString, QString> QStringMap;
 
 class CollectionPrivate {
-public:
+  public:
   explicit CollectionPrivate(Collection*);
   ~CollectionPrivate();
 
   bool isValid();
   bool isNewlyCreated() const;
-  void setDBusPath(const QDBusObjectPath& collPath);
   const WId& promptParentId() const;
-  OrgFreedesktopSecretCollectionInterface* collectionInterface();
   void setStatus(Collection::Status);
-  static void notifyCollectionDeleted(const QDBusObjectPath&);
-  static void notifyCollectionChanged(const QDBusObjectPath&);
   bool lock();
   static QList<CollectionPtr> listCollections();
   bool deleteCollection();
@@ -55,7 +51,7 @@ public:
   QList<SecretPtr> searchSecrets(const QStringMap&);
   bool createItem(const QString& label, const QStringMap& attributes,
       const Secret& secret, CreateItemOptions options);
-  QList<SecretItemPtr> items();
+  QList<SecretItemPtr> items() const;
   bool isLocked();
   QString label();
   QDateTime createdTime();
@@ -63,18 +59,13 @@ public:
   bool setLabel(const QString&);
   bool writeProperty(const QString& propName, const QVariant& propVal);
 
-public:
+  public:
   Collection* collection;
   QWidget* promptParent;
   QString collectionName;
   QVariantMap collectionProperties;
   Collection::Status collectionStatus;
-  QDBusObjectPath dbusPath;
-  static QMap<QDBusObjectPath, CollectionPrivate*> collectionMap;
-
-private:
-  OrgFreedesktopSecretCollectionInterface* collectionIf;
 };
-};
+}
 
 #endif // KSECRETSCOLLECTION_P_H

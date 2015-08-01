@@ -21,106 +21,148 @@
 #include "ksecretsitem.h"
 #include "ksecretsitem_p.h"
 #include "ksecretsserviceitemjobs.h"
-#include "dbusbackend.h"
 #include "item_interface.h"
 
 #include <QDateTime>
+#include <QtConcurrent>
 
 using namespace KSecrets;
 
-SecretItem::SecretItem() :
-    d( new SecretItemPrivate() )
+SecretItem::SecretItem()
+    : d(new SecretItemPrivate())
 {
 }
 
-SecretItem::SecretItem(const SecretItem& that) :
-    d( that.d )
+SecretItem::SecretItem(const SecretItem& that)
+    : QSharedData(that)
+    , d(that.d)
 {
 }
 
-SecretItem::SecretItem( SecretItemPrivate* sip ) :
-    d( sip )
+SecretItem::SecretItem(SecretItemPrivate* sip)
+    : d(sip)
 {
 }
 
-SecretItem::~SecretItem()
+SecretItem::~SecretItem() {}
+
+QFuture<bool> SecretItem::deleteItem(QWidget* parent)
 {
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::deleteItem, parent);
 }
 
-SecretItemDeleteJob * SecretItem::deleteItem( const WId &promptParentWindowId )
+QFuture<SecretPtr> SecretItem::getSecret() const
 {
-    return new SecretItemDeleteJob( this, promptParentWindowId );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::getSecret);
 }
 
-GetSecretItemSecretJob* SecretItem::getSecret() const
+QFuture<bool> SecretItem::setSecret(const Secret& secret)
 {
-    return new GetSecretItemSecretJob( const_cast< SecretItem*>( this ) );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::setSecret, secret);
 }
 
-
-SetSecretItemSecretJob* SecretItem::setSecret(const Secret& secret)
+QFuture<AttributesMap> SecretItem::attributes() const
 {
-    return new SetSecretItemSecretJob( this, secret );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::attributes);
 }
 
-ReadItemPropertyJob * SecretItem::attributes() const
+QFuture<bool> SecretItem::setAttributes(
+    const QMap<QString, QString>& attributes)
 {
-    return new ReadItemPropertyJob( const_cast<SecretItem*>(this), "Attributes" );
+  return QtConcurrent::run(
+      d.data(), &SecretItemPrivate::setAttributes, attributes);
 }
 
-WriteItemPropertyJob * SecretItem::setAttributes(const QMap< QString, QString >& attributes)
+QFuture<bool> SecretItem::isLocked() const
 {
-    QVariant value;
-    value.setValue<QMap<QString, QString > >(attributes);
-    return new WriteItemPropertyJob( const_cast<SecretItem*>(this), "Attributes", value );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::isLocked);
 }
 
-ReadItemPropertyJob * SecretItem::isLocked() const
+QFuture<QString> SecretItem::label() const
 {
-    return new ReadItemPropertyJob( const_cast<SecretItem*>(this), "Locked" );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::label);
 }
 
-ReadItemPropertyJob * SecretItem::label() const
+QFuture<QDateTime> SecretItem::createdTime() const
 {
-    return new ReadItemPropertyJob( const_cast<SecretItem*>(this), "Label" );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::createdTime);
 }
 
-ReadItemPropertyJob * SecretItem::createdTime() const
+QFuture<QDateTime> SecretItem::modifiedTime() const
 {
-    return new ReadItemPropertyJob( const_cast<SecretItem*>(this), "Created" );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::modifiedTime);
 }
 
-ReadItemPropertyJob * SecretItem::modifiedTime() const
+QFuture<bool> SecretItem::setLabel(const QString& label)
 {
-    return new ReadItemPropertyJob( const_cast<SecretItem*>(this), "Modified" );
+  return QtConcurrent::run(d.data(), &SecretItemPrivate::setLabel, label);
 }
 
-WriteItemPropertyJob * SecretItem::setLabel(const QString& label)
-{
-    return new WriteItemPropertyJob( this, "Label", QVariant( label ) );
-}
+SecretItemPrivate::SecretItemPrivate() {}
 
-SecretItemPrivate::SecretItemPrivate() :
-    _itemIf(0)
-{
-}
+SecretItemPrivate::~SecretItemPrivate() {}
 
-SecretItemPrivate::SecretItemPrivate( const QDBusObjectPath &dbusPath ) :
-    _itemIf(0)
-{
-    _itemIf = DBusSession::createItemIf( dbusPath );
-}
-
-SecretItemPrivate::SecretItemPrivate( const SecretItemPrivate &that ) :
-    QSharedData( that ),
-    _itemIf( that._itemIf )
+SecretItemPrivate::SecretItemPrivate(const SecretItemPrivate& that)
+    : QSharedData(that)
 {
 }
 
 bool SecretItemPrivate::isValid() const
 {
-    return _itemIf && _itemIf->isValid();
+  // TODO figure out if something must be checked, if not, just return true
+  return true;
 }
 
+bool SecretItemPrivate::deleteItem(QWidget*) {
+  // TODO
+  return true;
+}
+
+SecretPtr SecretItemPrivate::getSecret() const {
+  // TODO
+  return SecretPtr();
+}
+
+bool SecretItemPrivate::setSecret(const Secret& secret) {
+  // TODO
+  return true;
+}
+
+AttributesMap SecretItemPrivate::attributes() const {
+  // TODO
+  return AttributesMap();
+}
+
+bool SecretItemPrivate::setAttributes(const AttributesMap &)
+{
+  // TODO
+  return true;
+}
+
+bool SecretItemPrivate::isLocked() const {
+  return true; // no lock semantics for this version, however it acts like it's always locked
+}
+
+QString SecretItemPrivate::label() const {
+  // TODO
+  return QLatin1Literal("");
+}
+
+bool SecretItemPrivate::setLabel(const QString&) {
+  // TODO
+  return true;
+}
+
+QDateTime SecretItemPrivate::createdTime() const
+{
+  // TODO
+  return QDateTime();
+}
+
+QDateTime SecretItemPrivate::modifiedTime() const
+{
+  // TODO
+  return QDateTime();
+}
 
 #include "ksecretsitem.moc"

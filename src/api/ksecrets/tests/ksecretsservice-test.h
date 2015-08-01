@@ -1,5 +1,6 @@
 /*
  * Copyright 2011, Valentin Rusu <kde@rusu.info>
+ * Copyright 2015, Valentin Rusu <valir@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,13 +21,14 @@
 
 #ifndef KSECRETS_TEST_H
 #define KSECRETS_TEST_H
-#include <qobject.h>
+
+#include <QObject>
 
 class KSecretServiceTest : public QObject {
     Q_OBJECT
 public:
     explicit KSecretServiceTest(QObject* parent = 0);
-    
+
 private Q_SLOTS:
     void initTestCase();
     void testCreateAndDelete();

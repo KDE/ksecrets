@@ -7,8 +7,8 @@ include(ECMGenerateHeaders)
 include(CMakePackageConfigHelpers)
 
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS
-                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_version.h"
-                        PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5SecretsConfigVersion.cmake")
+                  VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_version.h"
+                  PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5SecretsConfigVersion.cmake")
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${CMAKECONFIG_INSTALL_PREFIX}/KF5Secrets")
@@ -39,30 +39,16 @@ endif()
 
 
 set (ksecrets_SRCS
-  ksecretsservice.cpp
-    # ksecretsitem.cpp
+    ksecretsservice.cpp
+    ksecretsitem.cpp
     # ksecretsserviceitemjobs.cpp
-    # ksecretsvalue.cpp
+    ksecretsvalue.cpp
     ksecretscollection.cpp
     # ksecretsservicecollectionjobs.cpp
     # ksecretsservicecodec.cpp
     # dbusbackend.cpp
     # promptjob.cpp
 )
-
-set_source_files_properties(
-    ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Collection.xml
-    ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Item.xml
-    ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Prompt.xml
-    ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Service.xml
-    ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Session.xml
-    PROPERTIES INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/ksecretsservicedbustypes.h )
-
-qt5_add_dbus_interface(ksecrets_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Collection.xml collection_interface)
-qt5_add_dbus_interface(ksecrets_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Item.xml item_interface)
-qt5_add_dbus_interface(ksecrets_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Prompt.xml prompt_interface)
-qt5_add_dbus_interface(ksecrets_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Service.xml service_interface)
-qt5_add_dbus_interface(ksecrets_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/org.freedesktop.Secret.Session.xml session_interface)
 
 add_library(KF5Secrets SHARED ${ksecrets_SRCS})
 generate_export_header(KF5Secrets BASE_NAME KSecrets)
@@ -100,10 +86,6 @@ install(FILES
   ${KSecrets_HEADERS}
   DESTINATION ${INCLUDE_INSTALL_DIR}/KSecrets COMPONENT Devel
 )
-
-INSTALL(FILES
-    ${ksecretsservice_xml}
-    DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 
 # INSTALL(FILES
 #     ksecretsservicecollection.h

@@ -18,24 +18,24 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETSSERVICE_P_H
-#define KSECRETSSERVICE_P_H
-
-namespace KSecrets {
-
-class ServicePrivate {
-  public:
-  ServicePrivate(Service* service)
-      : service(service)
-  {
-  }
-
-  static CollectionPtr findCollection(const QString& collName,
-      Service::FindCollectionOptions options,
-      const QVariantMap& collProps,
-      QWidget* promptParent);
-
-  Service* service;
-};
+bool SecretPrivate::toSecretStruct( DBusSecretStruct &secretStruct ) const
+{
+    secretStruct.m_session = DBusSession::sessionPath();
+    secretStruct.m_contentType = contentType;
+    return DBusSession::encrypt( value, secretStruct );
 }
-#endif
+
+bool SecretPrivate::fromSecretStruct( const DBusSecretStruct &secretStruct, SecretPrivate*& sp)
+{
+    bool result = false;
+    sp = 0;
+    QVariant value;
+    if ( DBusSession::decrypt( secretStruct, value ) ) {
+        sp = new SecretPrivate();
+        sp->value = value;
+        sp->contentType = secretStruct.m_contentType;
+        result = true;
+    }
+    return result;
+}
+

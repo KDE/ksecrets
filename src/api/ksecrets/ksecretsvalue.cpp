@@ -20,7 +20,6 @@
 
 #include "ksecretsvalue.h"
 #include "ksecretsvalue_p.h"
-#include "dbusbackend.h"
 
 using namespace KSecrets;
 
@@ -98,27 +97,6 @@ SecretPrivate::SecretPrivate( const DBusSecretStruct &that )
 
 SecretPrivate::~SecretPrivate()
 {
-}
-
-bool SecretPrivate::toSecretStruct( DBusSecretStruct &secretStruct ) const
-{
-    secretStruct.m_session = DBusSession::sessionPath();
-    secretStruct.m_contentType = contentType;
-    return DBusSession::encrypt( value, secretStruct );
-}
-
-bool SecretPrivate::fromSecretStruct( const DBusSecretStruct &secretStruct, SecretPrivate*& sp)
-{
-    bool result = false;
-    sp = 0;
-    QVariant value;
-    if ( DBusSession::decrypt( secretStruct, value ) ) {
-        sp = new SecretPrivate();
-        sp->value = value;
-        sp->contentType = secretStruct.m_contentType;
-        result = true;
-    }
-    return result;
 }
 
 bool SecretPrivate::operator == ( const SecretPrivate &that )  const

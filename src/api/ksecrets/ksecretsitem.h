@@ -1,6 +1,7 @@
 /* This file is part of the KDE project
  *
  * Copyright (C) 2011 Valentin Rusu <kde@rusu.info>
+ * Copyright (C) 2015 Valentin Rusu <kde@rusu.info>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,87 +31,95 @@
 
 namespace KSecrets {
 
-typedef QMap< QString, QString > QStringStringMap;
+typedef QMap<QString, QString> AttributesMap;
 
 class SecretItemPrivate;
 class SecretItem;
 typedef QSharedPointer<SecretItem> SecretItemPtr;
 
 /**
- * KSecrets aims to let application store sensitive pieces of information as SecretItem(s).
- * The central part of a SecretItem is the secret it holds. The secret is actually a structure named @ref SecretStruct["(SecretStruct)"]
- * SecretItems can be qualified using attributes. These attributes are used internally by KSecrets to uniquely identify them inside the collection.
- * The attributes list always contain at least one item, named "Label". It's content is up to the client application.
- * The "Label" attribute can also be read by calling the @ref attribute method and set by @ref setLabel method.
+ * KSecrets aims to let application store sensitive pieces of information as
+ *SecretItem(s).
+ * The central part of a SecretItem is the secret it holds. The secret is
+ *actually a structure named @ref SecretStruct["(SecretStruct)"]
+ * SecretItems can be qualified using attributes. These attributes are used
+ *internally by KSecrets to uniquely identify them inside the collection.
+ * The attributes list always contain at least one item, named "Label". It's
+ *content is up to the client application.
+ * The "Label" attribute can also be read by calling the @ref attribute method
+ *and set by @ref setLabel method.
  *
- * Please note that all the jobs returned by this class autodelete themselbes when done. If you application
- * need to access the returned items, then it should copy them away before returning from the job's done
+ * Please note that all the jobs returned by this class autodelete themselbes
+ *when done. If you application
+ * need to access the returned items, then it should copy them away before
+ *returning from the job's done
  * signal handling method.
  */
 class KSECRETS_EXPORT SecretItem : public QSharedData {
-    SecretItem( SecretItemPrivate * );
-public:
-    SecretItem();
-    SecretItem( const SecretItem& );
-    virtual ~SecretItem();
+  SecretItem(SecretItemPrivate*);
 
-    /**
-     */
-    QFuture<bool> deleteItem( const WId &promptParentWindowId =0 );
+  public:
+  SecretItem();
+  SecretItem(const SecretItem&);
+  virtual ~SecretItem();
 
-    /**
-     * Read the data held by the SecretItem
-     */
-    QFuture<SecretPtr> getSecret() const;
+  /**
+   */
+  QFuture<bool> deleteItem(QWidget* parent = NULL);
 
-    /**
-     * Modify the item's stored data
-     */
-    QFuture<bool> setSecret( const Secret &secret );
+  /**
+   * Read the data held by the SecretItem
+   */
+  QFuture<SecretPtr> getSecret() const;
 
-    /**
-     * @note returned ReadItemPropertyJob::value is a QMap< QString, QString>
-     */
-    QFuture< QMap<QString, QString> > attributes() const;
+  /**
+   * Modify the item's stored data
+   */
+  QFuture<bool> setSecret(const Secret& secret);
 
-    /**
-     * @param attributes a map containing the new attributes; it must contain at least one attribute, under the name "Label"
-     */
-    QFuture<bool> setAttributes( const QMap< QString, QString > &attributes );
+  /**
+   * @note returned ReadItemPropertyJob::value is a QMap< QString, QString>
+   */
+  QFuture<AttributesMap> attributes() const;
 
-    /**
-     * @note returned ReadItemPropertyJob::value is a bool
-     */
-    QFuture<bool> isLocked() const;
+  /**
+   * @param attributes a map containing the new attributes; it must contain at
+   * least one attribute, under the name "Label"
+   */
+  QFuture<bool> setAttributes(const AttributesMap& attributes);
 
-    /**
-     * @note returned ReadItemPropertyJob::value is a QString
-     */
-    QFuture<QString> label() const;
+  /**
+   * @note returned ReadItemPropertyJob::value is a bool
+   */
+  QFuture<bool> isLocked() const;
 
-    /**
-     * @note returned ReadItemPropertyJob::value is a time_t
-     */
-    QFuture<QDateTime> createdTime() const;
+  /**
+   * @note returned ReadItemPropertyJob::value is a QString
+   */
+  QFuture<QString> label() const;
 
-    /**
-     * @note returned ReadItemPropertyJob::value is a time_t
-     */
-    QFuture<QDateTime> modifiedTime() const;
+  /**
+   * @note returned ReadItemPropertyJob::value is a time_t
+   */
+  QFuture<QDateTime> createdTime() const;
 
-    /**
-     * Sets the item's label
-     */
-    QFuture<bool> setLabel( const QString &label );
+  /**
+   * @note returned ReadItemPropertyJob::value is a time_t
+   */
+  QFuture<QDateTime> modifiedTime() const;
 
-private:
-    friend class SecretItemPrivate;
+  /**
+   * Sets the item's label
+   */
+  QFuture<bool> setLabel(const QString& label);
 
-    QSharedDataPointer< SecretItemPrivate > d;
+  private:
+  friend class SecretItemPrivate;
+
+  QSharedDataPointer<SecretItemPrivate> d;
+};
 };
 
-};
-
-Q_DECLARE_METATYPE( KSecrets::SecretItem )
+Q_DECLARE_METATYPE(KSecrets::SecretItem)
 
 #endif // KSECRETSITEM_H

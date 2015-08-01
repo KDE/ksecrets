@@ -39,11 +39,12 @@ class KSECRETS_EXPORT Service : public QObject {
 
   /**
    * Options used when findCollection method is called
+   * TODO add an option to allow searching into the KWallet
    */
   enum FindCollectionOptions {
     OpenOnly = 0,        /// this will only try to open the collection without
                          /// creating it if not found
-    CreateCollection = 1 /// the collection will be created if not found
+    CreateCollection = 1, /// the collection will be created if not found
   };
 
   /**
@@ -74,7 +75,7 @@ class KSECRETS_EXPORT Service : public QObject {
    */
   static QFuture<CollectionPtr> findCollection(const QString& collectionName,
       FindCollectionOptions options = CreateCollection,
-      const QVariantMap collectionProperties = QVariantMap(),
+      const QVariantMap& collectionProperties = QVariantMap(),
       QWidget* promptParent = 0);
 
   private:
