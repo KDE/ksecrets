@@ -144,6 +144,18 @@ Top slide
 
 ** It could stay in an owncloud synced folder
 
+=== Changing the password
+
+* The user's session password is used via pam_ksecrets
+
+* When the user changes the password, pam_ksecrets gets notified
+
+** If the secrets file is not locked, the module would allow changing the password
+
+** A new key-pair will be derived and the file will be re-encrypted with it
+
+** The old secrets file will be kept as a backup. It will decrypt with the old password.
+
 === KSecrets Manager
 
 * This is the KWallet Manager equivalent
