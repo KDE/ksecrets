@@ -1,0 +1,13 @@
+maintainer: Valentin Rusu
+description: Secure and unified container for user passwords
+tier: 3
+type: solution
+platforms:
+    - name: Linux
+portingAid: false
+deprecated: false
+release: false
+libraries:
+ - qmake: KSecrets
+   cmake: "KF5::Secrets"
+cmakename: KF5Secrets
