@@ -156,10 +156,8 @@ void CollectionPrivate::setStatus(Collection::Status newStatus)
 
 bool CollectionPrivate::isValid()
 {
-    // TODO figure out if something should be checked here
-    // otherways, let this like this as it'll be overriden in the dbus related
-    // class
-    return false;
+    return (collectionStatus == Collection::NewlyCreated)
+        || (collectionStatus == Collection::FoundExisting);
 }
 
 QFuture<bool> Collection::isValid()

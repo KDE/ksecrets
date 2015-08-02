@@ -10,6 +10,11 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS
                   VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_version.h"
                   PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5SecretsConfigVersion.cmake")
 
+set(KF5_DEP_VERSION "5.12.0")
+find_package(KF5I18n ${KF5_DEP_VERSION} REQUIRED)
+find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
+find_package(KF5Service ${KF5_DEP_VERSION} REQUIRED)
+
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${CMAKECONFIG_INSTALL_PREFIX}/KF5Secrets")
 
@@ -41,13 +46,8 @@ endif()
 set (ksecrets_SRCS
     ksecretsservice.cpp
     ksecretsitem.cpp
-    # ksecretsserviceitemjobs.cpp
     ksecretsvalue.cpp
     ksecretscollection.cpp
-    # ksecretsservicecollectionjobs.cpp
-    # ksecretsservicecodec.cpp
-    # dbusbackend.cpp
-    # promptjob.cpp
 )
 
 add_library(KF5Secrets SHARED ${ksecrets_SRCS})
@@ -58,7 +58,6 @@ target_include_directories(KF5Secrets INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_I
 
 target_link_libraries(KF5Secrets PUBLIC
     Qt5::Widgets
-    Qt5::DBus
     Qt5::Concurrent
     KF5::I18n
     KF5::CoreAddons
@@ -73,11 +72,12 @@ set_target_properties(KF5Secrets PROPERTIES VERSION   ${KSECRETS_VERSION_STRING}
 ecm_generate_headers(
     KSecrets_HEADERS
     HEADER_NAMES
+        KSecretsService
         KSecretsCollection
+        KSecretsItem
+        KSecretsValue
     REQUIRED_HEADERS KSecrets_HEADERS
 )
-
-#install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/KSecrets DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
 
 install(TARGETS KF5Secrets EXPORT KF5SecretsTargets ${INSTALL_TARGETS_DEFAULT_ARGS})
 
@@ -87,20 +87,10 @@ install(FILES
   DESTINATION ${INCLUDE_INSTALL_DIR}/KSecrets COMPONENT Devel
 )
 
-# INSTALL(FILES
-#     ksecretsservicecollection.h
-#     ksecretsservicecollectionjobs.h
-#     ksecretsserviceitem.h
-#     ksecretsserviceitemjobs.h
-#     ksecretsservicesecret.h
-#     ksecretsservicedbustypes.h
-#     ksecretsservicecodec.h
-#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel
-# )
-#
-# INSTALL(FILES
-#     ksecretsservicedbustypes.h
-#     ksecretsservicecodec.h
-#     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice/private COMPONENT Devel
-# )
+INSTALL(FILES
+    ksecretscollection.h
+    ksecretsitem.h
+    ksecretsvalue.h
+    DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice COMPONENT Devel
+)
 

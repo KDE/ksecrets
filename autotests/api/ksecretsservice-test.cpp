@@ -24,6 +24,7 @@
 #include <ksecretscollection.h>
 #include <ksecretsvalue.h>
 #include <ksecretsitem.h>
+#include <ksecrets-crypt.h>
 
 #include <QtTest/QTest>
 #include <QDebug>

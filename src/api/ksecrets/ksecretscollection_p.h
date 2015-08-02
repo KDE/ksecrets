@@ -24,7 +24,6 @@
 
 #include "ksecretscollection.h"
 
-#include <QDBusObjectPath>
 #include <QString>
 #include <QDateTime>
 

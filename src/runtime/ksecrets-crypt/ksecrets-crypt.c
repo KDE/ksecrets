@@ -17,7 +17,6 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
 #include "ksecrets-crypt.h"
 
 #include <unistd.h>
@@ -26,6 +25,7 @@
 #include <libgen.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <linux/limits.h>
 #include <pwd.h>
 #include <string.h>
 #include <keyutils.h>
@@ -33,7 +33,7 @@
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
 
-#define GCRYPT_VERSION "1.6.0"
+#define GCRYPT_REQUIRED_VERSION "1.6.0"
 
 #define KSS_LOG_DEBUG (LOG_AUTH | LOG_DEBUG)
 #define KSS_LOG_INFO (LOG_AUTH | LOG_INFO)
@@ -46,47 +46,12 @@
 #define KSS_KEY_TYPE_ENCRYPT "ksecrets:encrypting"
 #define KSS_KEY_TYPE_MAC "ksecrets:mac"
 
-int mkpath(char* path, struct passwd* user_info)
-{
-    struct stat sb;
-    char* slash;
-    int done = 0;
-
-    slash = path;
-
-    while (!done) {
-        slash += strspn(slash, "/");
-        slash += strcspn(slash, "/");
-
-        done = (*slash == '\0');
-        *slash = '\0';
-
-        if (stat(path, &sb)) {
-            if (errno != ENOENT || (mkdir(path, 0777) && errno != EEXIST)) {
-                syslog(LOG_ERR, "Couldn't create directory: %s because: %d-%s", path,
-                    errno, strerror(errno));
-                return (-1);
-            }
-            else {
-                if (chown(path, user_info->pw_uid, user_info->pw_gid) == -1) {
-                    syslog(LOG_INFO, "Couldn't change ownership of: %s", path);
-                }
-            }
-        }
-        else if (!S_ISDIR(sb.st_mode)) {
-            return (-1);
-        }
-
-        *slash = '/';
-    }
-
-    return (0);
-}
+extern const char* prepare_secret_file_location(const char*);
 
 bool kss_init_gcry()
 {
     syslog(KSS_LOG_DEBUG, "setting-up grypt library");
-    if (!gcry_check_version(GCRYPT_VERSION)) {
+    if (!gcry_check_version(GCRYPT_REQUIRED_VERSION)) {
         syslog(KSS_LOG_ERR, "kwalletd: libcrypt version is too old");
         return false;
     }
@@ -103,8 +68,6 @@ bool kss_init_gcry()
     return true;
 }
 
-const char* secrets_file_path();
-
 /**
  * This function reads the crypting salt from the main ksecrets data file
  * If the file is not present, then it is created. This case should happen
@@ -114,8 +77,6 @@ const char* secrets_file_path();
  * first usage.
  *
  * NOTE This function has code from pam-kwallet
- * TODO adapt this code to enable configuration of the salt file path from the
- * PAM module command line
  */
 bool kss_get_salt(const char* username, char** salt)
 {
@@ -131,19 +92,19 @@ bool kss_get_salt(const char* username, char** salt)
         return false;
     }
 
-    /* FIXME this path should be configurable in a future version */
-    char* fixpath = secrets_file_path();
-    char* path = (char*)malloc(
-        strlen(user_info->pw_dir) + strlen(fixpath) + 2); /* 2 == / and \0 */
-    sprintf(path, "%s/%s", user_info->pw_dir, fixpath);
-
     struct stat info;
+    if (stat(user_info->pw_dir, &info) != 0) {
+        syslog(KSS_LOG_ERR, "pam_kwallet: Cannot stat user directory");
+        return false;
+    }
+
+    const char* path = prepare_secret_file_location(user_info->pw_dir);
+
     *salt = NULL;
     if (stat(path, &info) != 0 || info.st_size == 0) {
         unlink(path); /* in case the file already exists and it has size of 0 */
 
-        const char* dir = dirname(path);
-        mkpath(dir, user_info); /* create the path in case it does not exists */
+        const char* dir = dirname((char*)path);
 
         *salt = gcry_random_bytes(KSECRETS_SALTSIZE, GCRY_STRONG_RANDOM);
         FILE* fd = fopen(path, "w");
@@ -200,7 +161,7 @@ bool kss_derive_keys(const char* user_name, const char* password,
     if (!kss_init_gcry())
         return false;
 
-    const char* salt;
+    char* salt;
     salt = 0;
     if (!kss_get_salt(user_name, &salt))
         return false;
@@ -252,7 +213,7 @@ bool kss_store_keys(const char* encryption_key, const char* mac_key)
 
 bool kss_keys_already_there()
 {
-    struct key* key;
+    key_serial_t key;
     key = request_key(KSS_KEY_TYPE_ENCRYPT, 0, 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
         syslog(KSS_LOG_DEBUG, "request_key failed with errno %d", errno);
@@ -290,13 +251,9 @@ bool kss_can_change_password()
     return true;
 }
 
-bool kss_change_password(const char* password)
+bool kss_change_password(const char* new_password)
 {
     syslog(LOG_INFO, "kss_change_password");
     return true;
 }
 
-const char* secrets_file_path()
-{
-    return ".local/share/ksecretsd/ksecrets.data";
-}

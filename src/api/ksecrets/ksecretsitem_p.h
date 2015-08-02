@@ -22,7 +22,6 @@
 #define KSECRETSITEM_P_H
 
 #include "ksecretsitem.h"
-#include <QDBusObjectPath>
 #include <QSharedData>
 
 namespace KSecrets {

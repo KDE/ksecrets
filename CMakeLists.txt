@@ -21,7 +21,7 @@ find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED
 
 option(BUILD_TESTS "Build KSecrets with unit tests" ON)
 
-set(KF5_VERSION "5.12.0")
+set(KF5_VERSION "5.13.0")
 include(KDEInstallDirs)
 include(KDEFrameworkCompilerSettings)
 include(KDECMakeSettings)
@@ -29,17 +29,6 @@ include(FeatureSummary)
 include(GenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
-
-if(NOT kdelibs_SOURCE_DIR)
-    find_package(KF5 ${KF5_VERSION} REQUIRED
-        CoreAddons
-        WidgetsAddons
-        Service
-        Config
-        WindowSystem
-        I18n
-    )
-endif()
 
 
 add_subdirectory(src)

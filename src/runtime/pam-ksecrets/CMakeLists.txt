@@ -20,7 +20,7 @@ set(pam_ksecret_SRC
 add_library(pam_ksecrets SHARED ${pam_ksecret_SRC})
 set_target_properties(pam_ksecrets PROPERTIES PREFIX "")
 target_link_libraries(pam_ksecrets
-  ksecrets-crypt
+  ksecrets_crypt
   ${LIBGCRYPT_LIBRARIES}
   ${PAM_LIBRARIES}
   keyutils)
