@@ -132,7 +132,7 @@ Top slide
 
 * The file structure will be something like this:
 
-** MAGIC | LENGTH | IV | ENCRYPTED_DATA | MAC_OF_ENCRYPTED
+** SALT | LENGTH | IV | ENCRYPTED_DATA | MAC_OF_ENCRYPTED
 
 *** The Data is encrypted with the first key
 
