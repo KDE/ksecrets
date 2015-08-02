@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(KSecrets)
-set(CMAKE_EXPORT_COMPILE_COMMANDS)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 include(FeatureSummary)
 find_package(ECM 5.11.0 NO_MODULE)

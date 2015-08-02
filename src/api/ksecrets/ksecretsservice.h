@@ -31,6 +31,18 @@ namespace KSecrets {
 
 class ServicePrivate;
 
+/**
+ * KSecrets Service entry point.
+ *
+ * KDE applications use this class to actually handle their secrets.
+ * This class would do the magic of connecting to the right backend
+ * and store or retrieve the secrets.
+ *
+ * We encourage you to first read the Free Desktop draft about
+ * <a href="http://standards.freedesktop.org/secret-service/">Secret Service</a>
+ *
+ *
+ */
 class KSECRETS_EXPORT Service : public QObject {
   Q_OBJECT
   Q_DISABLE_COPY(Service)
@@ -39,39 +51,15 @@ class KSECRETS_EXPORT Service : public QObject {
 
   /**
    * Options used when findCollection method is called
-   * TODO add an option to allow searching into the KWallet
    */
   enum FindCollectionOptions {
-    OpenOnly = 0,        /// this will only try to open the collection without
-                         /// creating it if not found
-    CreateCollection = 1, /// the collection will be created if not found
+    OpenOnly = 0,           /// this will only try to open the collection without
+                            /// creating it if not found
+    CreateCollection = 1,   /// the collection will be created if not found
+    LookIntoKWallet = 2     /// Specify this if your application was ported from KWallet to KSecrets
   };
 
   /**
-   * This will try to find a collection given its name. If not found, it'll
-   * create it depending on the
-   * options given.
-   * @param collectionName collection name to be found
-   * @param options @see FindCollectionOptions
-   * @param collectionProperties specify collection properties and it's
-   * semantics depends on the options parameter
-   *      if options == CreateCollection, then the newly created collection
-   * will receive these properties
-   *      if options == OpenOnly, then the properties are used to match the
-   * existing collection so be careful
-   *                              not to specify a property not given when
-   * creation a collection or you'll not be
-   *                              able to find it with this method
-   * @param promptParentWindowId identifies the applications window to be used
-   * as a parent for prompt windows
-   * @return Collection instance to be used by the client application to
-   * further manipulated it's secrets
-   * @note Please note that the collection returned by this method is not yet
-   * connected to the secret storing
-   * infrastructure. As such, a NotFound status would not be immediatley
-   * known. Application should be prepared
-   * to get such an error upon the execution of the first KJob returned by one
-   * of the other methods of this class.
    */
   static QFuture<CollectionPtr> findCollection(const QString& collectionName,
       FindCollectionOptions options = CreateCollection,
@@ -81,6 +69,7 @@ class KSECRETS_EXPORT Service : public QObject {
   private:
   QSharedPointer<ServicePrivate> d;
 };
-}
+
+} // namespace
 
 #endif

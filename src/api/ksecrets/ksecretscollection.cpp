@@ -35,90 +35,105 @@ Collection::Collection()
     : QObject()
     , d(new CollectionPrivate(this))
 {
-  // nothing to do
+    // nothing to do
 }
 
 Collection::~Collection() {}
 
 QFuture<QList<CollectionPtr> > Collection::listCollections()
 {
-  return QtConcurrent::run(&CollectionPrivate::listCollections);
+    return QtConcurrent::run(&CollectionPrivate::listCollections);
 }
 
 Collection::Status Collection::status() const { return d->collectionStatus; }
 
 QFuture<bool> Collection::deleteCollection()
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::deleteCollection);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::deleteCollection);
 }
 
 QFuture<bool> Collection::renameCollection(const QString& newName)
 {
-  return QtConcurrent::run(
-      d.data(), &CollectionPrivate::renameCollection, newName);
+    return QtConcurrent::run(
+        d.data(), &CollectionPrivate::renameCollection, newName);
 }
 
 QFuture<QList<SecretItemPtr> > Collection::searchItems(
     const AttributesMap& attributes)
 {
-  return QtConcurrent::run(
-      d.data(), &CollectionPrivate::searchItems, attributes);
+    return QtConcurrent::run(
+        d.data(), &CollectionPrivate::searchItems, attributes);
+}
+
+QFuture<QList<SecretItemPtr> > Collection::searchItems(const QString&)
+{
+    AttributesMap attrs;
+    // TODO add here the label property
+    return searchItems(attrs);
+}
+
+QFuture<QList<SecretItemPtr> > Collection::searchItems(
+    const QString&, const AttributesMap& initialAttrs)
+{
+    AttributesMap attrs(initialAttrs);
+    // TODO add here the label property
+    return searchItems(attrs);
 }
 
 QFuture<QList<SecretPtr> > Collection::searchSecrets(
     const AttributesMap& attributes)
 {
-  return QtConcurrent::run(
-      d.data(), &CollectionPrivate::searchSecrets, attributes);
+    return QtConcurrent::run(
+        d.data(), &CollectionPrivate::searchSecrets, attributes);
 }
 
 QFuture<bool> Collection::createItem(const QString& label,
-    const QMap<QString, QString>& attributes, const Secret& secret,
+    const Secret& secret, const QMap<QString, QString>& attributes,
     CreateItemOptions options /* = DoNotReplaceExistingItem */)
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::createItem, label,
-      attributes, secret, options);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::createItem, label,
+        attributes, secret, options);
 }
 
 QFuture<QList<SecretItemPtr> > Collection::items() const
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::items);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::items);
 }
 
 QFuture<bool> Collection::isLocked() const
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::isLocked);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::isLocked);
 }
 
 QFuture<QString> Collection::label() const
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::label);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::label);
 }
 
 QFuture<QDateTime> Collection::createdTime() const
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::createdTime);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::createdTime);
 }
 
 QFuture<QDateTime> Collection::modifiedTime() const
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::modifiedTime);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::modifiedTime);
 }
 
 QFuture<bool> Collection::setLabel(const QString& label)
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::writeProperty,
-      QLatin1Literal("Label"), QVariant(label));
+    return QtConcurrent::run(d.data(), &CollectionPrivate::writeProperty,
+        QLatin1Literal("Label"), QVariant(label));
 }
 
 QFuture<bool> Collection::lock()
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::lock);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::lock);
 }
 
 void Collection::emitStatusChanged()
 {
-  emit statusChanged(d->collectionStatus);
+    emit statusChanged(d->collectionStatus);
 }
 
 void Collection::emitContentsChanged() { emit contentsChanged(); }
@@ -135,114 +150,114 @@ CollectionPrivate::~CollectionPrivate() {}
 
 void CollectionPrivate::setStatus(Collection::Status newStatus)
 {
-  collectionStatus = newStatus;
-  collection->emitStatusChanged();
+    collectionStatus = newStatus;
+    collection->emitStatusChanged();
 }
 
 bool CollectionPrivate::isValid()
 {
-  // TODO figure out if something should be checked here
-  // otherways, let this like this as it'll be overriden in the dbus related
-  // class
-  return true;
+    // TODO figure out if something should be checked here
+    // otherways, let this like this as it'll be overriden in the dbus related
+    // class
+    return false;
 }
 
 QFuture<bool> Collection::isValid()
 {
-  return QtConcurrent::run(d.data(), &CollectionPrivate::isValid);
+    return QtConcurrent::run(d.data(), &CollectionPrivate::isValid);
 }
 
 bool CollectionPrivate::writeProperty(
     const QString& propName, const QVariant& propVal)
 {
-  // TODO
-  return false;
+    // TODO
+    return false;
 }
 
 bool CollectionPrivate::isNewlyCreated() const
 {
-  // TODO
-  return false;
+    // TODO
+    return false;
 }
 
 bool CollectionPrivate::lock()
 {
-  // TODO
-  return true;
+    // TODO
+    return true;
 }
 
 QList<CollectionPtr> CollectionPrivate::listCollections()
 {
-  // TODO
-  return QList<CollectionPtr>();
+    // TODO
+    return QList<CollectionPtr>();
 }
 
 bool CollectionPrivate::deleteCollection()
 {
-  // TODO
-  return true;
+    // TODO
+    return true;
 }
 
 bool CollectionPrivate::renameCollection(const QString&)
 {
-  // TODO
-  return true;
+    // TODO
+    return true;
 }
 
-QList<SecretItemPtr> CollectionPrivate::searchItems(const QStringMap&)
+QList<SecretItemPtr> CollectionPrivate::searchItems(const AttributesMap&)
 {
-  // TODO
-  return QList<SecretItemPtr>();
+    // TODO
+    return QList<SecretItemPtr>();
 }
 
-QList<SecretPtr> CollectionPrivate::searchSecrets(const QStringMap&)
+QList<SecretPtr> CollectionPrivate::searchSecrets(const AttributesMap&)
 {
-  // TODO
-  return QList<SecretPtr>();
+    // TODO
+    return QList<SecretPtr>();
 }
 
 bool CollectionPrivate::createItem(const QString& label,
     const AttributesMap& attributes, const Secret& secret,
     CreateItemOptions options)
 {
-  // TODO
-  return true;
+    // TODO
+    return true;
 }
 
 bool CollectionPrivate::isLocked()
 {
-  // TODO
-  return false;
+    // TODO
+    return false;
 }
 
 QString CollectionPrivate::label()
 {
-  // TODO
-  return QLatin1Literal("");
+    // TODO
+    return QLatin1Literal("");
 }
 
 bool CollectionPrivate::setLabel(const QString&)
 {
-  // TODO
-  return true;
+    // TODO
+    return true;
 }
 
 QDateTime CollectionPrivate::createdTime()
 {
-  // TODO
-  return QDateTime();
+    // TODO
+    return QDateTime();
 }
 
 QDateTime CollectionPrivate::modifiedTime()
 {
-  // TODO
-  return QDateTime();
+    // TODO
+    return QDateTime();
 }
 
 QList<SecretItemPtr> CollectionPrivate::items() const
 {
-  // TODO
-  return QList<SecretItemPtr>();
+    // TODO
+    return QList<SecretItemPtr>();
 }
 
 #include "ksecretscollection.moc"

@@ -32,8 +32,6 @@ class OrgFreedesktopSecretCollectionInterface;
 
 namespace KSecrets {
 
-typedef QMap<QString, QString> QStringMap;
-
 class CollectionPrivate {
   public:
   explicit CollectionPrivate(Collection*);
@@ -47,9 +45,9 @@ class CollectionPrivate {
   static QList<CollectionPtr> listCollections();
   bool deleteCollection();
   bool renameCollection(const QString&);
-  QList<SecretItemPtr> searchItems(const QStringMap&);
-  QList<SecretPtr> searchSecrets(const QStringMap&);
-  bool createItem(const QString& label, const QStringMap& attributes,
+  QList<SecretItemPtr> searchItems(const AttributesMap&);
+  QList<SecretPtr> searchSecrets(const AttributesMap&);
+  bool createItem(const QString& label, const AttributesMap& attributes,
       const Secret& secret, CreateItemOptions options);
   QList<SecretItemPtr> items() const;
   bool isLocked();
