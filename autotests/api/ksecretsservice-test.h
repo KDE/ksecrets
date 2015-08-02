@@ -22,7 +22,7 @@
 #ifndef KSECRETS_TEST_H
 #define KSECRETS_TEST_H
 
-#include <QObject>
+#include <QtCore/QObject>
 
 class KSecretServiceTest : public QObject {
     Q_OBJECT

@@ -20,9 +20,9 @@
  */
 
 #include "ksecretsservice-test.h"
-#include "../ksecretscollection.h"
-#include "../ksecretsvalue.h"
-#include "../ksecretsitem.h"
+#include <ksecretscollection.h>
+#include <ksecretsvalue.h>
+#include <ksecretsitem.h>
 
 #include <QtTest/QTest>
 #include <QDebug>

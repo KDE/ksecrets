@@ -104,6 +104,3 @@ install(FILES
 #     DESTINATION ${INCLUDE_INSTALL_DIR}/ksecretsservice/private COMPONENT Devel
 # )
 
-if(BUILD_TESTS)
-add_subdirectory(tests)
-endif()
