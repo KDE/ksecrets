@@ -58,7 +58,7 @@ void KSecretServiceTest::initTestCase()
     QStandardPaths::setTestModeEnabled(true);
     sharedConfig = KSharedConfig::openConfig(QLatin1String("ksecretsrc"));
 
-    setupPAM();
+    setupKeyring();
 
     collection = KSecrets::Service::findCollection(
                      QLatin1String(TEST_CREATE_COLLECTION_NAME),
@@ -132,7 +132,7 @@ void KSecretServiceTest::cleanupTestCase()
     if (collection->isValid().result()) {
         collection->deleteCollection();
     }
-    cleanupPAM();
+    cleanupKeyring();
 
     QString configPath = QStandardPaths::locate(
             QStandardPaths::ConfigLocation,
@@ -142,7 +142,7 @@ void KSecretServiceTest::cleanupTestCase()
 }
 
 
-void KSecretServiceTest::setupPAM()
+void KSecretServiceTest::setupKeyring()
 {
     const char* KSS_TEST_USER = "USER";
     QVERIFY(qEnvironmentVariableIsSet(KSS_TEST_USER));
@@ -179,7 +179,7 @@ void KSecretServiceTest::setupPAM()
     QVERIFY(-1 != key);
 }
 
-void KSecretServiceTest::cleanupPAM()
+void KSecretServiceTest::cleanupKeyring()
 {
     QVERIFY(kss_delete_credentials());
 }

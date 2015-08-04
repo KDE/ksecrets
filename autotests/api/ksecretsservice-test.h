@@ -37,7 +37,7 @@ private Q_SLOTS:
     void cleanupTestCase();
 
 private:
-    void setupPAM();
-    void cleanupPAM();
+    void setupKeyring();
+    void cleanupKeyring();
 };
 #endif // KSECRETS_TEST_H
