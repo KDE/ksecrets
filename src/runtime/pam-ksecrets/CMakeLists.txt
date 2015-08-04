@@ -17,7 +17,7 @@ INCLUDE_DIRECTORIES(
 set(pam_ksecret_SRC
   pam_ksecrets.c)
 
-add_library(pam_ksecrets SHARED ${pam_ksecret_SRC})
+add_library(pam_ksecrets STATIC ${pam_ksecret_SRC})
 set_target_properties(pam_ksecrets PROPERTIES PREFIX "")
 target_link_libraries(pam_ksecrets
   ksecrets_crypt

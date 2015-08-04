@@ -21,7 +21,6 @@
 
 #include "ksecretscollection.h"
 #include "ksecretscollection_p.h"
-#include "collection_interface.h"
 
 #include <QDateTime>
 #include <QtDBus/QDBusPendingReply>

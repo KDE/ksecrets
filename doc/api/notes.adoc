@@ -1,0 +1,9 @@
+== Notes about the KSecrets API
+
+The communication between the API libraray and the ksecretsd should be
+encrypted, to reduce the attack surface, as the dbus traffic can be spied.
+
+The collections are already stored in a encrypted form on disk and they are
+typically handled only by one application. So, instead of decrypting the
+collection in ksecrets then re-encrypt them for dbus forwarding, the API will
+obtain the entire raw-encrypted collection and will handle it directly.

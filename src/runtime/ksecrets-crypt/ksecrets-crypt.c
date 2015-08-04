@@ -43,10 +43,10 @@
 #define KSECRETS_KEYSIZE 256
 #define KSECRETS_ITERATIONS 50000
 
-#define KSS_KEY_TYPE_ENCRYPT "ksecrets:encrypting"
-#define KSS_KEY_TYPE_MAC "ksecrets:mac"
-
+/* these functions are implemented in config.cpp next to this file */
 extern const char* prepare_secret_file_location(const char*);
+extern const char* get_keyname_encrypting();
+extern const char* get_keyname_mac();
 
 bool kss_init_gcry()
 {
@@ -88,7 +88,7 @@ bool kss_get_salt(const char* username, char** salt)
     struct passwd* user_info;
     user_info = getpwnam(username);
     if (!user_info) {
-        syslog(KSS_LOG_ERR, "pam_kwallet: Couldn't get user info (passwd) info");
+        syslog(KSS_LOG_ERR, "pam_kwallet: Couldn't get user %s info", username);
         return false;
     }
 
@@ -99,20 +99,21 @@ bool kss_get_salt(const char* username, char** salt)
     }
 
     const char* path = prepare_secret_file_location(user_info->pw_dir);
+    if (NULL == path) {
+        syslog(KSS_LOG_ERR, "pam_kwallet: Cannot prepare secret file location");
+        return false;
+    }
 
     *salt = NULL;
     if (stat(path, &info) != 0 || info.st_size == 0) {
         unlink(path); /* in case the file already exists and it has size of 0 */
-
-        const char* dir = dirname((char*)path);
 
         *salt = gcry_random_bytes(KSECRETS_SALTSIZE, GCRY_STRONG_RANDOM);
         FILE* fd = fopen(path, "w");
 
         /* If the file can't be created */
         if (fd == NULL) {
-            syslog(KSS_LOG_ERR, "Couldn't open file: %s because: %d-%s", path,
-                errno, strerror(errno));
+            syslog(KSS_LOG_ERR, "Couldn't open file: %s because: %d (%m)", path, errno);
             return false;
         }
 
@@ -120,8 +121,7 @@ bool kss_get_salt(const char* username, char** salt)
         fclose(fd);
 
         if (chown(path, user_info->pw_uid, user_info->pw_gid) == -1) {
-            syslog(
-                KSS_LOG_ERR, "Couldn't change ownership of the created salt file");
+            syslog(KSS_LOG_ERR, "Couldn't change ownership of the created salt file");
             return false;
         }
         syslog(KSS_LOG_INFO, "ksecrets: created secrets file path : %s", path);
@@ -129,8 +129,7 @@ bool kss_get_salt(const char* username, char** salt)
     else {
         FILE* fd = fopen(path, "r");
         if (fd == NULL) {
-            syslog(KSS_LOG_ERR, "Couldn't open file: %s because: %d-%s", path,
-                errno, strerror(errno));
+            syslog(KSS_LOG_ERR, "Couldn't open file: %s because: %d (%m)", path, errno);
             return 1;
         }
         *salt = (char*)malloc(sizeof(char) * KSECRETS_SALTSIZE);
@@ -146,15 +145,13 @@ bool kss_get_salt(const char* username, char** salt)
     return true;
 }
 
-bool kss_derive_keys(const char* user_name, const char* password,
-    char* encryption_key, char* mac_key)
+bool kss_derive_keys(const char* user_name, const char* password, char* encryption_key, char* mac_key)
 {
     gpg_error_t gcryerr;
 
     syslog(KSS_LOG_INFO, "kss_set_credentials: attempting keys generation");
     if (0 == password) {
-        syslog(
-            KSS_LOG_INFO, "NULL password given. ksecrets will not be available.");
+        syslog(KSS_LOG_INFO, "NULL password given. ksecrets will not be available.");
         return false;
     }
 
@@ -168,19 +165,15 @@ bool kss_derive_keys(const char* user_name, const char* password,
 
     /* generate both encryption and MAC key in one go */
     char keys[2 * KSECRETS_KEYSIZE];
-    gcryerr = gcry_kdf_derive(password, strlen(password),
-        GCRY_KDF_ITERSALTED_S2K, GCRY_MD_SHA512, salt, 8, KSECRETS_ITERATIONS,
-        2 * KSECRETS_KEYSIZE, keys);
+    gcryerr = gcry_kdf_derive(password, strlen(password), GCRY_KDF_ITERSALTED_S2K, GCRY_MD_SHA512, salt, 8, KSECRETS_ITERATIONS, 2 * KSECRETS_KEYSIZE, keys);
     if (gcryerr) {
-        syslog(KSS_LOG_ERR, "key derivation failed: code 0x%0x: %s/%s", gcryerr,
-            gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        syslog(KSS_LOG_ERR, "key derivation failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
         return false;
     }
 
     memcpy(encryption_key, keys, KSECRETS_KEYSIZE);
     memcpy(mac_key, keys + KSECRETS_KEYSIZE, KSECRETS_KEYSIZE);
-    syslog(KSS_LOG_INFO,
-        "successuflly generated ksecrets keys from user password.");
+    syslog(KSS_LOG_INFO, "successuflly generated ksecrets keys from user password.");
 
     return true;
 }
@@ -188,35 +181,30 @@ bool kss_derive_keys(const char* user_name, const char* password,
 bool kss_store_keys(const char* encryption_key, const char* mac_key)
 {
     key_serial_t ks;
-    ks = add_key("user", KSS_KEY_TYPE_ENCRYPT, encryption_key, KSECRETS_KEYSIZE,
-        KEY_SPEC_SESSION_KEYRING);
+    const char* key_name = get_keyname_encrypting();
+    ks = add_key("user", key_name, encryption_key, KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
     if (-1 == ks) {
-        syslog(KSS_LOG_ERR,
-            "ksecrets: cannot store encryption key in kernel keyring: errno=%d",
-            errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot store encryption key in kernel keyring: errno=%d (%m)", errno);
         return false;
     }
-    syslog(KSS_LOG_DEBUG,
-        "ksecrets: encrpyting key now in kernel keyring with id %d", ks);
+    syslog(KSS_LOG_DEBUG, "ksecrets: encrpyting key now in kernel keyring with id %d and desc %s", ks, key_name);
 
-    ks = add_key("user", KSS_KEY_TYPE_MAC, mac_key, KSECRETS_KEYSIZE,
-        KEY_SPEC_SESSION_KEYRING);
+    key_name = get_keyname_mac();
+    ks = add_key("user", key_name, mac_key, KSECRETS_KEYSIZE, KEY_SPEC_SESSION_KEYRING);
     if (-1 == ks) {
-        syslog(KSS_LOG_ERR,
-            "ksecrets: cannot store mac key in kernel keyring: errno=%d", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot store mac key in kernel keyring: errno=%d (%m)", errno);
         return false;
     }
-    syslog(KSS_LOG_DEBUG, "ksecrets: mac key now in kernel keyring with id %d",
-        ks);
+    syslog(KSS_LOG_DEBUG, "ksecrets: mac key now in kernel keyring with id %d and desc %s", ks, key_name);
     return true;
 }
 
 bool kss_keys_already_there()
 {
     key_serial_t key;
-    key = request_key(KSS_KEY_TYPE_ENCRYPT, 0, 0, KEY_SPEC_SESSION_KEYRING);
+    key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d", errno);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), so assuming ksecrets not yet loaded", errno);
         return false;
     }
     syslog(KSS_LOG_DEBUG, "ksecrets: keys already in keyring");
@@ -225,6 +213,7 @@ bool kss_keys_already_there()
 
 bool kss_set_credentials(const char* user_name, const char* password)
 {
+    syslog(KSS_LOG_DEBUG, "kss_set_credentials for %s", user_name);
     if (kss_keys_already_there())
         return true;
 
@@ -239,9 +228,32 @@ bool kss_set_credentials(const char* user_name, const char* password)
     return true;
 }
 
-void kss_delete_credentials()
+bool kss_delete_credentials()
 {
     syslog(KSS_LOG_INFO, "kss_delete_credentials");
+    key_serial_t key;
+    key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_SESSION_KEYRING);
+    if (-1 == key) {
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), cannot purge encrypting key", errno);
+        return false;
+    }
+    long res = keyctl(KEYCTL_REVOKE, key);
+    if (-1 == res) {
+        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d (%m), cannot purge encrypting key", errno);
+        return false;
+    }
+
+    key = request_key("user", get_keyname_mac(), 0, KEY_SPEC_SESSION_KEYRING);
+    if (-1 == key) {
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), cannot purge mac key", errno);
+        return false;
+    }
+    res = keyctl(KEYCTL_REVOKE, key);
+    if (-1 == res) {
+        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d (%m), cannot purge mac key", errno);
+        return false;
+    }
+    return true;
 }
 
 bool kss_can_change_password()
@@ -256,4 +268,4 @@ bool kss_change_password(const char* new_password)
     syslog(LOG_INFO, "kss_change_password");
     return true;
 }
-
+/* vim:tw=220:ts=4 */

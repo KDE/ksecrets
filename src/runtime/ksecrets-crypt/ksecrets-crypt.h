@@ -23,12 +23,20 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool kss_set_credentials(const char* user_name, const char* password);
 
-void kss_delete_credentials();
+bool kss_delete_credentials();
 
 bool kss_can_change_password();
 
 bool kss_change_password(const char* newPassword);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
