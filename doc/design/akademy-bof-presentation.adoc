@@ -258,6 +258,10 @@ The KSecrets API handles secrets grouped into collections. KWallet, on the other
 
 . KSecrets Manager
 
+. passwordstore.org backend {
+
+** This is an advanced-mode store, letting users share secrets between them, without compromising local secrets
+
 . ksecretsd
 
 ** This would allow GNOME applications integrate with KDE
