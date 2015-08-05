@@ -26,15 +26,24 @@
 #include <QtConcurrent/QtConcurrent>
 
 namespace KSecrets {
+
 typedef QSharedPointer<Collection> CollectionPtr;
+
 
 CollectionPtr ServicePrivate::findCollection(const QString& collName,
     Service::FindCollectionOptions opts,
     const QVariantMap& collProps,
     QWidget* promptParent)
 {
+
   // TODO
   return CollectionPtr(new Collection, &QObject::deleteLater);
+}
+
+QList<CollectionPtr> ServicePrivate::listCollections()
+{
+    // TODO
+    return QList<CollectionPtr>();
 }
 
 Service::~Service()
@@ -47,6 +56,11 @@ QFuture<CollectionPtr> Service::findCollection(const QString& collectionName, Fi
 {
   return QtConcurrent::run(&ServicePrivate::findCollection, collectionName,
       options, collectionProperties, promptParent);
+}
+
+QFuture<QList<CollectionPtr> > Service::listCollections()
+{
+    return QtConcurrent::run(&ServicePrivate::listCollections);
 }
 
 #include "ksecretsservice.moc"

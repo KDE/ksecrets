@@ -41,7 +41,6 @@ class CollectionPrivate {
   const WId& promptParentId() const;
   void setStatus(Collection::Status);
   bool lock();
-  static QList<CollectionPtr> listCollections();
   bool deleteCollection();
   bool renameCollection(const QString&);
   QList<SecretItemPtr> searchItems(const AttributesMap&);

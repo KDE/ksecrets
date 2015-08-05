@@ -59,26 +59,16 @@ public:
      * @see statusChanged()
      */
     enum Status {
-        Invalid
-        = 0, /// the collection objet is freshly initialized and none of
-             /// it's methods have been called
-        Pending
-        = 1, /// one of the collection methods was called but this object
-             /// is yet to be connected to the backed
-        FoundExisting
-        = 2, /// this object is connected to an existing backend connection
-        NewlyCreated
-        = 3, /// this object is connected to a newly created connection
-        NotFound = 4, /// the collection was not found
-        Deleted = 5 /// the collection was deleted. Calling methods in such a
-                    /// collection would lead to unpredictable results
+        Invalid = 0,       /// the collection objet is freshly initialized and none of
+                           /// it's methods have been called
+        Pending = 1,       /// one of the collection methods was called but this object
+                           /// is yet to be connected to the backed
+        FoundExisting = 2, /// this object is connected to an existing backend connection
+        NewlyCreated = 3,  /// this object is connected to a newly created connection
+        NotFound = 4,      /// the collection was not found
+        Deleted = 5        /// the collection was deleted. Calling methods in such a
+                           /// collection would lead to unpredictable results
     };
-
-    /**
-     * Use this method to find out the names of all known secret service
-     * collections on the running system
-     */
-    static QFuture<QList<CollectionPtr> > listCollections();
 
     /**
      * This will get the actual findStatus of this collection
@@ -137,20 +127,17 @@ public:
      * @return QFuture whose method results() will bring all the items found
      *
      */
-    QFuture<QList<SecretItemPtr> > searchItems(
-        const AttributesMap& attributes);
+    QFuture<QList<SecretItemPtr> > searchItems(const AttributesMap& attributes);
 
     QFuture<QList<SecretItemPtr> > searchItems(const QString& label);
 
-    QFuture<QList<SecretItemPtr> > searchItems(
-        const QString& label, const AttributesMap& attributes);
+    QFuture<QList<SecretItemPtr> > searchItems(const QString& label, const AttributesMap& attributes);
 
     /**
      * Use this method to get several secrets without getting through getting
      * items
      */
-    QFuture<QList<SecretPtr> > searchSecrets(
-        const StringStringMap& attributes);
+    QFuture<QList<SecretPtr> > searchSecrets(const StringStringMap& attributes);
 
     /**
      * Create a new item inside the current collection
@@ -166,9 +153,7 @@ public:
      *
      * @see SecretItem
      */
-    QFuture<bool> createItem(const QString& label, const Secret& secret,
-        const AttributesMap& attributes = AttributesMap(),
-        CreateItemOptions options = DoNotReplaceExistingItem);
+    QFuture<bool> createItem(const QString& label, const Secret& secret, const AttributesMap& attributes = AttributesMap(), CreateItemOptions options = DoNotReplaceExistingItem);
 
     /**
      * Retrieve items stored inside this collection
@@ -249,8 +234,7 @@ Q_SIGNALS:
     void itemChanged(const KSecrets::SecretItem&);
 
 protected:
-    friend class ServicePrivate; // collections are instantiated from the
-                                 // service only
+    friend class ServicePrivate; // collections are instantiated from the service only
     explicit Collection();
 
 private:

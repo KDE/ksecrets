@@ -40,34 +40,38 @@ class ServicePrivate;
  *
  * We encourage you to first read the Free Desktop draft about
  * <a href="http://standards.freedesktop.org/secret-service/">Secret Service</a>
- *
- *
  */
 class KSECRETS_EXPORT Service : public QObject {
-  Q_OBJECT
-  Q_DISABLE_COPY(Service)
-  public:
-  virtual ~Service();
+    Q_OBJECT
+    Q_DISABLE_COPY(Service)
+public:
+    virtual ~Service();
 
-  /**
-   * Options used when findCollection method is called
-   */
-  enum FindCollectionOptions {
-    OpenOnly = 0,           /// this will only try to open the collection without
-                            /// creating it if not found
-    CreateCollection = 1,   /// the collection will be created if not found
-    LookIntoKWallet = 2     /// Specify this if your application was ported from KWallet to KSecrets
-  };
+    /**
+     * Options used when findCollection method is called
+     */
+    enum FindCollectionOptions {
+        OpenOnly = 0,         /// this will only try to open the collection without
+                              /// creating it if not found
+        CreateCollection = 1, /// the collection will be created if not found
+        LookIntoKWallet = 2   /// Specify this if your application was ported from KWallet to KSecrets
+    };
 
-  /**
-   */
-  static QFuture<CollectionPtr> findCollection(const QString& collectionName,
-      FindCollectionOptions options = CreateCollection,
-      const QVariantMap& collectionProperties = QVariantMap(),
-      QWidget* promptParent = 0);
+    /**
+    */
+    static QFuture<CollectionPtr> findCollection(const QString& collectionName,
+        FindCollectionOptions options = CreateCollection,
+        const QVariantMap& collectionProperties = QVariantMap(),
+        QWidget* promptParent = 0);
 
-  private:
-  QSharedPointer<ServicePrivate> d;
+    /**
+     * Use this method to find out the names of all known secret service
+     * collections on the running system
+     */
+    static QFuture<QList<CollectionPtr> > listCollections();
+
+private:
+    QSharedPointer<ServicePrivate> d;
 };
 
 } // namespace

@@ -35,6 +35,7 @@ class ServicePrivate {
       const QVariantMap& collProps,
       QWidget* promptParent);
 
+  static QList<CollectionPtr> listCollections();
   Service* service;
 };
 }

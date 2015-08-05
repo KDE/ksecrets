@@ -39,11 +39,6 @@ Collection::Collection()
 
 Collection::~Collection() {}
 
-QFuture<QList<CollectionPtr> > Collection::listCollections()
-{
-    return QtConcurrent::run(&CollectionPrivate::listCollections);
-}
-
 Collection::Status Collection::status() const { return d->collectionStatus; }
 
 QFuture<bool> Collection::deleteCollection()
@@ -181,12 +176,6 @@ bool CollectionPrivate::lock()
 {
     // TODO
     return true;
-}
-
-QList<CollectionPtr> CollectionPrivate::listCollections()
-{
-    // TODO
-    return QList<CollectionPtr>();
 }
 
 bool CollectionPrivate::deleteCollection()
