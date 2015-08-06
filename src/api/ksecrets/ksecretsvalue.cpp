@@ -89,12 +89,6 @@ SecretPrivate::SecretPrivate( const SecretPrivate &that ) :
     value = that.value;
 }
 
-SecretPrivate::SecretPrivate( const DBusSecretStruct &that )
-{
-    value = that.m_value;
-    contentType = that.m_contentType;
-}
-
 SecretPrivate::~SecretPrivate()
 {
 }

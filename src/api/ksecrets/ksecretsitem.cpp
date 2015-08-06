@@ -20,7 +20,6 @@
 
 #include "ksecretsitem.h"
 #include "ksecretsitem_p.h"
-#include "ksecretsserviceitemjobs.h"
 
 #include <QDateTime>
 #include <QtConcurrent>
