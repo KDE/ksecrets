@@ -36,7 +36,7 @@
  * state between calls. So, even if your application crashes, the file won't get corrupted.
  * FIXME is that OK? Further tests should be confirm if a background sync should be introduced
  *       in order to get operations faster. However, today computing power do not justify
- *       à priori optimisations, so this first version would modify the file with eatch API call.
+ *       à priori optimizations, so this first version would modify the file with each API call.
  *       That guarantee client applications that edits are always synced to disk/storage.
  *
  * The API calls are organized in classes, following the structure of data in the backend.
@@ -108,7 +108,7 @@ public:
     /* Holds a secret value.
      *
      * The Item class let applications associate metadata with secret values.
-     * These matadata could simply be the label or other custom attributes.
+     * These metadata could simply be the label or other custom attributes.
      * Items are organized in Collections.
      *
      * @see Collection
@@ -129,7 +129,7 @@ public:
     using ItemPtr = std::shared_ptr<Item>;
 
     /**
-     * Each application organises it's secrets in collections.
+     * Each application organizes it's secrets in collections.
      *
      * Typical applications will only use one collection. A collection can store
      * an arbitrary amount of Items. Each Item has a label, custom attributes and
