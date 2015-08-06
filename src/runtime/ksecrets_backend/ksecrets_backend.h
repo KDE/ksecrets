@@ -30,7 +30,7 @@
 /**
  * Secrets storage for KSecrets Service.
  *
- * This class would store the secrets into an underlying custo formated file.
+ * This class would store the secrets into an underlying custom formated file.
  *
  * Each API call is stateless. That is, the secrets file will always be left in a consistent
  * state between calls. So, even if your application crashes, the file won't get corrupted.
@@ -206,8 +206,8 @@ public:
      */
     CollectionPtr readCollection(std::string&&) const noexcept;
 
-    bool deleteCollection(CollectionPtr);
-    bool deleteCollection(std::string&&);
+    bool deleteCollection(CollectionPtr) noexcept;
+    bool deleteCollection(std::string&&) noexcept;
 
 private:
     std::unique_ptr<KSecretsBackendPrivate> d;
