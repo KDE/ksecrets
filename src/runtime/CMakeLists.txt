@@ -1,5 +1,6 @@
 add_subdirectory(ksecrets-crypt)
 add_subdirectory(pam-ksecrets)
+add_subdirectory(ksecrets_backend)
 # add_subdirectory(ksecrets)
 #add_subdirectory(kio)
 #add_subdirectory(kwl2kss)
