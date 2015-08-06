@@ -27,6 +27,8 @@
 #include <vector>
 #include <future>
 
+class KSecretsBackendPrivate;
+
 /**
  * Secrets storage for KSecrets Service.
  *
@@ -75,7 +77,6 @@
  *       would be destroyed, releasing the file, upon block exit.
  */
 class KSecretsBackend {
-    class KSecretsBackendPrivate;
     class ItemPrivate;
     class CollectionPrivate;
 
@@ -218,16 +219,21 @@ public:
      */
     KSecretsBackend();
     KSecretsBackend(const KSecretsBackend&) = delete;
-    virtual ~KSecretsBackend() = default;
+    virtual ~KSecretsBackend();
 
-    enum class OpenStatus {
-        Good,
-        NoPathGiven,
-        FileLocked,
-        FileNotFound,
-        PermissionDeniedByTheSystem
+    struct OpenResult {
+        enum class OpenStatus {
+            Good,
+            NoPathGiven,
+            FileLocked,
+            SystemError // @see
+        };
+
+        OpenStatus status_;
+        int errno_;
     };
-    std::future<OpenStatus> open(
+
+    std::future<OpenResult> open(
         std::string&&, bool readOnly = true) noexcept;
     std::vector<std::string> dirCollections() noexcept;
     /*

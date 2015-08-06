@@ -21,12 +21,17 @@
 #ifndef KSECRETSBACKEND_P_H
 #define KSECRETSBACKEND_P_H
 
-class KSecretsBackend;
+#include "ksecrets_backend.h"
 
 class KSecretsBackendPrivate {
-    KSecretsBackendPrivate(KSecretsBackend*);
+public:
+    KSecretsBackendPrivate() = delete;
+    explicit KSecretsBackendPrivate(KSecretsBackend*);
+
+    KSecretsBackend::OpenResult lock_open(const std::string&);
+    KSecretsBackend::OpenResult open(const std::string&);
+
+    KSecretsBackend* b_;
 };
-
-
 
 #endif

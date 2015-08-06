@@ -22,4 +22,62 @@
 #include "ksecrets_backend.h"
 #include "ksecrets_backend_p.h"
 
+#include <future>
+#include <thread>
+#include <sys/stat.h>
 
+KSecretsBackendPrivate::KSecretsBackendPrivate(KSecretsBackend* b)
+    : b_(b)
+{
+}
+
+KSecretsBackend::KSecretsBackend()
+    : d(new KSecretsBackendPrivate(this))
+{
+}
+
+KSecretsBackend::~KSecretsBackend() = default;
+
+std::future<KSecretsBackend::OpenResult> KSecretsBackend::open(
+    std::string&& path, bool readonly /* =true */) noexcept
+{
+    // sanity checks
+    if (path.empty()) {
+        return std::async(std::launch::deferred, []() {
+            return OpenResult{ OpenResult::OpenStatus::NoPathGiven, 0 };
+        });
+    }
+
+    struct stat buf;
+    if (stat(path.c_str(), &buf) != 0) {
+        auto err = errno;
+        return std::async(std::launch::deferred, [err]() {
+            return OpenResult{ OpenResult::OpenStatus::SystemError, errno };
+        });
+    }
+
+    // now we can proceed
+    auto localThis = this;
+    if (!readonly) {
+        return std::async(std::launch::async,
+            [localThis, path]() { return localThis->d->lock_open(path); });
+    }
+    else {
+        return std::async(std::launch::deferred,
+            [localThis, path]() { return localThis->d->open(path); });
+    }
+}
+
+KSecretsBackend::OpenResult KSecretsBackendPrivate::lock_open(
+    const std::string& path)
+{
+    // TODO
+    return { KSecretsBackend::OpenResult::OpenStatus::Good, 0};
+}
+
+KSecretsBackend::OpenResult KSecretsBackendPrivate::open(
+    const std::string& path)
+{
+    // TODO
+    return { KSecretsBackend::OpenResult::OpenStatus::Good, 0};
+}
