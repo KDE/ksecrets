@@ -30,8 +30,28 @@ public:
 
     KSecretsBackend::OpenResult lock_open(const std::string&);
     KSecretsBackend::OpenResult open(const std::string&);
+    using open_action
+        = std::function<KSecretsBackend::OpenResult(const std::string&)>;
+    KSecretsBackend::OpenResult createFileIfNeededThenDo(
+        const std::string&, bool, open_action);
+    int createFile(const std::string&);
+    const char* salt() const;
+
+    constexpr static auto IV_SIZE = 32;
+    struct FileHeadStruct {
+        char magic[9];
+        char salt[KSecretsBackend::SALT_SIZE];
+        char iv[IV_SIZE];
+    };
+
+    KSecretsBackend::OpenResult setOpenStatus(KSecretsBackend::OpenResult);
+    bool isOpen() const noexcept { return KSecretsBackend::OpenStatus::Good == openStatus_.status_; }
 
     KSecretsBackend* b_;
+    FILE* file_;
+    FileHeadStruct fileHead_;
+    KSecretsBackend::OpenResult openStatus_;
 };
 
 #endif
+// vim: tw=220:ts=4

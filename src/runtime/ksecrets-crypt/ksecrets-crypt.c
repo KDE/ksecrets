@@ -47,6 +47,7 @@
 extern const char* prepare_secret_file_location(const char*);
 extern const char* get_keyname_encrypting();
 extern const char* get_keyname_mac();
+extern bool get_salt(const char*, char*, size_t);
 
 bool kss_init_gcry()
 {
@@ -268,4 +269,5 @@ bool kss_change_password(const char* new_password)
     syslog(LOG_INFO, "kss_change_password");
     return true;
 }
-/* vim:tw=220:ts=4 */
+/* vim: tw=220 ts=4
+*/

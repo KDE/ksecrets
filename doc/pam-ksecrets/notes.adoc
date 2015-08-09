@@ -67,6 +67,8 @@ This situation of a user session being penetrated is not worst that one on a com
 
 Finally, the point of ksecrets is to securely store items on disk and avoid unauthorized applications from reading/getting them. All security measures in ksecrets should be put in place according to this goal.
 
-= References =
- http://stackoverflow.com/questions/14548748/encrypting-a-file-from-a-password-using-libgcrypt
+= References = 
 
+  http://stackoverflow.com/questions/14548748/encrypting-a-file-from-a-password-using-libgcrypt
+
+  https://panthema.net/2008/0714-cryptography-speedtest-comparison/

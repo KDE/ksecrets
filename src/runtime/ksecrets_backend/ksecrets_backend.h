@@ -21,10 +21,13 @@
 #ifndef KSECRETS_BACKEND_H
 #define KSECRETS_BACKEND_H
 
+#include <ksecrets_backend_export.h>
+
 #include <memory>
 #include <ctime>
 #include <map>
 #include <vector>
+#include <array>
 #include <future>
 
 class KSecretsBackendPrivate;
@@ -34,38 +37,28 @@ class KSecretsBackendPrivate;
  *
  * This class would store the secrets into an underlying custom formated file.
  *
- * Each API call is stateless. That is, the secrets file will always be left
- *in a consistent
- * state between calls. So, even if your application crashes, the file won't
- *get corrupted.
- * FIXME is that OK? Further tests should be confirm if a background sync
- *should be introduced
- *       in order to get operations faster. However, today computing power do
- *not justify
- *       à priori optimizations, so this first version would modify the file
- *with each API call.
- *       That guarantee client applications that edits are always synced to
- *disk/storage.
+ * Each API call is stateless. That is, the secrets file will always be left in a consistent
+ * state between calls. So, even if your application crashes, the file won't get corrupted.
+ *   FIXME is that OK? Further tests should be confirm if a background sync
+ *   should be introduced in order to get operations faster. However, today computing power do
+ *   not justify à priori optimizations, so this first version would modify the file
+ *   with each API call.
+ * That guarantees client applications that edits are always synced to disk/storage.
  *
- * The API calls are organized in classes, following the structure of data in
- *the backend.
- * Applications will first work with a Collection, the search or insert Items
- *into it.
- * The Item class holds, sure enough, the secret value but also let
- *applications associate
- * the secret value with metadata, such as the label or other custom
- *properties.
+ * The API calls are organized in classes, following the structure of data in the backend.
+ * Applications will first work with a Collection, the search or insert Items into it.
+ * The Item class holds, sure enough, the secret value but also let applications associate
+ * the secret value with metadata, such as the label or other custom properties.
  *
  * Before using a collection, the application should open it.
  * Upon opening, it's possible to indicate if readonly mode is possible.
  *
- * When opening without readonly flag, then the file is exclusively locked.
- *The lock is
- * released when the class is destroyed. You should keep the file locked as
- *shortly as
- * possible, in order to avoid deadlocks between applications that also need
- *to read the
+ * When opening without readonly flag, then the file is exclusively locked. The lock is
+ * released when the class is destroyed. You should keep the file locked as shortly as
+ * possible, in order to avoid deadlocks between applications that also need to read the
  * secrets. For more information @see open().
+ *
+ * The data are encrypted using libgcypt and the algorythm Twofish which is the fasted for this library.
  *
  * TODO give here a code example once the API stabilizes
  *
@@ -76,7 +69,7 @@ class KSecretsBackendPrivate;
  *       By providing a class, one could use local variables and the class
  *       would be destroyed, releasing the file, upon block exit.
  */
-class KSecretsBackend {
+class KSECRETS_BACKEND_EXPORT KSecretsBackend {
     class ItemPrivate;
     class CollectionPrivate;
 
@@ -187,8 +180,7 @@ public:
          * possible. So please check if via it's operator bool() before using
          * it.
          */
-        ItemPtr createItem(
-            std::string&& label, AttributesMap&&, ItemValue&&) noexcept;
+        ItemPtr createItem(std::string&& label, AttributesMap&&, ItemValue&&) noexcept;
         /*
          * Convenience method for creating items without supplemental
          * attributes.
@@ -221,21 +213,37 @@ public:
     KSecretsBackend(const KSecretsBackend&) = delete;
     virtual ~KSecretsBackend();
 
+    enum class OpenStatus {
+        NotYetOpened,
+        Good,
+        NoPathGiven,
+        InvalidFile, // the file format was not recognized. Is this a ksecrets file?
+        FileLocked,
+        SystemError
+    };
     struct OpenResult {
-        enum class OpenStatus {
-            Good,
-            NoPathGiven,
-            FileLocked,
-            SystemError // @see
-        };
-
         OpenStatus status_;
         int errno_;
     };
 
-    std::future<OpenResult> open(
-        std::string&&, bool readOnly = true) noexcept;
-    std::vector<std::string> dirCollections() noexcept;
+    /**
+     * Open the designated file. Creates file if not found, regardless
+     * of the readOnly parameter value.
+     *
+     * @parameter path full path to the backend file to handle
+     * @parameter readOnly set it to true if you only intend reading to speed
+     * things-up
+     */
+    std::future<OpenResult> open(std::string&& path, bool readOnly = true) noexcept;
+
+    constexpr static auto SALT_SIZE = 56;
+    /**
+     * @return pointer to the salt structure inside the internal structure of this object. The buffer has SALT_SIZE length.
+     */
+    const char* salt() const;
+
+    using CollectionNames = std::vector<std::string>;
+    CollectionNames dirCollections() const noexcept;
     /*
      * @return CollectionPtr which can empty if the call did not succeed.
      *Please check that with operator bool().
@@ -258,3 +266,4 @@ private:
 };
 
 #endif
+// vim: tw=220:ts=4

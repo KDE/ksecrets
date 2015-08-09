@@ -19,6 +19,8 @@
     Boston, MA 02110-1301, USA.
 */
 
+#include <ksecrets_backend.h>
+
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
 #include <QtCore/QDir>
@@ -31,6 +33,10 @@ KSharedConfigPtr sharedConfig;
 #define CONFIGNAME "ksecretsrc"
 
 extern "C" {
+/*
+ * @note even if you could use QDir::home() to retrieve user's home directory, this function
+ * may be called in contexts where current user information is not yet available
+ */
 const char* prepare_secret_file_location(const char* home_dir)
 {
     qCDebug(logCat) << "prepare_secret_file_location(" << home_dir << ")";
@@ -69,6 +75,17 @@ const char* get_keyname_mac()
         .readEntry("keyname_mac", "ksecrets:mac")
         .toUtf8()
         .constData();
+}
+
+bool get_salt(const char* path, char* buf, size_t len)
+{
+    bool res= false;
+    KSecretsBackend backend;
+    auto openfut = backend.open(path);
+    if (openfut.get().status_ == KSecretsBackend::OpenStatus::Good) {
+
+    }
+    return res;
 }
 }
 

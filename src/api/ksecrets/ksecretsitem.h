@@ -118,7 +118,8 @@ class KSECRETS_EXPORT SecretItem : public QSharedData {
 
   QSharedDataPointer<SecretItemPrivate> d;
 };
-};
+
+}
 
 Q_DECLARE_METATYPE(KSecrets::SecretItem)
 

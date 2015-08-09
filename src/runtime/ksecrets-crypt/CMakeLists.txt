@@ -10,6 +10,9 @@ find_package(LibGcrypt 1.6.0 REQUIRED)
 set(KF5_DEP_VERSION "5.12.0")
 find_package(KF5Config ${KF5_DEP_VERSION} REQUIRED)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../ksecrets_backend)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/../ksecrets_backend)
+
 remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 set(ksecrets_crypt_SRC
   ksecrets-crypt.c
