@@ -23,6 +23,36 @@
 
 #include "ksecrets_backend.h"
 
+class TimeStamped {
+
+protected:
+    TimeStamped()
+        : createdTime_(std::time(nullptr))
+        , modifiedTime_(std::time(nullptr))
+    {
+    }
+    virtual ~TimeStamped() = default;
+    TimeStamped(const TimeStamped&) = default;
+    TimeStamped& operator=(const TimeStamped&) = default;
+
+    template <class FUNC> void modify(FUNC func)
+    {
+        // FIXME func may return some value so modify this to take that into account
+        func();
+        modifiedTime = std::time(nullptr);
+    };
+
+private:
+    std::time_t createdTime_;
+    std::time_t modifiedTime_;
+};
+
+class KSecretsItemPrivate : public TimeStamped {
+};
+
+class KSecretsCollectionPrivate : public TimeStamped {
+};
+
 class KSecretsBackendPrivate {
 public:
     KSecretsBackendPrivate() = delete;
@@ -30,10 +60,8 @@ public:
 
     KSecretsBackend::OpenResult lock_open(const std::string&);
     KSecretsBackend::OpenResult open(const std::string&);
-    using open_action
-        = std::function<KSecretsBackend::OpenResult(const std::string&)>;
-    KSecretsBackend::OpenResult createFileIfNeededThenDo(
-        const std::string&, bool, open_action);
+    using open_action = std::function<KSecretsBackend::OpenResult(const std::string&)>;
+    KSecretsBackend::OpenResult createFileIfNeededThenDo(const std::string&, bool, open_action);
     int createFile(const std::string&);
     const char* salt() const;
 
