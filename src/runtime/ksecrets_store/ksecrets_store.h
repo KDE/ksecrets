@@ -94,7 +94,7 @@ public:
         Item& operator=(const Item&) = default;
 
         std::string label() const noexcept;
-        bool setLabel(std::string&&) noexcept;
+        bool setLabel(const char*) noexcept;
 
         AttributesMap attributes() const;
         void setAttributes(AttributesMap&&) noexcept;
@@ -116,55 +116,48 @@ public:
     /**
      * Each application organizes it's secrets in collections.
      *
-     * Typical applications will only use one collection. A collection can
-     *store
-     * an arbitrary amount of Items. Each Item has a label, custom attributes
-     *and
+     * Typical applications will only use one collection. A collection can store
+     * an arbitrary amount of Items. Each Item has a label, custom attributes and
      * a secret value.
      *
-     * The custom attributes are application-defined. This API would store
-     *these
+     * The custom attributes are application-defined. This API would store these
      * attributes as they are provided.
      *
-     * Search methods are provided to let application locate items by
-     *specifying
-     * only a subset of these custom attributes. When searching, partial
-     *matching is
-     * used, so you could only provide part of the value of an attribute and
-     *get all
-     * the items having attribute value containing that partially specified
-     *value.
+     * Search methods are provided to let application locate items by specifying
+     * only a subset of these custom attributes. When searching, partial matching is
+     * used, so you could only provide part of the value of an attribute and get all
+     * the items having attribute value containing that partially specified value.
      */
     class Collection {
         Collection(const Collection&) = default;
         Collection& operator=(const Collection&) = default;
 
         std::string label() const noexcept;
-        bool setLabel(std::string&&) noexcept;
+        bool setLabel(const char*) noexcept;
 
         std::time_t createdTime() const noexcept;
         std::time_t modifiedTime() const noexcept;
 
         using ItemList = std::vector<ItemPtr>;
         ItemList searchItems(AttributesMap&&) noexcept;
-        ItemList searchItems(std::string&&) noexcept;
-        ItemList searchItems(std::string&&, AttributesMap&&) noexcept;
+        ItemList searchItems(const char*) noexcept;
+        ItemList searchItems(const char*, AttributesMap&&) noexcept;
 
         /**
          * @return ItemPtr which can be empty if creating the item was not
-         * possible. So please check if via it's operator bool() before using
+         * possible. So please check it via it's operator bool() before using
          * it.
          */
-        ItemPtr createItem(std::string&& label, AttributesMap&&, ItemValue&&) noexcept;
+        ItemPtr createItem(const char*, AttributesMap&&, ItemValue&&) noexcept;
         /*
          * Convenience method for creating items without supplemental
          * attributes.
          *
          * @return ItemPtr which can be empty if creating the item was not
-         * possible. So please check if via it's operator bool() before using
+         * possible. So please check it via it's operator bool() before using
          * it.
          */
-        ItemPtr createItem(std::string&& label, ItemValue&&) noexcept;
+        ItemPtr createItem(const char *label, ItemValue&&) noexcept;
 
     protected:
         Collection();
@@ -209,7 +202,7 @@ public:
      * @parameter readOnly set it to true if you only intend reading to speed
      * things-up
      */
-    std::future<OpenResult> open(std::string&& path, bool readOnly = true) noexcept;
+    std::future<OpenResult> open(const char* path, bool readOnly = true) noexcept;
 
     constexpr static auto SALT_SIZE = 56;
     /**
@@ -225,16 +218,16 @@ public:
      * If it fails, have you already called open()?
      *
      */
-    CollectionPtr createCollection(std::string&&) noexcept;
+    CollectionPtr createCollection(const char*) noexcept;
     /*
      * @return CollectionPtr which can empty if the call did not succeed, e.g.
      * the collection was not found.
      *         Please check that with operator bool()
      */
-    CollectionPtr readCollection(std::string&&) const noexcept;
+    CollectionPtr readCollection(const char*) const noexcept;
 
     bool deleteCollection(CollectionPtr) noexcept;
-    bool deleteCollection(std::string&&) noexcept;
+    bool deleteCollection(const char*) noexcept;
 
 private:
     std::unique_ptr<KSecretsStorePrivate> d;
