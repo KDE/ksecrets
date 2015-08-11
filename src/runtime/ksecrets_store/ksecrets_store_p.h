@@ -21,7 +21,7 @@
 #ifndef KSECRETSBACKEND_P_H
 #define KSECRETSBACKEND_P_H
 
-#include "ksecrets_backend.h"
+#include "ksecrets_store.h"
 
 class TimeStamped {
 
@@ -39,7 +39,7 @@ protected:
     {
         // FIXME func may return some value so modify this to take that into account
         func();
-        modifiedTime = std::time(nullptr);
+        modifiedTime_ = std::time(nullptr);
     };
 
 private:
@@ -53,32 +53,32 @@ class KSecretsItemPrivate : public TimeStamped {
 class KSecretsCollectionPrivate : public TimeStamped {
 };
 
-class KSecretsBackendPrivate {
+class KSecretsStorePrivate {
 public:
-    KSecretsBackendPrivate() = delete;
-    explicit KSecretsBackendPrivate(KSecretsBackend*);
+    KSecretsStorePrivate() = delete;
+    explicit KSecretsStorePrivate(KSecretsStore*);
 
-    KSecretsBackend::OpenResult lock_open(const std::string&);
-    KSecretsBackend::OpenResult open(const std::string&);
-    using open_action = std::function<KSecretsBackend::OpenResult(const std::string&)>;
-    KSecretsBackend::OpenResult createFileIfNeededThenDo(const std::string&, bool, open_action);
+    KSecretsStore::OpenResult lock_open(const std::string&);
+    KSecretsStore::OpenResult open(const std::string&);
+    using open_action = std::function<KSecretsStore::OpenResult(const std::string&)>;
+    KSecretsStore::OpenResult createFileIfNeededThenDo(const std::string&, bool, open_action);
     int createFile(const std::string&);
     const char* salt() const;
 
     constexpr static auto IV_SIZE = 32;
     struct FileHeadStruct {
         char magic[9];
-        char salt[KSecretsBackend::SALT_SIZE];
+        char salt[KSecretsStore::SALT_SIZE];
         char iv[IV_SIZE];
     };
 
-    KSecretsBackend::OpenResult setOpenStatus(KSecretsBackend::OpenResult);
-    bool isOpen() const noexcept { return KSecretsBackend::OpenStatus::Good == openStatus_.status_; }
+    KSecretsStore::OpenResult setOpenStatus(KSecretsStore::OpenResult);
+    bool isOpen() const noexcept { return KSecretsStore::OpenStatus::Good == openStatus_.status_; }
 
-    KSecretsBackend* b_;
+    KSecretsStore* b_;
     FILE* file_;
     FileHeadStruct fileHead_;
-    KSecretsBackend::OpenResult openStatus_;
+    KSecretsStore::OpenResult openStatus_;
 };
 
 #endif

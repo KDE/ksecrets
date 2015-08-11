@@ -30,7 +30,7 @@
 #include <array>
 #include <future>
 
-class KSecretsBackendPrivate;
+class KSecretsStorePrivate;
 
 /**
  * Secrets storage for KSecrets Service.
@@ -69,7 +69,7 @@ class KSecretsBackendPrivate;
  *       By providing a class, one could use local variables and the class
  *       would be destroyed, releasing the file, upon block exit.
  */
-class KSECRETS_BACKEND_EXPORT KSecretsBackend {
+class KSECRETS_BACKEND_EXPORT KSecretsStore {
     class ItemPrivate;
     class CollectionPrivate;
 
@@ -106,7 +106,7 @@ public:
         std::time_t modifiedTime() const noexcept;
     protected:
         Item();
-        friend class KSecretsBackend;
+        friend class KSecretsStore;
 
     private:
         std::shared_ptr<ItemPrivate> d;
@@ -168,7 +168,7 @@ public:
 
     protected:
         Collection();
-        friend class KSecretsBackend;
+        friend class KSecretsStore;
 
     private:
         std::shared_ptr<CollectionPrivate> d;
@@ -184,9 +184,9 @@ public:
      *
      * @see open()
      */
-    KSecretsBackend();
-    KSecretsBackend(const KSecretsBackend&) = delete;
-    virtual ~KSecretsBackend();
+    KSecretsStore();
+    KSecretsStore(const KSecretsStore&) = delete;
+    virtual ~KSecretsStore();
 
     enum class OpenStatus {
         NotYetOpened,
@@ -237,7 +237,7 @@ public:
     bool deleteCollection(std::string&&) noexcept;
 
 private:
-    std::unique_ptr<KSecretsBackendPrivate> d;
+    std::unique_ptr<KSecretsStorePrivate> d;
 };
 
 #endif

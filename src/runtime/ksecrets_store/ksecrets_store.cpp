@@ -19,8 +19,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#include "ksecrets_backend.h"
-#include "ksecrets_backend_p.h"
+#include "ksecrets_store.h"
+#include "ksecrets_store_p.h"
 
 #include <future>
 #include <thread>
@@ -30,20 +30,20 @@
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
 
-KSecretsBackendPrivate::KSecretsBackendPrivate(KSecretsBackend* b)
+KSecretsStorePrivate::KSecretsStorePrivate(KSecretsStore* b)
     : b_(b)
 {
-    openStatus_.status_ = KSecretsBackend::OpenStatus::NotYetOpened;
+    openStatus_.status_ = KSecretsStore::OpenStatus::NotYetOpened;
 }
 
-KSecretsBackend::KSecretsBackend()
-    : d(new KSecretsBackendPrivate(this))
+KSecretsStore::KSecretsStore()
+    : d(new KSecretsStorePrivate(this))
 {
 }
 
-KSecretsBackend::~KSecretsBackend() = default;
+KSecretsStore::~KSecretsStore() = default;
 
-std::future<KSecretsBackend::OpenResult> KSecretsBackend::open(std::string&& path, bool readonly /* =true */) noexcept
+std::future<KSecretsStore::OpenResult> KSecretsStore::open(std::string&& path, bool readonly /* =true */) noexcept
 {
     // sanity checks
     if (path.empty()) {
@@ -72,20 +72,20 @@ std::future<KSecretsBackend::OpenResult> KSecretsBackend::open(std::string&& pat
     auto localThis = this;
     if (!readonly) {
         return std::async(
-            std::launch::async, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsBackendPrivate::lock_open, localThis->d.get(), path)); });
+            std::launch::async, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsStorePrivate::lock_open, localThis->d.get(), path)); });
     }
     else {
         return std::async(
-            std::launch::deferred, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsBackendPrivate::open, localThis->d.get(), path)); });
+            std::launch::deferred, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsStorePrivate::open, localThis->d.get(), path)); });
     }
 }
 
-KSecretsBackend::OpenResult KSecretsBackendPrivate::createFileIfNeededThenDo(const std::string& path, bool shouldCreateFile, open_action action)
+KSecretsStore::OpenResult KSecretsStorePrivate::createFileIfNeededThenDo(const std::string& path, bool shouldCreateFile, open_action action)
 {
     if (shouldCreateFile) {
         auto createRes = createFile(path);
         if (createRes != 0) {
-            return setOpenStatus({ KSecretsBackend::OpenStatus::SystemError, createRes });
+            return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, createRes });
         }
     }
     return action(path);
@@ -94,7 +94,7 @@ KSecretsBackend::OpenResult KSecretsBackendPrivate::createFileIfNeededThenDo(con
 char fileMagic[] = { 'k', 's', 'e', 'c', 'r', 'e', 't', 's' };
 constexpr auto fileMagicLen = sizeof(fileMagic) / sizeof(fileMagic[0]);
 
-int KSecretsBackendPrivate::createFile(const std::string& path)
+int KSecretsStorePrivate::createFile(const std::string& path)
 {
     FILE* f = fopen(path.c_str(), "w");
     if (f == nullptr) {
@@ -103,7 +103,7 @@ int KSecretsBackendPrivate::createFile(const std::string& path)
 
     FileHeadStruct emptyFileData;
     memcpy(emptyFileData.magic, fileMagic, fileMagicLen);
-    gcry_randomize(emptyFileData.salt, KSecretsBackend::SALT_SIZE, GCRY_STRONG_RANDOM);
+    gcry_randomize(emptyFileData.salt, KSecretsStore::SALT_SIZE, GCRY_STRONG_RANDOM);
     gcry_randomize(emptyFileData.iv, IV_SIZE, GCRY_STRONG_RANDOM);
 
     int res = 0;
@@ -114,69 +114,69 @@ int KSecretsBackendPrivate::createFile(const std::string& path)
     return res;
 }
 
-const char* KSecretsBackend::salt() const { return d->salt(); }
+const char* KSecretsStore::salt() const { return d->salt(); }
 
-const char* KSecretsBackendPrivate::salt() const { return fileHead_.salt; }
+const char* KSecretsStorePrivate::salt() const { return fileHead_.salt; }
 
-KSecretsBackend::OpenResult KSecretsBackendPrivate::lock_open(const std::string& path)
+KSecretsStore::OpenResult KSecretsStorePrivate::lock_open(const std::string& path)
 {
     file_ = fopen(path.c_str(), "w+");
     if (file_ == nullptr) {
-        return { KSecretsBackend::OpenStatus::SystemError, errno };
+        return { KSecretsStore::OpenStatus::SystemError, errno };
     }
     // TODO perform the lock here
     return open(path);
 }
 
-KSecretsBackend::OpenResult KSecretsBackendPrivate::setOpenStatus(KSecretsBackend::OpenResult openStatus)
+KSecretsStore::OpenResult KSecretsStorePrivate::setOpenStatus(KSecretsStore::OpenResult openStatus)
 {
     openStatus_ = openStatus;
     return openStatus;
 }
 
-KSecretsBackend::OpenResult KSecretsBackendPrivate::open(const std::string& path)
+KSecretsStore::OpenResult KSecretsStorePrivate::open(const std::string& path)
 {
     if (file_ == nullptr) {
         file_ = fopen(path.c_str(), "r");
     }
     if (file_ == nullptr) {
-        return setOpenStatus({ KSecretsBackend::OpenStatus::SystemError, errno });
+        return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, errno });
     }
     if (fread(&fileHead_, sizeof(fileHead_), 1, file_) != sizeof(fileHead_)) {
-        return setOpenStatus({ KSecretsBackend::OpenStatus::SystemError, ferror(file_) });
+        return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, ferror(file_) });
     }
     if (memcmp(fileHead_.magic, fileMagic, fileMagicLen) != 0) {
-        return setOpenStatus({ KSecretsBackend::OpenStatus::InvalidFile, 0 });
+        return setOpenStatus({ KSecretsStore::OpenStatus::InvalidFile, 0 });
     }
     // decrypting will occur upon collection request
-    return setOpenStatus({ KSecretsBackend::OpenStatus::Good, 0 });
+    return setOpenStatus({ KSecretsStore::OpenStatus::Good, 0 });
 }
 
-KSecretsBackend::CollectionNames KSecretsBackend::dirCollections() const noexcept
+KSecretsStore::CollectionNames KSecretsStore::dirCollections() const noexcept
 {
     // TODO
     return CollectionNames();
 }
 
-KSecretsBackend::CollectionPtr KSecretsBackend::createCollection(std::string&&) noexcept
+KSecretsStore::CollectionPtr KSecretsStore::createCollection(std::string&&) noexcept
 {
     // TODO
     return CollectionPtr();
 }
 
-KSecretsBackend::CollectionPtr KSecretsBackend::readCollection(std::string&&) const noexcept
+KSecretsStore::CollectionPtr KSecretsStore::readCollection(std::string&&) const noexcept
 {
     // TODO
     return CollectionPtr();
 }
 
-bool KSecretsBackend::deleteCollection(CollectionPtr) noexcept
+bool KSecretsStore::deleteCollection(CollectionPtr) noexcept
 {
     // TODO
     return false;
 }
 
-bool KSecretsBackend::deleteCollection(std::string&&) noexcept
+bool KSecretsStore::deleteCollection(std::string&&) noexcept
 {
     // TODO
     return false;
