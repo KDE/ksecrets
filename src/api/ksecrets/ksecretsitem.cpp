@@ -32,8 +32,7 @@ SecretItem::SecretItem()
 }
 
 SecretItem::SecretItem(const SecretItem& that)
-    : QSharedData(that)
-    , d(that.d)
+    d(that.d)
 {
 }
 

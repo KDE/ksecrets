@@ -55,7 +55,7 @@ typedef QSharedPointer<SecretItem> SecretItemPtr;
  *returning from the job's done
  * signal handling method.
  */
-class KSECRETS_EXPORT SecretItem : public QSharedData {
+class KSECRETS_EXPORT SecretItem {
   SecretItem(SecretItemPrivate*);
 
   public:
