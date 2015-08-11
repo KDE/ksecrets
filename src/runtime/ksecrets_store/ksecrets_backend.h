@@ -76,36 +76,6 @@ class KSECRETS_BACKEND_EXPORT KSecretsBackend {
 public:
     using AttributesMap = std::map<std::string, std::string>;
 
-    /**
-     * This base class is not directly used by client applications.
-     *
-     * This class provides basic timestamp operations
-     */
-    class TimeStamped {
-        std::time_t createTime() const noexcept;
-        std::time_t modifiedTime() const noexcept;
-
-    protected:
-        TimeStamped()
-            : createdTime_(std::time(nullptr))
-            , modifiedTime_(std::time(nullptr))
-        {
-        }
-        virtual ~TimeStamped() = default;
-        TimeStamped(const TimeStamped&) = default;
-        TimeStamped& operator=(const TimeStamped&) = default;
-
-        template <class FUNC> void modify(FUNC func)
-        {
-            func();
-            modifiedTime = std::time(nullptr);
-        };
-
-    private:
-        std::time_t createdTime_;
-        std::time_t modifiedTime_;
-    };
-
     struct ItemValue {
         std::string contentType;
         std::vector<char> contents;
@@ -119,7 +89,7 @@ public:
      *
      * @see Collection
      */
-    class Item : public TimeStamped {
+    class Item {
         Item(const Item&) = default;
         Item& operator=(const Item&) = default;
 
@@ -132,6 +102,8 @@ public:
         ItemValue value() const noexcept;
         bool setValue(ItemValue&&) noexcept;
 
+        std::time_t createdTime() const noexcept;
+        std::time_t modifiedTime() const noexcept;
     protected:
         Item();
         friend class KSecretsBackend;
@@ -163,12 +135,15 @@ public:
      * the items having attribute value containing that partially specified
      *value.
      */
-    class Collection : public TimeStamped {
+    class Collection {
         Collection(const Collection&) = default;
         Collection& operator=(const Collection&) = default;
 
         std::string label() const noexcept;
         bool setLabel(std::string&&) noexcept;
+
+        std::time_t createdTime() const noexcept;
+        std::time_t modifiedTime() const noexcept;
 
         using ItemList = std::vector<ItemPtr>;
         ItemList searchItems(AttributesMap&&) noexcept;
