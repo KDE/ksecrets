@@ -9,6 +9,7 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS_BACKEND
                   PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5SecretsBackendConfigVersion.cmake")
 
 set(ksecrets_backend_SRC
+   ksecrets_crypt.c
    ksecrets_backend.cpp)
 
 add_library(ksecrets_backend SHARED ${ksecrets_backend_SRC})

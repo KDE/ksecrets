@@ -14,11 +14,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../ksecrets_backend)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../ksecrets_backend)
 
 remove_definitions(-DQT_NO_CAST_FROM_ASCII)
-set(ksecrets_crypt_SRC
-  ksecrets-crypt.c
+set(ksecrets_config_SRC
   config.cpp)
 
-add_library(ksecrets_crypt STATIC ${ksecrets_crypt_SRC})
-target_link_libraries(ksecrets_crypt PRIVATE KF5::ConfigCore)
-set_target_properties(ksecrets_crypt PROPERTIES PREFIX "")
+add_library(ksecrets_config STATIC ${ksecrets_config_SRC})
+target_link_libraries(ksecrets_config PRIVATE KF5::ConfigCore)
+set_target_properties(ksecrets_config PROPERTIES PREFIX "")
 
