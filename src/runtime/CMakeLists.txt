@@ -1,4 +1,4 @@
-add_subdirectory(pam-ksecrets)
+add_subdirectory(pam_ksecrets)
 add_subdirectory(ksecrets_store)
 # add_subdirectory(ksecrets)
 #add_subdirectory(kio)
