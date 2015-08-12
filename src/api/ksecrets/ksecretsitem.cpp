@@ -32,7 +32,7 @@ SecretItem::SecretItem()
 }
 
 SecretItem::SecretItem(const SecretItem& that)
-    d(that.d)
+    : d(that.d)
 {
 }
 

@@ -18,10 +18,10 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_BACKEND_H
-#define KSECRETS_BACKEND_H
+#ifndef KSECRETS_STORE_H
+#define KSECRETS_STORE_H
 
-#include <ksecrets_backend_export.h>
+#include <ksecrets_store_export.h>
 
 #include <memory>
 #include <ctime>
@@ -45,7 +45,7 @@ class KSecretsStorePrivate;
  *   with each API call.
  * That guarantees client applications that edits are always synced to disk/storage.
  *
- * The API calls are organized in classes, following the structure of data in the backend.
+ * The API calls are organized in classes, following the structure of data in the store.
  * Applications will first work with a Collection, the search or insert Items into it.
  * The Item class holds, sure enough, the secret value but also let applications associate
  * the secret value with metadata, such as the label or other custom properties.
@@ -69,7 +69,7 @@ class KSecretsStorePrivate;
  *       By providing a class, one could use local variables and the class
  *       would be destroyed, releasing the file, upon block exit.
  */
-class KSECRETS_BACKEND_EXPORT KSecretsStore {
+class KSECRETS_STORE_EXPORT KSecretsStore {
     class ItemPrivate;
     class CollectionPrivate;
 
@@ -144,6 +144,11 @@ public:
         ItemList searchItems(const char*, AttributesMap&&) noexcept;
 
         /**
+         * Creates an item in the collection in one go. This is more efficient than
+         * initializing en empty than setting the label, eventually the parameters and
+         * the value. The returned item may still be modified, keep in mind that each
+         * method call will trigger an store file update.
+         *
          * @return ItemPtr which can be empty if creating the item was not
          * possible. So please check it via it's operator bool() before using
          * it.
@@ -171,7 +176,7 @@ public:
     /*
      * Default constructor.
      *
-     * This constructor only initializes the backend class. You should call
+     * This constructor only initializes the store class. You should call
      * the open() method right after the initialization and before any other
      * methods of this API.
      *
@@ -181,28 +186,56 @@ public:
     KSecretsStore(const KSecretsStore&) = delete;
     virtual ~KSecretsStore();
 
-    enum class OpenStatus {
-        NotYetOpened,
+    enum class StoreStatus {
         Good,
+        JustCreated,
+        SetupShouldBeCalledFirst,
+        IncorrectState,
+        CannotInitGcrypt,
+        CannotDeriveKeys,
+        CannotStoreKeys,
+        SetupDone,
+        SetupError,
         NoPathGiven,
         InvalidFile, // the file format was not recognized. Is this a ksecrets file?
-        FileLocked,
+        CannotOpenFile,
+        CannotLockFile,
+        CannotReadFile,
         SystemError
     };
-    struct OpenResult {
-        OpenStatus status_;
+
+    struct SetupResult {
+        StoreStatus status_;
         int errno_;
+        operator bool() const { return status_ == StoreStatus::SetupDone; }
+    };
+
+    /*
+     * Before opening, the store must be setup, that is, it must know the
+     * file path and the user's password. This method is typically called
+     * from the pam module but it can also be called from another program
+     * after prompting user for the password, for example.
+     *
+     * This call creates the file if it's not found.
+     *
+     * @return SetupResult whose operator bool could be used to check the error condition
+     */
+    std::future<SetupResult> setup(const char* path, const char* password, const char* keyNameEcrypting = "ksecrets:encrypting", const char* keyNameMac = "ksecrets:mac");
+
+    struct OpenResult {
+        StoreStatus status_;
+        int errno_;
+        operator bool() const { return status_ == StoreStatus::Good; }
     };
 
     /**
-     * Open the designated file. Creates file if not found, regardless
-     * of the readOnly parameter value.
-     *
-     * @parameter path full path to the backend file to handle
+     * @parameter path full path to the store file to handle
      * @parameter readOnly set it to true if you only intend reading to speed
-     * things-up
+     * things-up and avoid placing a lock on the file
+     *
+     * @return OpenResult whose operator bool could be used to check the error condition
      */
-    std::future<OpenResult> open(const char* path, bool readOnly = true) noexcept;
+    std::future<OpenResult> open(bool readOnly = true) noexcept;
 
     constexpr static auto SALT_SIZE = 56;
     /**
@@ -214,9 +247,8 @@ public:
     CollectionNames dirCollections() const noexcept;
     /*
      * @return CollectionPtr which can empty if the call did not succeed.
-     *Please check that with operator bool().
+     * Please check that with operator bool().
      * If it fails, have you already called open()?
-     *
      */
     CollectionPtr createCollection(const char*) noexcept;
     /*

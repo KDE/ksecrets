@@ -24,16 +24,34 @@
 
 #include <future>
 #include <thread>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <syslog.h>
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
+
+#define KSECRETS_SALTSIZE 56
+#define KSECRETS_KEYSIZE 256
+#define KSS_LOG_ERR (LOG_AUTH | LOG_ERR)
+
+const char* keyNameEncrypting = nullptr;
+const char* keyNameMac = nullptr;
+
+extern "C" {
+bool kss_init_gcry();
+bool kss_derive_keys(const char* salt, const char* password, char* encryption_key, char* mac_key, size_t);
+bool kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySize);
+const char* get_keyname_encrypting() { return keyNameEncrypting; }
+const char* get_keyname_mac() { return keyNameMac; }
+}
 
 KSecretsStorePrivate::KSecretsStorePrivate(KSecretsStore* b)
     : b_(b)
 {
-    openStatus_.status_ = KSecretsStore::OpenStatus::NotYetOpened;
+    status_ = KSecretsStore::StoreStatus::JustCreated;
 }
 
 KSecretsStore::KSecretsStore()
@@ -43,52 +61,66 @@ KSecretsStore::KSecretsStore()
 
 KSecretsStore::~KSecretsStore() = default;
 
-std::future<KSecretsStore::OpenResult> KSecretsStore::open(std::string&& path, bool readonly /* =true */) noexcept
+std::future<KSecretsStore::SetupResult> KSecretsStore::setup(const char* path, const char* password, const char* keyNameEcrypting, const char* keyNameMac)
 {
     // sanity checks
-    if (path.empty()) {
-        return std::async(std::launch::deferred, []() { return OpenResult{ OpenStatus::NoPathGiven, 0 }; });
+    if (d->status_ != StoreStatus::JustCreated) {
+        return std::async(std::launch::deferred, []() { return SetupResult{ StoreStatus::IncorrectState, -1 }; });
+    }
+    if (path == nullptr || strlen(path) == 0) {
+        return std::async(std::launch::deferred, []() { return SetupResult{ StoreStatus::NoPathGiven, 0 }; });
     }
 
     bool shouldCreateFile = false;
     struct stat buf;
-    if (stat(path.c_str(), &buf) != 0) {
+    if (stat(path, &buf) != 0) {
         auto err = errno;
         if (ENOENT == err) {
             shouldCreateFile = true;
         }
         else {
-            return std::async(std::launch::deferred, [err]() { return OpenResult{ OpenStatus::SystemError, errno }; });
+            return std::async(std::launch::deferred, [err]() { return SetupResult{ StoreStatus::SystemError, errno }; });
         }
     }
     else {
         if (buf.st_size == 0) {
-            unlink(path.c_str());
+            unlink(path);
             shouldCreateFile = true; // recreate if empty file was found
         }
     }
 
-    // now we can proceed
+    ::keyNameEncrypting = keyNameEcrypting;
+    ::keyNameMac = keyNameMac;
+
     auto localThis = this;
-    if (!readonly) {
-        return std::async(
-            std::launch::async, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsStorePrivate::lock_open, localThis->d.get(), path)); });
-    }
-    else {
-        return std::async(
-            std::launch::deferred, [localThis, path, shouldCreateFile]() { return localThis->d->createFileIfNeededThenDo(path, shouldCreateFile, std::bind(&KSecretsStorePrivate::open, localThis->d.get(), path)); });
-    }
+    std::string filePath = path;
+    std::string pwd = password;
+    return std::async(std::launch::async, [localThis, filePath, shouldCreateFile, pwd]() { return localThis->d->setup(filePath, shouldCreateFile, pwd); });
 }
 
-KSecretsStore::OpenResult KSecretsStorePrivate::createFileIfNeededThenDo(const std::string& path, bool shouldCreateFile, open_action action)
+KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, bool shouldCreateFile, const std::string& password)
 {
     if (shouldCreateFile) {
-        auto createRes = createFile(path);
-        if (createRes != 0) {
-            return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, createRes });
+        auto createres = createFile(path);
+        if (createres != 0) {
+            return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::SystemError, createres }));
         }
     }
-    return action(path);
+    if (!kss_init_gcry()) {
+        return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::CannotInitGcrypt, -1 }));
+    }
+    // FIXME this should be adjusted on platforms where kernel keyring is not available and store the keys elsewhere
+    char encryption_key[KSECRETS_KEYSIZE];
+    char mac_key[KSECRETS_KEYSIZE];
+    if (!kss_derive_keys(salt(), password.c_str(), encryption_key, mac_key, KSECRETS_KEYSIZE)) {
+        return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::CannotDeriveKeys, -1 }));
+    }
+
+    if (!kss_store_keys(encryption_key, mac_key, KSECRETS_KEYSIZE)) {
+        return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::CannotStoreKeys, -1 }));
+    }
+    secretsFile_.filePath_ = path;
+    return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::SetupDone, 0 }));
 }
 
 char fileMagic[] = { 'k', 's', 'e', 'c', 'r', 'e', 't', 's' };
@@ -114,42 +146,63 @@ int KSecretsStorePrivate::createFile(const std::string& path)
     return res;
 }
 
+std::future<KSecretsStore::OpenResult> KSecretsStore::open(bool readonly /* =true */) noexcept
+{
+    // check the state first
+    if (d->status_ == StoreStatus::JustCreated) {
+        return std::async(std::launch::deferred, []() { return OpenResult{ StoreStatus::SetupShouldBeCalledFirst, -1 }; });
+    }
+    if (d->status_ != StoreStatus::SetupDone) {
+        // open could not be called two times or perhaps the setup call left this store in an invalid state because of some error
+        return std::async(std::launch::deferred, []() { return OpenResult{ StoreStatus::IncorrectState, -1 }; });
+    }
+    // now we can proceed
+    auto localThis = this;
+    if (!readonly) {
+        return std::async([localThis]() { return localThis->d->open(true); });
+    }
+    else {
+        return std::async([localThis]() { return localThis->d->open(false); });
+    }
+}
+
 const char* KSecretsStore::salt() const { return d->salt(); }
 
 const char* KSecretsStorePrivate::salt() const { return fileHead_.salt; }
 
-KSecretsStore::OpenResult KSecretsStorePrivate::lock_open(const std::string& path)
+KSecretsStore::OpenResult KSecretsStorePrivate::open(bool lockFile)
 {
-    file_ = fopen(path.c_str(), "w+");
-    if (file_ == nullptr) {
-        return { KSecretsStore::OpenStatus::SystemError, errno };
+    using OpenResult = KSecretsStore::OpenResult;
+    secretsFile_.file_ = ::open(secretsFile_.filePath_.c_str(), O_DSYNC | O_NOATIME | O_NOFOLLOW);
+    if (secretsFile_.file_ == -1) {
+        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotOpenFile, errno }));
     }
-    // TODO perform the lock here
-    return open(path);
-}
-
-KSecretsStore::OpenResult KSecretsStorePrivate::setOpenStatus(KSecretsStore::OpenResult openStatus)
-{
-    openStatus_ = openStatus;
-    return openStatus;
-}
-
-KSecretsStore::OpenResult KSecretsStorePrivate::open(const std::string& path)
-{
-    if (file_ == nullptr) {
-        file_ = fopen(path.c_str(), "r");
+    if (lockFile) {
+        if (flock(secretsFile_.file_, LOCK_EX) == -1) {
+            return KSecretsStore::OpenResult{ KSecretsStore::StoreStatus::CannotLockFile, errno };
+        }
+        secretsFile_.locked_ = true;
     }
-    if (file_ == nullptr) {
-        return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, errno });
+    auto r = read(secretsFile_.file_, &fileHead_, sizeof(fileHead_));
+    if (r == -1) {
+        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotReadFile, errno }));
     }
-    if (fread(&fileHead_, sizeof(fileHead_), 1, file_) != sizeof(fileHead_)) {
-        return setOpenStatus({ KSecretsStore::OpenStatus::SystemError, ferror(file_) });
-    }
-    if (memcmp(fileHead_.magic, fileMagic, fileMagicLen) != 0) {
-        return setOpenStatus({ KSecretsStore::OpenStatus::InvalidFile, 0 });
+    if ((size_t)r < sizeof(fileHead_) || memcmp(fileHead_.magic, fileMagic, fileMagicLen) != 0) {
+        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::InvalidFile, -1 }));
     }
     // decrypting will occur upon collection request
-    return setOpenStatus({ KSecretsStore::OpenStatus::Good, 0 });
+    return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::Good, 0 }));
+}
+
+KSecretsStorePrivate::SecretsFile::~SecretsFile(){
+    if (file_ != -1) {
+        auto r = close(file_);
+        if (r == -1) {
+            syslog(KSS_LOG_ERR, "ksecrets: system return erro upon secrets file close: %d (%m)", errno);
+            syslog(KSS_LOG_ERR, "ksecrets: the secrets file might now be corrup because of the previous error");
+        }
+        file_ = -1;
+    }
 }
 
 KSecretsStore::CollectionNames KSecretsStore::dirCollections() const noexcept
@@ -158,13 +211,13 @@ KSecretsStore::CollectionNames KSecretsStore::dirCollections() const noexcept
     return CollectionNames();
 }
 
-KSecretsStore::CollectionPtr KSecretsStore::createCollection(std::string&&) noexcept
+KSecretsStore::CollectionPtr KSecretsStore::createCollection(const char*) noexcept
 {
     // TODO
     return CollectionPtr();
 }
 
-KSecretsStore::CollectionPtr KSecretsStore::readCollection(std::string&&) const noexcept
+KSecretsStore::CollectionPtr KSecretsStore::readCollection(const char*) const noexcept
 {
     // TODO
     return CollectionPtr();
@@ -176,7 +229,7 @@ bool KSecretsStore::deleteCollection(CollectionPtr) noexcept
     return false;
 }
 
-bool KSecretsStore::deleteCollection(std::string&&) noexcept
+bool KSecretsStore::deleteCollection(const char*) noexcept
 {
     // TODO
     return false;

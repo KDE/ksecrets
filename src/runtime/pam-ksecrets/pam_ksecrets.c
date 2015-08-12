@@ -3,16 +3,22 @@
 #define PAM_SM_SESSION
 #define PAM_SM_PASSWORD
 
+#include <ksecrets_credentials.h>
+
 #include <syslog.h>
 #include <security/pam_ext.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-#include "ksecrets-crypt.h"
-
 #define UNUSED(x) (void)(x)
 
 const char* password;
+
+/* these extern functions are implemented in ksecrets_store_bridge.cpp */
+extern int kss_set_credentials(const char*, const char*);
+extern int kss_delete_credentials();
+extern int kss_can_change_password();
+extern int kss_change_password(const char*);
 
 PAM_EXTERN int pam_sm_authenticate(
     pam_handle_t* pamh, int flags, int argc, const char** argv)
@@ -93,7 +99,7 @@ PAM_EXTERN int pam_sm_chauthtok(
 
   if (flags & PAM_PRELIM_CHECK) {
     pam_syslog(pamh, LOG_INFO, "pam_sm_chauthtok preliminary check");
-    if (kss_can_change_password(pamh)) {
+    if (kss_can_change_password()) {
       return PAM_SUCCESS;
     }
     else {

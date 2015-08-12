@@ -18,22 +18,22 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETSCRYPT_H
-#define KSECRETSCRYPT_H
+#ifndef KSECRETS_CREDENTIALS_H
+#define KSECRETS_CREDENTIALS_H
 
-#include <stdbool.h>
+#include <ksecrets_store_export.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool kss_set_credentials(const char* user_name, const char* password);
+int kss_set_credentials(const char* user_name, const char* password);
 
-bool kss_delete_credentials();
+int kss_delete_credentials();
 
-bool kss_can_change_password();
+int kss_can_change_password();
 
-bool kss_change_password(const char* newPassword);
+int kss_change_password(const char* newPassword);
 
 #ifdef __cplusplus
 }

@@ -58,10 +58,9 @@ public:
     KSecretsStorePrivate() = delete;
     explicit KSecretsStorePrivate(KSecretsStore*);
 
-    KSecretsStore::OpenResult lock_open(const std::string&);
-    KSecretsStore::OpenResult open(const std::string&);
+    KSecretsStore::SetupResult setup(const std::string& path, bool, const std::string&);
+    KSecretsStore::OpenResult open(bool lock);
     using open_action = std::function<KSecretsStore::OpenResult(const std::string&)>;
-    KSecretsStore::OpenResult createFileIfNeededThenDo(const std::string&, bool, open_action);
     int createFile(const std::string&);
     const char* salt() const;
 
@@ -72,13 +71,25 @@ public:
         char iv[IV_SIZE];
     };
 
-    KSecretsStore::OpenResult setOpenStatus(KSecretsStore::OpenResult);
-    bool isOpen() const noexcept { return KSecretsStore::OpenStatus::Good == openStatus_.status_; }
+    template <typename S> S setStoreStatus(S s)
+    {
+        status_ = s.status_;
+        return s;
+    }
+    bool isOpen() const noexcept { return KSecretsStore::StoreStatus::Good == status_; }
 
+    struct SecretsFile {
+        SecretsFile()
+            : file_(-1), locked_(false) {};
+        ~SecretsFile();
+        std::string filePath_;
+        int file_;
+        bool locked_;
+    };
     KSecretsStore* b_;
-    FILE* file_;
+    SecretsFile secretsFile_;
     FileHeadStruct fileHead_;
-    KSecretsStore::OpenResult openStatus_;
+    KSecretsStore::StoreStatus status_;
 };
 
 #endif

@@ -24,7 +24,7 @@
 #include <ksecretscollection.h>
 #include <ksecretsvalue.h>
 #include <ksecretsitem.h>
-#include <ksecrets-crypt.h>
+#include <ksecrets_credentials.h>
 
 #include <QtCore/QtGlobal>
 #include <QtTest/QTest>
@@ -47,7 +47,7 @@ KSecretServiceTest::KSecretServiceTest(QObject* parent)
 }
 
 KSecrets::CollectionPtr collection;
-extern KSharedConfig::Ptr sharedConfig; // defined in the ksecrets_crypt library
+KSharedConfig::Ptr sharedConfig;
 
 void KSecretServiceTest::initTestCase()
 {

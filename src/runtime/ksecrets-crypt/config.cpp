@@ -19,7 +19,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#include <ksecrets_backend.h>
+#include <ksecrets_store.h>
 
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
@@ -80,9 +80,9 @@ const char* get_keyname_mac()
 bool get_salt(const char* path, char* buf, size_t len)
 {
     bool res= false;
-    KSecretsBackend backend;
-    auto openfut = backend.open(path);
-    if (openfut.get().status_ == KSecretsBackend::OpenStatus::Good) {
+    KSecretsStore store;
+    auto openfut = store.open(path);
+    if (openfut.get().status_ == KSecretsStore::OpenStatus::Good) {
 
     }
     return res;

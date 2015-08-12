@@ -19,9 +19,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#include "ksecrets_backend_test.h"
+#include "ksecrets_store_test.h"
 
-#include <ksecrets_backend.h>
+#include <ksecrets_store.h>
 #include <QtTest/QtTest>
 #include <QtCore/QDir>
 
@@ -36,6 +36,9 @@ KSecretServiceStoreTest::KSecretServiceStoreTest(QObject* parent)
 
 void KSecretServiceStoreTest::initTestCase()
 {
+    // create a test file here and performe the real open test below
+    KSecretsStore backend;
+    auto setupfut = backend.setup(test_file_path, "test");
 }
 
 void KSecretServiceStoreTest::cleanupTestCase()
@@ -46,7 +49,8 @@ void KSecretServiceStoreTest::cleanupTestCase()
 void KSecretServiceStoreTest::testOpen()
 {
     KSecretsStore backend;
-    auto openfut = backend.open(test_file_path, true);
+    auto setupfut = backend.setup(test_file_path, "test");
+    auto openfut = backend.open(true);
     auto openres = openfut.get();
-    QVERIFY(openres.status_ == KSecretsStore::OpenStatus::Good);
+    QVERIFY(openres.status_ == KSecretsStore::StoreStatus::Good);
 }
