@@ -48,6 +48,7 @@ KSecretServiceTest::KSecretServiceTest(QObject* parent)
 
 KSecrets::CollectionPtr collection;
 KSharedConfig::Ptr sharedConfig;
+QString secretsFilePath;
 
 void KSecretServiceTest::initTestCase()
 {
@@ -57,6 +58,11 @@ void KSecretServiceTest::initTestCase()
      */
     QStandardPaths::setTestModeEnabled(true);
     sharedConfig = KSharedConfig::openConfig(QLatin1String("ksecretsrc"));
+
+    secretsFilePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QVERIFY(QDir::home().mkpath(secretsFilePath));
+    secretsFilePath += QLatin1Literal("/ksecrets-test.data");
+    qDebug() << "secrets store path: " << secretsFilePath;
 
     setupKeyring();
 
@@ -170,7 +176,7 @@ void KSecretServiceTest::setupKeyring()
     QVERIFY(-1 == key);
 
     /* now go setup user's keyring */
-    QVERIFY(kss_set_credentials(testUser.constData(), testPass.constData()));
+    QVERIFY(kss_set_credentials(testUser.constData(), testPass.constData(), secretsFilePath.toLocal8Bit().constData()));
 
     // the right keys should be present into the kernel keyring
     key = request_key("user", KEYNAME_ENCRYPTING, 0, KEY_SPEC_SESSION_KEYRING);

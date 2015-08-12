@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-int kss_set_credentials(const char* user_name, const char* password);
+int kss_set_credentials(const char* user_name, const char* password, const char* path);
 
 int kss_delete_credentials();
 
