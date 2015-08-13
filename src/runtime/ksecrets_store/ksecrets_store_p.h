@@ -58,9 +58,9 @@ public:
     KSecretsStorePrivate() = delete;
     explicit KSecretsStorePrivate(KSecretsStore*);
 
-    KSecretsStore::SetupResult setup(const std::string& path, bool, const std::string&);
-    KSecretsStore::OpenResult open(bool lock);
-    using open_action = std::function<KSecretsStore::OpenResult(const std::string&)>;
+    KSecretsStore::SetupResult setup(const std::string& path, bool, bool);
+    KSecretsStore::CredentialsResult setCredentials(const std::string&);
+    KSecretsStore::SetupResult open(bool);
     int createFile(const std::string&);
     const char* salt() const;
 
@@ -80,11 +80,13 @@ public:
 
     struct SecretsFile {
         SecretsFile()
-            : file_(-1), locked_(false) {};
+            : file_(-1)
+            , locked_(false){};
         ~SecretsFile();
         std::string filePath_;
         int file_;
         bool locked_;
+        bool readOnly_;
     };
     KSecretsStore* b_;
     SecretsFile secretsFile_;

@@ -142,9 +142,13 @@ int KSECRETS_STORE_EXPORT kss_set_credentials(const char* user_name, const char*
         return TRUE;
 
     KSecretsStore secretsStore;
-    auto setupres = secretsStore.setup(path, password);
+    auto setupres = secretsStore.setup(path);
+    if (!setupres.get()) {
+        return FALSE;
+    }
 
-    return setupres.get() ? 1 : 0;
+    auto credres = secretsStore.setCredentials(password);
+    return credres.get() ? TRUE: FALSE;
 }
 
 extern "C"

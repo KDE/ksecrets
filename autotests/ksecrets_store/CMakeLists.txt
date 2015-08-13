@@ -11,8 +11,11 @@ if(NOT Qt5Test_FOUND)
     return()
 endif()
 
+find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
+find_package(KF5Config ${KF5_DEP_VERSION} REQUIRED)
+
 ecm_add_test(
     ksecrets_store_test.cpp
-    LINK_LIBRARIES Qt5::Test ksecrets_store
+    LINK_LIBRARIES Qt5::Test KF5::CoreAddons KF5::ConfigCore ksecrets_store
 )
 

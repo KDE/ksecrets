@@ -4,8 +4,6 @@ include(ECMAddTests)
 
 find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Test)
 
-find_package(LibGcrypt 1.6.0 REQUIRED)
-
 include_directories(
    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store
    ${CMAKE_BINARY_DIR}/src/runtime/ksecrets_store
@@ -20,6 +18,6 @@ find_package(KF5 REQUIRED CoreAddons)
 
 ecm_add_test(
     ksecretsservice-test.cpp
-    LINK_LIBRARIES KF5::Secrets Qt5::Test KF5::Secrets KF5::CoreAddons ksecrets_store ${LIBGCRYPT_LIBRARIES} keyutils
+    LINK_LIBRARIES Qt5::Test KF5::Secrets KF5::CoreAddons ksecrets_store keyutils
 )
 

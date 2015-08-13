@@ -190,11 +190,11 @@ public:
         Good,
         JustCreated,
         SetupShouldBeCalledFirst,
+        CredentialsSet,
         IncorrectState,
         CannotInitGcrypt,
         CannotDeriveKeys,
         CannotStoreKeys,
-        SetupDone,
         SetupError,
         NoPathGiven,
         InvalidFile, // the file format was not recognized. Is this a ksecrets file?
@@ -204,38 +204,47 @@ public:
         SystemError
     };
 
-    struct SetupResult {
+    template <StoreStatus G>
+    struct OpResult {
         StoreStatus status_;
         int errno_;
-        operator bool() const { return status_ == StoreStatus::SetupDone; }
+        operator bool() const { return status_ == G; }
     };
 
+    using SetupResult = OpResult<StoreStatus::Good>;
+    // struct SetupResult {
+    //     StoreStatus status_;
+    //     int errno_;
+    //     operator bool() const { return status_ == StoreStatus::Good; }
+    // };
+
     /*
-     * Before opening, the store must be setup, that is, it must know the
-     * file path and the user's password. This method is typically called
-     * from the pam module but it can also be called from another program
-     * after prompting user for the password, for example.
-     *
-     * This call creates the file if it's not found.
+     * Before usage, the store must be setup, that is, it must know its file path.
+     * This call creates the file if it's not found and the readOnly flag is set to false.
+     * The file is not created when the readOnly flag is set to false in order to prevent
+     * unintended side effects. If the file don't exists, the SetupResult.statu_ is set
+     * to StoreStatus::SystemError and errno should be 2
      *
      * @return SetupResult whose operator bool could be used to check the error condition
      */
-    std::future<SetupResult> setup(const char* path, const char* password, const char* keyNameEcrypting = "ksecrets:encrypting", const char* keyNameMac = "ksecrets:mac");
+    std::future<SetupResult> setup(const char* path, bool readOnly =true);
 
-    struct OpenResult {
-        StoreStatus status_;
-        int errno_;
-        operator bool() const { return status_ == StoreStatus::Good; }
-    };
-
+    using CredentialsResult = OpResult<StoreStatus::CredentialsSet>;
+    // struct CredentialsResult {
+    //     StoreStatus status_;
+    //     int errno_;
+    //     operator bool() const { return status_ == StoreStatus::Good; }
+    // };
     /**
-     * @parameter path full path to the store file to handle
-     * @parameter readOnly set it to true if you only intend reading to speed
-     * things-up and avoid placing a lock on the file
+     * Set the system-wide credentials for the secrets store
      *
-     * @return OpenResult whose operator bool could be used to check the error condition
+     * This method is typically called from the pam module but it can also be
+     * called from another program after prompting user for the password, for example.
+     * Client applications only need to call this once per user session.
      */
-    std::future<OpenResult> open(bool readOnly = true) noexcept;
+    std::future<CredentialsResult> setCredentials(const char* password = nullptr, const char* keyNameEcrypting = "ksecrets:encrypting", const char* keyNameMac = "ksecrets:mac");
+
+    bool isGood() const noexcept;
 
     constexpr static auto SALT_SIZE = 56;
     /**

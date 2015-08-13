@@ -24,10 +24,13 @@
 #include <ksecrets_store.h>
 #include <QtTest/QtTest>
 #include <QtCore/QDir>
+#include <ksharedconfig.h>
+#include <kconfiggroup.h>
 
 QTEST_GUILESS_MAIN(KSecretServiceStoreTest);
 
-const char* test_file_path = "~/.qttest/ksecretsbackend-test.dat";
+KSharedConfig::Ptr sharedConfig;
+QString secretsFilePath;
 
 KSecretServiceStoreTest::KSecretServiceStoreTest(QObject* parent)
     : QObject(parent)
@@ -36,21 +39,29 @@ KSecretServiceStoreTest::KSecretServiceStoreTest(QObject* parent)
 
 void KSecretServiceStoreTest::initTestCase()
 {
+    QStandardPaths::setTestModeEnabled(true);
+    sharedConfig = KSharedConfig::openConfig(QLatin1String("ksecretsrc"));
+
+    secretsFilePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QVERIFY(QDir::home().mkpath(secretsFilePath));
+    secretsFilePath += QLatin1Literal("/ksecrets-test.data");
+    qDebug() << "secrets store path: " << secretsFilePath;
     // create a test file here and performe the real open test below
     KSecretsStore backend;
-    auto setupfut = backend.setup(test_file_path, "test");
+    auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
+    QVERIFY(setupfut.get());
+    auto credfut = backend.setCredentials("test", "ksecrets-test:crypt", "ksecrets-test:mac");
+    QVERIFY(credfut.get());
 }
 
 void KSecretServiceStoreTest::cleanupTestCase()
 {
-    QDir::home().remove(QLatin1Literal(test_file_path));
+    QDir::home().remove(secretsFilePath);
 }
 
 void KSecretServiceStoreTest::testOpen()
 {
     KSecretsStore backend;
-    auto setupfut = backend.setup(test_file_path, "test");
-    auto openfut = backend.open(true);
-    auto openres = openfut.get();
-    QVERIFY(openres.status_ == KSecretsStore::StoreStatus::Good);
+    auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData());
+    QVERIFY(setupfut.get());
 }
