@@ -65,9 +65,10 @@ public:
     const char* salt() const;
 
     constexpr static auto IV_SIZE = 32;
+    constexpr static auto SALT_SIZE = 56;
     struct FileHeadStruct {
         char magic[9];
-        char salt[KSecretsStore::SALT_SIZE];
+        char salt[SALT_SIZE];
         char iv[IV_SIZE];
     };
 

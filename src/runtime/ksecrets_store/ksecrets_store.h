@@ -50,13 +50,15 @@ class KSecretsStorePrivate;
  * The Item class holds, sure enough, the secret value but also let applications associate
  * the secret value with metadata, such as the label or other custom properties.
  *
- * Before using a collection, the application should open it.
- * Upon opening, it's possible to indicate if readonly mode is possible.
+ * Before using a collection, the application should setup it.
+ * It's possible to indicate if readonly mode is possible. That would be the prefered way of
+ * accessing the store, as usually applications only need some previously entered password.
+ * The setup operation fails if the readonly flag is given and if the secrets file is not found.
  *
- * When opening without readonly flag, then the file is exclusively locked. The lock is
+ * When setting-up without readonly flag, the file is created if not found, then the file is exclusively locked. The lock is
  * released when the class is destroyed. You should keep the file locked as shortly as
  * possible, in order to avoid deadlocks between applications that also need to read the
- * secrets. For more information @see open().
+ * secrets. For more information @see setup().
  *
  * The data are encrypted using libgcypt and the algorythm Twofish which is the fasted for this library.
  *
@@ -154,7 +156,7 @@ public:
          * it.
          */
         ItemPtr createItem(const char*, AttributesMap&&, ItemValue&&) noexcept;
-        /*
+        /**
          * Convenience method for creating items without supplemental
          * attributes.
          *
@@ -163,6 +165,8 @@ public:
          * it.
          */
         ItemPtr createItem(const char *label, ItemValue&&) noexcept;
+
+        bool deleteItem(ItemPtr) noexcept;
 
     protected:
         Collection();
@@ -173,12 +177,13 @@ public:
     };
     using CollectionPtr = std::shared_ptr<Collection>;
 
-    /*
+    /**
      * Default constructor.
      *
      * This constructor only initializes the store class. You should call
-     * the open() method right after the initialization and before any other
-     * methods of this API.
+     * the setup() method right after the initialization and before any other
+     * methods of this API. If the password was not set by the pam_ksecrets module
+     * then you have to also call setCredentials()
      *
      * @see open()
      */
@@ -204,21 +209,22 @@ public:
         SystemError
     };
 
+    /**
+     * @brief Small structure returned by KSecretsStore API calls
+     *
+     * It introduces a bool() operator client applications could use to check the correct
+     * issue of the respective API call.
+     */
     template <StoreStatus G>
-    struct OpResult {
+    struct CallResult {
         StoreStatus status_;
         int errno_;
         operator bool() const { return status_ == G; }
     };
 
-    using SetupResult = OpResult<StoreStatus::Good>;
-    // struct SetupResult {
-    //     StoreStatus status_;
-    //     int errno_;
-    //     operator bool() const { return status_ == StoreStatus::Good; }
-    // };
+    using SetupResult = CallResult<StoreStatus::Good>;
 
-    /*
+    /**
      * Before usage, the store must be setup, that is, it must know its file path.
      * This call creates the file if it's not found and the readOnly flag is set to false.
      * The file is not created when the readOnly flag is set to false in order to prevent
@@ -229,12 +235,8 @@ public:
      */
     std::future<SetupResult> setup(const char* path, bool readOnly =true);
 
-    using CredentialsResult = OpResult<StoreStatus::CredentialsSet>;
-    // struct CredentialsResult {
-    //     StoreStatus status_;
-    //     int errno_;
-    //     operator bool() const { return status_ == StoreStatus::Good; }
-    // };
+    using CredentialsResult = CallResult<StoreStatus::CredentialsSet>;
+
     /**
      * Set the system-wide credentials for the secrets store
      *
@@ -246,18 +248,12 @@ public:
 
     bool isGood() const noexcept;
 
-    constexpr static auto SALT_SIZE = 56;
-    /**
-     * @return pointer to the salt structure inside the internal structure of this object. The buffer has SALT_SIZE length.
-     */
-    const char* salt() const;
-
     using CollectionNames = std::vector<std::string>;
     CollectionNames dirCollections() const noexcept;
     /*
      * @return CollectionPtr which can empty if the call did not succeed.
      * Please check that with operator bool().
-     * If it fails, have you already called open()?
+     * If it fails, have you already called setup()?
      */
     CollectionPtr createCollection(const char*) noexcept;
     /*

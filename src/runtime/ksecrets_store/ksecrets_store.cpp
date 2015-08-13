@@ -150,7 +150,7 @@ int KSecretsStorePrivate::createFile(const std::string& path)
 
     FileHeadStruct emptyFileData;
     memcpy(emptyFileData.magic, fileMagic, fileMagicLen);
-    gcry_randomize(emptyFileData.salt, KSecretsStore::SALT_SIZE, GCRY_STRONG_RANDOM);
+    gcry_randomize(emptyFileData.salt, SALT_SIZE, GCRY_STRONG_RANDOM);
     gcry_randomize(emptyFileData.iv, IV_SIZE, GCRY_STRONG_RANDOM);
 
     int res = 0;
@@ -162,14 +162,6 @@ int KSecretsStorePrivate::createFile(const std::string& path)
 }
 
 bool KSecretsStore::isGood() const noexcept { return d->status_ == StoreStatus::Good; }
-
-const char* KSecretsStore::salt() const
-{
-    if (isGood())
-        return d->salt();
-    else
-        return nullptr;
-}
 
 const char* KSecretsStorePrivate::salt() const { return fileHead_.salt; }
 
