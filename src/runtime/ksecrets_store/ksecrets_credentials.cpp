@@ -191,6 +191,7 @@ int KSECRETS_STORE_EXPORT kss_can_change_password()
 extern "C"
 int KSECRETS_STORE_EXPORT kss_change_password(const char* new_password)
 {
+    UNUSED(new_password);
     syslog(LOG_INFO, "kss_change_password");
     return TRUE;
 }

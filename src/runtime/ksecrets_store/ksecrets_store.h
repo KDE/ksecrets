@@ -81,6 +81,7 @@ public:
     struct ItemValue {
         std::string contentType;
         std::vector<char> contents;
+        bool operator == (const ItemValue& that) const noexcept { return contentType == that.contentType && contents == that.contents; }
     };
 
     /* Holds a secret value.
@@ -92,6 +93,7 @@ public:
      * @see Collection
      */
     class Item {
+    public:
         Item(const Item&) = default;
         Item& operator=(const Item&) = default;
 
@@ -99,10 +101,18 @@ public:
         bool setLabel(const char*) noexcept;
 
         AttributesMap attributes() const;
-        void setAttributes(AttributesMap&&) noexcept;
+        /**
+         * @brief
+         *
+         * @note This method uses C++11 move semantics so the AttributesMap local variable used to call this member
+         * will no longer be valid upon call return.
+         *
+         * @param AttributesMap
+         */
+        bool setAttributes(AttributesMap) noexcept;
 
         ItemValue value() const noexcept;
-        bool setValue(ItemValue&&) noexcept;
+        bool setValue(ItemValue) noexcept;
 
         std::time_t createdTime() const noexcept;
         std::time_t modifiedTime() const noexcept;
@@ -132,9 +142,7 @@ public:
      * the items having attribute value containing that partially specified value.
      */
     class Collection {
-        Collection(const Collection&) = default;
-        Collection& operator=(const Collection&) = default;
-
+    public:
         std::string label() const noexcept;
         bool setLabel(const char*) noexcept;
 
@@ -142,9 +150,10 @@ public:
         std::time_t modifiedTime() const noexcept;
 
         using ItemList = std::vector<ItemPtr>;
-        ItemList searchItems(AttributesMap&&) noexcept;
-        ItemList searchItems(const char*) noexcept;
-        ItemList searchItems(const char*, AttributesMap&&) noexcept;
+        ItemList dirItems() const noexcept;
+        ItemList searchItems(const AttributesMap&) const noexcept;
+        ItemList searchItems(const char*) const noexcept;
+        ItemList searchItems(const char*, const AttributesMap&) const noexcept;
 
         /**
          * Creates an item in the collection in one go. This is more efficient than
@@ -152,11 +161,14 @@ public:
          * the value. The returned item may still be modified, keep in mind that each
          * method call will trigger an store file update.
          *
+         * @note This member uses C++11 move semantics for the AttributesMap and ItemValue
+         *
          * @return ItemPtr which can be empty if creating the item was not
          * possible. So please check it via it's operator bool() before using
-         * it.
+         * it. Open possible failure reason is that an item with the same label already
+         * exists in the collection.
          */
-        ItemPtr createItem(const char*, AttributesMap&&, ItemValue&&) noexcept;
+        ItemPtr createItem(const char*, AttributesMap, ItemValue) noexcept;
         /**
          * Convenience method for creating items without supplemental
          * attributes.
@@ -165,12 +177,14 @@ public:
          * possible. So please check it via it's operator bool() before using
          * it.
          */
-        ItemPtr createItem(const char* label, ItemValue&&) noexcept;
+        ItemPtr createItem(const char* label, ItemValue) noexcept;
 
         bool deleteItem(ItemPtr) noexcept;
 
     protected:
         Collection();
+        Collection(const Collection&) = default;
+        Collection& operator=(const Collection&) = default;
         friend class KSecretsStore;
 
     private:
@@ -222,11 +236,15 @@ public:
         operator bool() const { return status_ == G; }
     };
 
+    template <typename T> struct AlwaysGoodPred { bool operator()(const T&) const noexcept { return true; }};
     /**
-     * @brief Small structure returned by API calls that create things
+     * @brief Small structure returned by API calls that create things. It's possible to check the returned
+     *        value by giving this template a custom OK_PRED of type equivalent to std::function<bool(const R&)>
      */
-    template <StoreStatus G, typename R> struct CallResultWithValue : public CallResult<G> {
+    template <StoreStatus G, typename R, typename OK_PRED = AlwaysGoodPred<R> >
+        struct CallResultWithValue : public CallResult<G> {
         R result_;
+        operator bool() const noexcept { return CallResult<G>::operator bool() && OK_PRED()(result_); }
     };
 
     using SetupResult = CallResult<StoreStatus::Good>;
@@ -259,7 +277,8 @@ public:
     using DirCollectionsResult = CallResultWithValue<StoreStatus::Good, CollectionNames>;
     DirCollectionsResult dirCollections() const noexcept;
 
-    using CreateCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr>;
+    template <typename P> struct IsGoodSmartPtr { bool operator()(const P& p) { return p.get() != nullptr; }};
+    using CreateCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr, IsGoodSmartPtr<CollectionPtr> >;
     /**
      * @return CollectionPtr which can empty if the call did not succeed
      *         Please check that with operator bool()
@@ -268,7 +287,7 @@ public:
      */
     CreateCollectionResult createCollection(const char*) noexcept;
 
-    using ReadCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr>;
+    using ReadCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr, IsGoodSmartPtr<CollectionPtr> >;
     /**
      * @return CollectionPtr which can empty if the call did not succeed, e.g.
      * the collection was not found
@@ -276,13 +295,20 @@ public:
      */
     ReadCollectionResult readCollection(const char*) const noexcept;
 
-    using DeleteCollectionResult = CallResultWithValue<StoreStatus::Good, bool>;
+    /**
+     * @brief Return value for deleteCollection method variants. Please note the operator bool() can be used to both
+     * check the collection's status after the deleteCollection call, and the result of the delete operation, as it's
+     * using the `bool` specialized version of the IsGoodPred
+     */
+    using DeleteCollectionResult = CallResultWithValue<StoreStatus::Good, bool, AlwaysGoodPred<bool> >;
     DeleteCollectionResult deleteCollection(CollectionPtr) noexcept;
     DeleteCollectionResult deleteCollection(const char*) noexcept;
 
 private:
     std::unique_ptr<KSecretsStorePrivate> d;
 };
+
+template <> struct KSecretsStore::AlwaysGoodPred<bool> { bool operator()(const bool& b) const noexcept { return b; }};
 
 #endif
 // vim: tw=220:ts=4

@@ -230,4 +230,95 @@ KSecretsStore::DeleteCollectionResult KSecretsStore::deleteCollection(const char
     // TODO
     return DeleteCollectionResult();
 }
+
+std::time_t KSecretsStore::Collection::createdTime() const {
+    // TODO
+    return std::time_t();
+}
+
+std::time_t KSecretsStore::Collection::modifiedTime() const {
+    //TODO
+    return std::time_t();
+}
+
+std::string KSecretsStore::Collection::label() const {
+    // TODO
+    return "";
+}
+
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::dirItems() const {
+    // TODO
+    return ItemList();
+}
+
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const AttributesMap &) const {
+    // TODO
+    return ItemList();
+}
+
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*, const AttributesMap &) const {
+    // TODO
+    return ItemList();
+}
+
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*) const {
+    // TODO
+    return ItemList();
+}
+
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, AttributesMap, ItemValue) {
+    // TODO
+    return ItemPtr();
+}
+
+bool KSecretsStore::Collection::deleteItem(ItemPtr) {
+    // TODO
+    return false;
+}
+
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, ItemValue) {
+    // TODO
+    return ItemPtr();
+}
+
+std::time_t KSecretsStore::Item::createdTime() const {
+    // TODO
+    return std::time_t();
+}
+
+std::time_t KSecretsStore::Item::modifiedTime() const {
+    // TODO
+    return std::time_t();
+}
+
+std::string KSecretsStore::Item::label() const {
+    // TODO
+    return "";
+}
+
+bool KSecretsStore::Item::setLabel(const char*) {
+    // TODO
+    return false;
+}
+
+KSecretsStore::ItemValue KSecretsStore::Item::value() const {
+    // TODO
+    return ItemValue();
+}
+
+bool KSecretsStore::Item::setValue(ItemValue) {
+    // TODO
+    return false;
+}
+
+KSecretsStore::AttributesMap KSecretsStore::Item::attributes() const {
+    // TODO
+    return AttributesMap();
+}
+
+bool KSecretsStore::Item::setAttributes(AttributesMap) {
+    // TODO
+    return false;
+}
+
 // vim: tw=220:ts=4

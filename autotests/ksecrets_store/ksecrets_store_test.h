@@ -30,13 +30,18 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void testCreateCollection();
-    void testCreateItem();
-    void testSearchItem();
-    void testItem();
-    void testDeleteItem();
+    void testCreateCollectionFailOnReadonly();
     void testDirCollections();
     void testReadCollection();
+    void testCreateItem();
+    void testCreateItemFailOnReadonly();
+    void testSearchItem();
+    void testItem();
+    void testItemModifyFailOnReadonly();
+    void testDeleteItem();
+    void testDeleteItemFailOnReadonly();
     void testDeleteCollection();
+    void testDeleteCollectionFailOnReadonly();
     void cleanupTestCase();
 };
 
