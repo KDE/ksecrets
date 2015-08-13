@@ -54,14 +54,22 @@ void KSecretServiceStoreTest::initTestCase()
     QVERIFY(credfut.get());
 }
 
-void KSecretServiceStoreTest::cleanupTestCase()
-{
-    QDir::home().remove(secretsFilePath);
-}
+void KSecretServiceStoreTest::testCreateCollection() { QVERIFY(false); }
+void KSecretServiceStoreTest::testCreateItem() { QVERIFY(false); }
+void KSecretServiceStoreTest::testSearchItem() { QVERIFY(false); }
+void KSecretServiceStoreTest::testItem() { QVERIFY(false); }
+void KSecretServiceStoreTest::testDeleteItem() { QVERIFY(false); }
+void KSecretServiceStoreTest::testDirCollections() { QVERIFY(false); }
+void KSecretServiceStoreTest::testReadCollection() { QVERIFY(false); }
+void KSecretServiceStoreTest::testDeleteCollection() { QVERIFY(false); }
+void KSecretServiceStoreTest::cleanupTestCase() { QDir::home().remove(secretsFilePath); }
 
-void KSecretServiceStoreTest::testOpen()
-{
-    KSecretsStore backend;
-    auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData());
-    QVERIFY(setupfut.get());
-}
+// void KSecretServiceStoreTest::testOpen()
+// {
+//     KSecretsStore backend;
+//     auto setupfut =
+//     backend.setup(secretsFilePath.toLocal8Bit().constData());
+//     QVERIFY(setupfut.get());
+// }
+
+// vim: tw=220 ts=4

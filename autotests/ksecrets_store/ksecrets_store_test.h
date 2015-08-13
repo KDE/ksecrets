@@ -29,7 +29,14 @@ public:
     explicit KSecretServiceStoreTest(QObject* parent = 0);
 private Q_SLOTS:
     void initTestCase();
-    void testOpen();
+    void testCreateCollection();
+    void testCreateItem();
+    void testSearchItem();
+    void testItem();
+    void testDeleteItem();
+    void testDirCollections();
+    void testReadCollection();
+    void testDeleteCollection();
     void cleanupTestCase();
 };
 
