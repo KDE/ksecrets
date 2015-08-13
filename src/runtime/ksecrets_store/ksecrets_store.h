@@ -106,6 +106,7 @@ public:
 
         std::time_t createdTime() const noexcept;
         std::time_t modifiedTime() const noexcept;
+
     protected:
         Item();
         friend class KSecretsStore;
@@ -164,7 +165,7 @@ public:
          * possible. So please check it via it's operator bool() before using
          * it.
          */
-        ItemPtr createItem(const char *label, ItemValue&&) noexcept;
+        ItemPtr createItem(const char* label, ItemValue&&) noexcept;
 
         bool deleteItem(ItemPtr) noexcept;
 
@@ -215,11 +216,17 @@ public:
      * It introduces a bool() operator client applications could use to check the correct
      * issue of the respective API call.
      */
-    template <StoreStatus G>
-    struct CallResult {
+    template <StoreStatus G> struct CallResult {
         StoreStatus status_;
         int errno_;
         operator bool() const { return status_ == G; }
+    };
+
+    /**
+     * @brief Small structure returned by API calls that create things
+     */
+    template <StoreStatus G, typename R> struct CallResultWithValue : public CallResult<G> {
+        R result_;
     };
 
     using SetupResult = CallResult<StoreStatus::Good>;
@@ -233,7 +240,7 @@ public:
      *
      * @return SetupResult whose operator bool could be used to check the error condition
      */
-    std::future<SetupResult> setup(const char* path, bool readOnly =true);
+    std::future<SetupResult> setup(const char* path, bool readOnly = true);
 
     using CredentialsResult = CallResult<StoreStatus::CredentialsSet>;
 
@@ -249,22 +256,29 @@ public:
     bool isGood() const noexcept;
 
     using CollectionNames = std::vector<std::string>;
-    CollectionNames dirCollections() const noexcept;
-    /*
-     * @return CollectionPtr which can empty if the call did not succeed.
-     * Please check that with operator bool().
-     * If it fails, have you already called setup()?
+    using DirCollectionsResult = CallResultWithValue<StoreStatus::Good, CollectionNames>;
+    DirCollectionsResult dirCollections() const noexcept;
+
+    using CreateCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr>;
+    /**
+     * @return CollectionPtr which can empty if the call did not succeed
+     *         Please check that with operator bool()
+     *         If it fails, have you already called setup()?
+     *
      */
-    CollectionPtr createCollection(const char*) noexcept;
-    /*
+    CreateCollectionResult createCollection(const char*) noexcept;
+
+    using ReadCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr>;
+    /**
      * @return CollectionPtr which can empty if the call did not succeed, e.g.
-     * the collection was not found.
+     * the collection was not found
      *         Please check that with operator bool()
      */
-    CollectionPtr readCollection(const char*) const noexcept;
+    ReadCollectionResult readCollection(const char*) const noexcept;
 
-    bool deleteCollection(CollectionPtr) noexcept;
-    bool deleteCollection(const char*) noexcept;
+    using DeleteCollectionResult = CallResultWithValue<StoreStatus::Good, bool>;
+    DeleteCollectionResult deleteCollection(CollectionPtr) noexcept;
+    DeleteCollectionResult deleteCollection(const char*) noexcept;
 
 private:
     std::unique_ptr<KSecretsStorePrivate> d;

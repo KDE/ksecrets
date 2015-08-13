@@ -201,33 +201,33 @@ KSecretsStorePrivate::SecretsFile::~SecretsFile()
     }
 }
 
-KSecretsStore::CollectionNames KSecretsStore::dirCollections() const noexcept
+KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept
 {
     // TODO
-    return CollectionNames();
+    return DirCollectionsResult();
 }
 
-KSecretsStore::CollectionPtr KSecretsStore::createCollection(const char*) noexcept
+KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char*) noexcept
 {
     // TODO
-    return CollectionPtr();
+    return CreateCollectionResult();
 }
 
-KSecretsStore::CollectionPtr KSecretsStore::readCollection(const char*) const noexcept
+KSecretsStore::ReadCollectionResult KSecretsStore::readCollection(const char*) const noexcept
 {
     // TODO
-    return CollectionPtr();
+    return ReadCollectionResult();
 }
 
-bool KSecretsStore::deleteCollection(CollectionPtr) noexcept
+KSecretsStore::DeleteCollectionResult KSecretsStore::deleteCollection(CollectionPtr) noexcept
 {
     // TODO
-    return false;
+    return DeleteCollectionResult();
 }
 
-bool KSecretsStore::deleteCollection(const char*) noexcept
+KSecretsStore::DeleteCollectionResult KSecretsStore::deleteCollection(const char*) noexcept
 {
     // TODO
-    return false;
+    return DeleteCollectionResult();
 }
 // vim: tw=220:ts=4
