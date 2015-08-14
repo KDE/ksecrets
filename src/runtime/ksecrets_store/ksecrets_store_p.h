@@ -22,6 +22,7 @@
 #define KSECRETSBACKEND_P_H
 
 #include "ksecrets_store.h"
+#include "ksecrets_file.h"
 
 class TimeStamped {
 
@@ -64,14 +65,6 @@ public:
     int createFile(const std::string&);
     const char* salt() const;
 
-    constexpr static auto IV_SIZE = 32;
-    constexpr static auto SALT_SIZE = 56;
-    struct FileHeadStruct {
-        char magic[9];
-        char salt[SALT_SIZE];
-        char iv[IV_SIZE];
-    };
-
     template <typename S> S setStoreStatus(S s)
     {
         status_ = s.status_;
@@ -79,19 +72,8 @@ public:
     }
     bool isOpen() const noexcept { return KSecretsStore::StoreStatus::Good == status_; }
 
-    struct SecretsFile {
-        SecretsFile()
-            : file_(-1)
-            , locked_(false){};
-        ~SecretsFile();
-        std::string filePath_;
-        int file_;
-        bool locked_;
-        bool readOnly_;
-    };
     KSecretsStore* b_;
-    SecretsFile secretsFile_;
-    FileHeadStruct fileHead_;
+    KSecretsFile secretsFile_;
     KSecretsStore::StoreStatus status_;
 };
 

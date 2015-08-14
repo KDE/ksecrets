@@ -26,7 +26,6 @@
 #include <thread>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/file.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <syslog.h>
@@ -50,7 +49,6 @@ KSecretsStorePrivate::KSecretsStorePrivate(KSecretsStore* b)
     : b_(b)
 {
     status_ = KSecretsStore::StoreStatus::JustCreated;
-    memset(&fileHead_, 0, sizeof(fileHead_));
 }
 
 KSecretsStore::KSecretsStore()
@@ -102,8 +100,7 @@ KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, 
             return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::SystemError, createres }));
         }
     }
-    secretsFile_.filePath_ = path;
-    secretsFile_.readOnly_ = readOnly;
+    secretsFile_.setup(path, readOnly);
     return open(!readOnly);
 }
 
@@ -136,67 +133,35 @@ KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std:
     return setStoreStatus(Result({ KSecretsStore::StoreStatus::CredentialsSet, 0 }));
 }
 
-char fileMagic[] = { 'k', 's', 'e', 'c', 'r', 'e', 't', 's' };
-constexpr auto fileMagicLen = sizeof(fileMagic) / sizeof(fileMagic[0]);
-
 int KSecretsStorePrivate::createFile(const std::string& path)
 {
-    FILE* f = fopen(path.c_str(), "w");
-    if (f == nullptr) {
-        return errno;
-    }
-
-    FileHeadStruct emptyFileData;
-    memcpy(emptyFileData.magic, fileMagic, fileMagicLen);
-    gcry_randomize(emptyFileData.salt, SALT_SIZE, GCRY_STRONG_RANDOM);
-    gcry_randomize(emptyFileData.iv, IV_SIZE, GCRY_STRONG_RANDOM);
-
-    int res = 0;
-    if (fwrite(&emptyFileData, 1, sizeof(emptyFileData), f) != sizeof(emptyFileData)) {
-        res = ferror(f);
-    }
-    fclose(f);
-    return res;
+    return secretsFile_.create(path);
 }
 
 bool KSecretsStore::isGood() const noexcept { return d->status_ == StoreStatus::Good; }
 
-const char* KSecretsStorePrivate::salt() const { return fileHead_.salt; }
+const char* KSecretsStorePrivate::salt() const { return secretsFile_.salt(); }
 
 KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
 {
     using OpenResult = KSecretsStore::SetupResult;
-    secretsFile_.file_ = ::open(secretsFile_.filePath_.c_str(), O_DSYNC | O_NOATIME | O_NOFOLLOW);
-    if (secretsFile_.file_ == -1) {
+    if (!secretsFile_.open()) {
         return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotOpenFile, errno }));
     }
     if (lockFile) {
-        if (flock(secretsFile_.file_, LOCK_EX) == -1) {
+        if (!secretsFile_.lock()) {
             return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotLockFile, errno }));
         }
-        secretsFile_.locked_ = true;
     }
-    auto r = read(secretsFile_.file_, &fileHead_, sizeof(fileHead_));
-    if (r == -1) {
+    if (!secretsFile_.readHeader()) {
         return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotReadFile, errno }));
     }
-    if ((size_t)r < sizeof(fileHead_) || memcmp(fileHead_.magic, fileMagic, fileMagicLen) != 0) {
+    if (!secretsFile_.checkMagic()) {
         return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::InvalidFile, -1 }));
     }
+    // TODO add here MAC integrity check
     // decrypting will occur upon collection request
     return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::Good, 0 }));
-}
-
-KSecretsStorePrivate::SecretsFile::~SecretsFile()
-{
-    if (file_ != -1) {
-        auto r = close(file_);
-        if (r == -1) {
-            syslog(KSS_LOG_ERR, "ksecrets: system return erro upon secrets file close: %d (%m)", errno);
-            syslog(KSS_LOG_ERR, "ksecrets: the secrets file might now be corrup because of the previous error");
-        }
-        file_ = -1;
-    }
 }
 
 KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept
