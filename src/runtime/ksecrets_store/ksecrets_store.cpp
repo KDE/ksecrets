@@ -40,13 +40,11 @@
 const char* keyNameEncrypting = nullptr;
 const char* keyNameMac = nullptr;
 
-extern "C" {
 bool kss_init_gcry();
 bool kss_derive_keys(const char* salt, const char* password, char* encryption_key, char* mac_key, size_t);
 bool kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySize);
 const char* get_keyname_encrypting() { return keyNameEncrypting; }
 const char* get_keyname_mac() { return keyNameMac; }
-}
 
 KSecretsStorePrivate::KSecretsStorePrivate(KSecretsStore* b)
     : b_(b)

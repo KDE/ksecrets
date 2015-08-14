@@ -54,6 +54,12 @@ PAM_EXTERN int pam_sm_authenticate(
  * If nothing is specified, then the default path will be
  * $HOME/.local/share/ksecrets/ksecrets.data
  *
+ * FIXME see how this could be simplified or how one could add a configuration
+ * file handling here. Handling configuration files is DE specific and this
+ * pam module tries to stay as generic as possible. Perhaps we could add here
+ * a DE-specific plugin that would retrieve values from the DE-specific configuration
+ * files, using the DE-specific configuration handling libraries.
+ *
  * The location should point to an actual file. If it's a symlink, then the
  * store handling routine will fail.
  */
