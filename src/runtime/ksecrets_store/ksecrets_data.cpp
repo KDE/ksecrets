@@ -23,32 +23,66 @@
 
 #include <unistd.h>
 
+long kss_encrypt_buffer(unsigned char* out, size_t lout, const void* iv,
+    size_t liv, const unsigned char* in, size_t lin);
+long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv,
+    size_t liv, const unsigned char* in, size_t lin);
+char* kss_alloc_crypt_buffer(size_t rlen);
+
 SecretsEntity::SecretsEntity()
-    : size_(0)
-    , state_(Empty)
-    , encrypted_(nullptr)
-    , unencrypted_(nullptr)
+    : state_(State::Empty)
 {
 }
-SecretsEntity::~SecretsEntity()
-{
-    if (encrypted_) {
-        ::free(encrypted_);
-        encrypted_ = nullptr;
-    }
-    if (unencrypted_) {
-        ::free(unencrypted_);
-        unencrypted_ = nullptr;
-    }
-}
+
+SecretsEntity::~SecretsEntity() {}
+
+// TODO refactor this when encrypting plugins will be put in place
+// the KSecretsFile should place the IV in the plugin structure instead of
+// this class
+const char* iv = nullptr;
+size_t liv = KSecretsFile::IV_SIZE;
+
 bool SecretsEntity::read(KSecretsFile& file)
 {
-    if (!file.read(size_)) {
+    if (iv == nullptr) {
+        iv = file.iv();
+    }
+
+    size_t s;
+    if (!file.read(s)) {
+        return false;
+    }
+    if (!encrypted_.allocate(s)) {
         return false;
     }
 
-    encrypted_ = ::malloc(res);
-    if (encrypted_ == nullptr) {
-        return false;
-    }
+    return file.read(encrypted_.data_,
+        encrypted_.len_); // beware not to specify encrypted.size_ here
 }
+
+bool SecretsEntity::decrypt()
+{
+    if (isEmpty())
+        return false;
+    if (unencrypted_.len_ > 0)
+        return true; // already decrpyted
+    if (encrypted_.len_ == 0)
+        return false; // what to decrypt?
+    unencrypted_.allocate(encrypted_.len_);
+    auto dres = kss_decrypt_buffer(unencrypted_.data_, unencrypted_.len_, iv,
+        liv, encrypted_.data_, encrypted_.len_);
+    return dres == 0;
+}
+
+bool SecretsEntity::encrypt()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsEntity::write(KSecretsFile &) const
+{
+    // TODO
+    return false;
+}
+// vim: tw=220:ts=4

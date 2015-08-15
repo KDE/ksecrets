@@ -165,10 +165,16 @@ KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections()
     return res;
 }
 
-KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char*) noexcept
+KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char* collName) noexcept
 {
-    // TODO
-    return CreateCollectionResult();
+    return d->createCollection(collName);
+}
+
+KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(const std::string &collName) noexcept
+{
+    KSecretsStore::CreateCollectionResult res;
+
+    return res;
 }
 
 KSecretsStore::ReadCollectionResult KSecretsStore::readCollection(const char*) const noexcept

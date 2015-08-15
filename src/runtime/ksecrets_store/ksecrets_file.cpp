@@ -37,6 +37,7 @@ KSecretsFile::KSecretsFile()
     : file_(-1)
     , locked_(false)
     , empty_(true)
+    , eof_(false)
 {
     memset(&fileHead_, 0, sizeof(fileHead_));
 }
@@ -105,6 +106,7 @@ bool KSecretsFile::readHeader()
     if (eoftest == 0) {
         // we are at EOF already, so file is empty
         empty_ = true;
+        eof_ = true;
     }
     else {
         if (-1 == lseek(file_, -bytes, SEEK_CUR)) {
@@ -139,8 +141,47 @@ int KSecretsFile::checkMAC() const
     return -1;
 }
 
-KSecretsFile::DirCollectionResult KSecretsFile::dirCollections() {
-    return DirCollectionResult();
+bool KSecretsFile::read(size_t& s) { return read(&s, sizeof(s)); }
+
+bool KSecretsFile::read(void* buf, size_t len)
+{
+    if (eof_) return false;
+    auto rres = ::read(file_, buf, len);
+    if (rres < 0)
+        return setFailState(errno);
+    if (static_cast<size_t>(rres) < len)
+        return setEOF(); // are we @ EOF?
+    return true;
 }
+
+KSecretsFile::DirCollectionResult KSecretsFile::dirCollections()
+{
+    DirCollectionResult res;
+    res.first = false;
+    res.second = nullptr;
+
+    if (empty_) {
+        return res;
+    }
+
+    readDirectory();
+    decryptEntity(directory_);
+
+    if (directory_.isDecrypted()) {
+        res.first = true;
+        res.second = &directory_;
+    }
+
+    return res;
+}
+
+bool KSecretsFile::readDirectory()
+{
+    if (empty_)
+        return false; // file is empty, don't event attempt read
+    return directory_.read(*this);
+}
+
+bool KSecretsFile::decryptEntity(SecretsEntity& entity) { return entity.decrypt(); }
 
 // vim: tw=220:ts=4

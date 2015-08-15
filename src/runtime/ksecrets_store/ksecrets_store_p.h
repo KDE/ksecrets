@@ -64,6 +64,7 @@ public:
     KSecretsStore::SetupResult open(bool) noexcept;
     int createFile(const std::string&) noexcept;
     const char* salt() const noexcept;
+    KSecretsStore::CreateCollectionResult createCollection(const std::string&) noexcept;
     KSecretsStore::DirCollectionsResult dirCollections() noexcept;
 
     template <typename S> S setStoreStatus(S s) noexcept

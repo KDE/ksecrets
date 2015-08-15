@@ -21,33 +21,48 @@
 #ifndef KSECRETS_DATA_H
 #define KSECRETS_DATA_H
 
+#include "ksecrets_crypt.h"
+
 #include <cstdint>
 #include <sys/types.h>
 
 class KSecretsFile;
 
+/**
+ * @brief Elementary secret element
+ *
+ * TODO this class uses routines from ksecrets_crypt.cpp file to handle
+ * encrypting and decrypting of the files. It would be better to define some
+ * plugin architecture, allowing users specify different encryption methods.
+ */
 struct SecretsEntity {
     SecretsEntity();
     SecretsEntity(const SecretsEntity&) = delete;
     SecretsEntity(SecretsEntity&&) = delete;
     virtual ~SecretsEntity();
 
-    enum class State: std::uint8_t {
+    enum class State : std::uint8_t {
         Empty = 0,
         Encrypted = 0x01,
         Decrypted = 0x02
     };
 
-    size_t size_;
+    bool isEmpty() const noexcept { return state_ == State::Empty; }
+    bool isDecrypted() const noexcept
+    {
+        return (static_cast<std::uint8_t>(state_)
+                   & static_cast<std::uint8_t>(State::Decrypted)) != 0;
+    }
+
+    virtual bool decrypt() noexcept;
+    virtual bool encrypt() noexcept;
+
+    virtual bool read(KSecretsFile&) noexcept;
+    virtual bool write(KSecretsFile&) const noexcept;
+
     State state_;
-    char* encrypted_;
-    char* unencrypted_;
-
-    bool decrypt() noexcept;
-    bool encrypt() noexcept;
-
-    bool read(KSecretsFile&) noexcept;
-    bool write(KSecretsFile&) const noexcept;
+    CryptBuffer encrypted_;
+    CryptBuffer unencrypted_;
 };
 
 struct SecretsCollection : public SecretsEntity {

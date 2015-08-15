@@ -26,6 +26,9 @@
 #include <memory>
 #include <list>
 
+/**
+ * @brief This is the secrets file format handling class
+ */
 class KSecretsFile {
 public:
     KSecretsFile();
@@ -46,6 +49,7 @@ public:
     bool readHeader() noexcept;
     bool checkMagic() noexcept;
     const char* salt() const noexcept { return fileHead_.salt_; }
+    const char* iv() const noexcept { return fileHead_.iv_; }
     int checkMAC() const noexcept;
     bool read(void* buf, size_t count);
     bool read(size_t&);
@@ -54,11 +58,18 @@ public:
     DirCollectionResult dirCollections() noexcept;
 
 private:
-    bool setFailState(int err, bool retval = false)
+    bool setFailState(int err, bool retval = false) noexcept
     {
         errno_ = err;
         return retval; // wo do like this so this function could end other methods with an elegant return setFailState(errno);
     }
+    bool setEOF() noexcept {
+        eof_ = true;
+        return false; // this work the same as setFailState
+    }
+    bool readDirectory() noexcept;
+    bool decryptEntity(SecretsEntity&) noexcept;
+
     using Entities = std::list<SecretsEntity*>;
 
     std::string filePath_;
@@ -69,7 +80,9 @@ private:
     bool empty_;
     char fileMAC_[64];
     Entities entities_;
+    CollectionDirectory directory_;
     int errno_;
+    bool eof_;
 };
 
 #endif
