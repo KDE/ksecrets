@@ -23,6 +23,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
+#include <memory>
 
 extern "C" {
 #include <keyutils.h>
@@ -32,6 +33,9 @@ extern "C" {
 #include <gcrypt.h>
 
 #define GCRYPT_REQUIRED_VERSION "1.6.0"
+
+#define KSECRETS_SALTSIZE 56
+#define KSECRETS_KEYSIZE 256
 
 const char* get_keyname_encrypting();
 const char* get_keyname_mac();
@@ -102,6 +106,17 @@ int kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySi
     return TRUE;
 }
 
+int kss_set_credentials(const std::string &password, const char *salt)
+{
+    // FIXME this should be adjusted on platforms where kernel keyring is not available and store the keys elsewhere
+    char encryption_key[KSECRETS_KEYSIZE];
+    char mac_key[KSECRETS_KEYSIZE];
+    auto res = kss_derive_keys(salt, password.c_str(), encryption_key, mac_key, KSECRETS_KEYSIZE);
+    if (res) return res;
+
+    return kss_store_keys(encryption_key, mac_key, KSECRETS_KEYSIZE);
+}
+
 int kss_keys_already_there()
 {
     key_serial_t key;
@@ -112,5 +127,34 @@ int kss_keys_already_there()
     }
     syslog(KSS_LOG_DEBUG, "ksecrets: keys already in keyring");
     return TRUE;
+}
+
+long kss_read_key(const char *keyName, char* buffer, size_t bufferSize)
+{
+    key_serial_t key;
+    key = request_key("user", keyName, 0, KEY_SPEC_SESSION_KEYRING);
+    if (-1 == key) {
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m) when reading MAC key %s", errno, keyName);
+        return -1;
+    }
+    auto bytes = keyctl_read(key, buffer, bufferSize);
+    if (bytes == -1) {
+        syslog(KSS_LOG_ERR, "error reading key %s contents from the keyring", keyName);
+        return -1;
+    }
+    if ((size_t)bytes > bufferSize) {
+        return bytes;
+    }
+    return 0; // key contents correctly transffered into the buffer
+}
+
+long kss_read_mac_key(char *buffer, size_t bufferSize)
+{
+    return kss_read_key(get_keyname_mac(), buffer, bufferSize);
+}
+
+long kss_read_encrypting_key(char *buffer, size_t bufferSize)
+{
+    return kss_read_key(get_keyname_encrypting(), buffer, bufferSize);
 }
 

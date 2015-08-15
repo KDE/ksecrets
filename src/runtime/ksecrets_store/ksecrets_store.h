@@ -81,7 +81,7 @@ public:
     struct ItemValue {
         std::string contentType;
         std::vector<char> contents;
-        bool operator == (const ItemValue& that) const noexcept { return contentType == that.contentType && contents == that.contents; }
+        bool operator==(const ItemValue& that) const noexcept { return contentType == that.contentType && contents == that.contents; }
     };
 
     /* Holds a secret value.
@@ -231,18 +231,37 @@ public:
      * issue of the respective API call.
      */
     template <StoreStatus G> struct CallResult {
+        CallResult()
+            : status_(StoreStatus::SystemError)
+            , errno_(-1)
+        {
+        }
+        explicit CallResult(StoreStatus s, int err = -1)
+            : status_(s)
+            , errno_(err)
+        {
+        }
         StoreStatus status_;
         int errno_;
         operator bool() const { return status_ == G; }
     };
 
-    template <typename T> struct AlwaysGoodPred { bool operator()(const T&) const noexcept { return true; }};
+    template <typename T> struct AlwaysGoodPred {
+        bool operator()(const T&) const noexcept { return true; }
+    };
     /**
      * @brief Small structure returned by API calls that create things. It's possible to check the returned
      *        value by giving this template a custom OK_PRED of type equivalent to std::function<bool(const R&)>
      */
-    template <StoreStatus G, typename R, typename OK_PRED = AlwaysGoodPred<R> >
-        struct CallResultWithValue : public CallResult<G> {
+    template <StoreStatus G, typename R, typename OK_PRED = AlwaysGoodPred<R> > struct CallResultWithValue : public CallResult<G> {
+        CallResultWithValue()
+            : CallResult<G>()
+        {
+        }
+        explicit CallResultWithValue(StoreStatus s, int err = -1)
+            : CallResult<G>(s, err)
+        {
+        }
         R result_;
         operator bool() const noexcept { return CallResult<G>::operator bool() && OK_PRED()(result_); }
     };
@@ -277,7 +296,9 @@ public:
     using DirCollectionsResult = CallResultWithValue<StoreStatus::Good, CollectionNames>;
     DirCollectionsResult dirCollections() const noexcept;
 
-    template <typename P> struct IsGoodSmartPtr { bool operator()(const P& p) { return p.get() != nullptr; }};
+    template <typename P> struct IsGoodSmartPtr {
+        bool operator()(const P& p) { return p.get() != nullptr; }
+    };
     using CreateCollectionResult = CallResultWithValue<StoreStatus::Good, CollectionPtr, IsGoodSmartPtr<CollectionPtr> >;
     /**
      * @return CollectionPtr which can empty if the call did not succeed
@@ -308,7 +329,9 @@ private:
     std::unique_ptr<KSecretsStorePrivate> d;
 };
 
-template <> struct KSecretsStore::AlwaysGoodPred<bool> { bool operator()(const bool& b) const noexcept { return b; }};
+template <> struct KSecretsStore::AlwaysGoodPred<bool> {
+    bool operator()(const bool& b) const noexcept { return b; }
+};
 
 #endif
 // vim: tw=220:ts=4

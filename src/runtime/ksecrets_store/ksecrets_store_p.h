@@ -59,13 +59,14 @@ public:
     KSecretsStorePrivate() = delete;
     explicit KSecretsStorePrivate(KSecretsStore*);
 
-    KSecretsStore::SetupResult setup(const std::string& path, bool, bool);
-    KSecretsStore::CredentialsResult setCredentials(const std::string&);
-    KSecretsStore::SetupResult open(bool);
-    int createFile(const std::string&);
-    const char* salt() const;
+    KSecretsStore::SetupResult setup(const std::string& path, bool, bool) noexcept;
+    KSecretsStore::CredentialsResult setCredentials(const std::string&) noexcept;
+    KSecretsStore::SetupResult open(bool) noexcept;
+    int createFile(const std::string&) noexcept;
+    const char* salt() const noexcept;
+    KSecretsStore::DirCollectionsResult dirCollections() noexcept;
 
-    template <typename S> S setStoreStatus(S s)
+    template <typename S> S setStoreStatus(S s) noexcept
     {
         status_ = s.status_;
         return s;

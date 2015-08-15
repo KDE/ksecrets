@@ -21,7 +21,10 @@
 #ifndef KSECRETS_FILE_H
 #define KSECRETS_FILE_H
 
+#include "ksecrets_data.h"
+
 #include <memory>
+#include <list>
 
 class KSecretsFile {
 public:
@@ -31,25 +34,42 @@ public:
     constexpr static auto IV_SIZE = 32;
     constexpr static auto SALT_SIZE = 56;
     struct FileHeadStruct {
-        char magic[9];
-        char salt[SALT_SIZE];
-        char iv[IV_SIZE];
+        char magic_[9];
+        char salt_[SALT_SIZE];
+        char iv_[IV_SIZE];
     };
 
-    int create(const std::string &path);
-    void setup(const std::string &path, bool readOnly) noexcept;
+    int create(const std::string& path);
+    void setup(const std::string& path, bool readOnly) noexcept;
     bool open() noexcept;
     bool lock() noexcept;
     bool readHeader() noexcept;
     bool checkMagic() noexcept;
-    const char *salt() const noexcept { return fileHead_.salt; }
+    const char* salt() const noexcept { return fileHead_.salt_; }
+    int checkMAC() const noexcept;
+    bool read(void* buf, size_t count);
+    bool read(size_t&);
+
+    using DirCollectionResult = std::pair<bool, const CollectionDirectory*>;
+    DirCollectionResult dirCollections() noexcept;
 
 private:
+    bool setFailState(int err, bool retval = false)
+    {
+        errno_ = err;
+        return retval; // wo do like this so this function could end other methods with an elegant return setFailState(errno);
+    }
+    using Entities = std::list<SecretsEntity*>;
+
     std::string filePath_;
     int file_;
     bool locked_;
     bool readOnly_;
     FileHeadStruct fileHead_;
+    bool empty_;
+    char fileMAC_[64];
+    Entities entities_;
+    int errno_;
 };
 
 #endif

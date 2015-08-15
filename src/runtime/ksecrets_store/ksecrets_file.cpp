@@ -36,6 +36,7 @@ constexpr auto fileMagicLen = sizeof(fileMagic) / sizeof(fileMagic[0]);
 KSecretsFile::KSecretsFile()
     : file_(-1)
     , locked_(false)
+    , empty_(true)
 {
     memset(&fileHead_, 0, sizeof(fileHead_));
 }
@@ -63,11 +64,11 @@ int KSecretsFile::create(const std::string& path)
     }
 
     FileHeadStruct emptyFileData;
-    memcpy(emptyFileData.magic, fileMagic, fileMagicLen);
+    memcpy(emptyFileData.magic_, fileMagic, fileMagicLen);
 
     // FIXME should we put this kind of call in gcrypt-dedicated file?
-    gcry_randomize(emptyFileData.salt, SALT_SIZE, GCRY_STRONG_RANDOM);
-    gcry_randomize(emptyFileData.iv, IV_SIZE, GCRY_STRONG_RANDOM);
+    gcry_randomize(emptyFileData.salt_, SALT_SIZE, GCRY_STRONG_RANDOM);
+    gcry_randomize(emptyFileData.iv_, IV_SIZE, GCRY_STRONG_RANDOM);
 
     int res = 0;
     if (fwrite(&emptyFileData, 1, sizeof(emptyFileData), f) != sizeof(emptyFileData)) {
@@ -95,13 +96,51 @@ bool KSecretsFile::lock()
     locked_ = true;
 }
 
-bool KSecretsFile::readHeader() { return read(file_, &fileHead_, sizeof(fileHead_)) == sizeof(fileHead_); }
+bool KSecretsFile::readHeader()
+{
+    auto rres = ::read(file_, &fileHead_, sizeof(fileHead_));
+    char dummyBuffer[4];
+    auto bytes = sizeof(dummyBuffer) / sizeof(dummyBuffer[0]);
+    auto eoftest = ::read(file_, dummyBuffer, bytes);
+    if (eoftest == 0) {
+        // we are at EOF already, so file is empty
+        empty_ = true;
+    }
+    else {
+        if (-1 == lseek(file_, -bytes, SEEK_CUR)) {
+            setFailState(errno);
+            return false;
+        }
+        empty_ = false;
+    }
+    return rres == sizeof(fileHead_);
+}
 
 bool KSecretsFile::checkMagic()
 {
-    if (memcmp(fileHead_.magic, fileMagic, fileMagicLen) != 0) {
+    if (memcmp(fileHead_.magic_, fileMagic, fileMagicLen) != 0) {
         return false;
     }
     return true;
 }
+
+int KSecretsFile::checkMAC() const
+{
+    if (empty_)
+        return 0; // MAC of empty files is always OK
+    // const char *macKey = kss_read_mac_key();
+    // gcry_error_t err;
+    // gcry_mac_hd_t hd;
+    // err = gcry_mac_open(&hd, GCRY_MAC_HMAC_SHA512, 0, NULL);
+    // if (!err) return gcry_err_code_to_errno(gcry_err_code(err));
+    //
+    // err = gcry_mac_setkey(hd, );
+    // TODO
+    return -1;
+}
+
+KSecretsFile::DirCollectionResult KSecretsFile::dirCollections() {
+    return DirCollectionResult();
+}
+
 // vim: tw=220:ts=4

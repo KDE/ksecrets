@@ -21,6 +21,8 @@
 
 #include "ksecrets_store.h"
 #include "ksecrets_store_p.h"
+#include "ksecrets_file.h"
+#include "ksecrets_data.h"
 
 #include <future>
 #include <thread>
@@ -32,16 +34,13 @@
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
 
-#define KSECRETS_SALTSIZE 56
-#define KSECRETS_KEYSIZE 256
 #define KSS_LOG_ERR (LOG_AUTH | LOG_ERR)
 
 const char* keyNameEncrypting = nullptr;
 const char* keyNameMac = nullptr;
 
 bool kss_init_gcry();
-bool kss_derive_keys(const char* salt, const char* password, char* encryption_key, char* mac_key, size_t);
-bool kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySize);
+int kss_set_credentials(const std::string& password, const char* salt);
 const char* get_keyname_encrypting() { return keyNameEncrypting; }
 const char* get_keyname_mac() { return keyNameMac; }
 
@@ -62,7 +61,7 @@ std::future<KSecretsStore::SetupResult> KSecretsStore::setup(const char* path, b
 {
     // sanity checks
     if (d->status_ != StoreStatus::JustCreated) {
-        return std::async(std::launch::deferred, []() { return SetupResult({ StoreStatus::IncorrectState, -1 }); });
+        return std::async(std::launch::deferred, []() { return SetupResult{ StoreStatus::IncorrectState, -1 }; });
     }
     if (path == nullptr || strlen(path) == 0) {
         return std::async(std::launch::deferred, []() { return SetupResult{ StoreStatus::NoPathGiven, 0 }; });
@@ -97,7 +96,7 @@ KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, 
     if (shouldCreateFile) {
         auto createres = createFile(path);
         if (createres != 0) {
-            return setStoreStatus(KSecretsStore::SetupResult({ KSecretsStore::StoreStatus::SystemError, createres }));
+            return setStoreStatus(KSecretsStore::SetupResult(KSecretsStore::StoreStatus::SystemError, createres));
         }
     }
     secretsFile_.setup(path, readOnly);
@@ -118,25 +117,16 @@ KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std:
 {
     using Result = KSecretsStore::CredentialsResult;
     if (!kss_init_gcry()) {
-        return setStoreStatus(Result({ KSecretsStore::StoreStatus::CannotInitGcrypt, -1 }));
+        return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotInitGcrypt, -1));
     }
-    // FIXME this should be adjusted on platforms where kernel keyring is not available and store the keys elsewhere
-    char encryption_key[KSECRETS_KEYSIZE];
-    char mac_key[KSECRETS_KEYSIZE];
-    if (!kss_derive_keys(salt(), password.c_str(), encryption_key, mac_key, KSECRETS_KEYSIZE)) {
-        return setStoreStatus(Result({ KSecretsStore::StoreStatus::CannotDeriveKeys, -1 }));
+    auto res = kss_set_credentials(password, salt());
+    if (-1 == res) {
+        return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotDeriveKeys, res));
     }
-
-    if (!kss_store_keys(encryption_key, mac_key, KSECRETS_KEYSIZE)) {
-        return setStoreStatus(Result({ KSecretsStore::StoreStatus::CannotStoreKeys, errno }));
-    }
-    return setStoreStatus(Result({ KSecretsStore::StoreStatus::CredentialsSet, 0 }));
+    return setStoreStatus(Result(KSecretsStore::StoreStatus::CredentialsSet, 0));
 }
 
-int KSecretsStorePrivate::createFile(const std::string& path)
-{
-    return secretsFile_.create(path);
-}
+int KSecretsStorePrivate::createFile(const std::string& path) { return secretsFile_.create(path); }
 
 bool KSecretsStore::isGood() const noexcept { return d->status_ == StoreStatus::Good; }
 
@@ -146,28 +136,33 @@ KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
 {
     using OpenResult = KSecretsStore::SetupResult;
     if (!secretsFile_.open()) {
-        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotOpenFile, errno }));
+        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotOpenFile, errno));
     }
     if (lockFile) {
         if (!secretsFile_.lock()) {
-            return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotLockFile, errno }));
+            return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotLockFile, errno));
         }
     }
     if (!secretsFile_.readHeader()) {
-        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::CannotReadFile, errno }));
+        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotReadFile, errno));
     }
     if (!secretsFile_.checkMagic()) {
-        return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::InvalidFile, -1 }));
+        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile, -1));
     }
     // TODO add here MAC integrity check
     // decrypting will occur upon collection request
-    return setStoreStatus(OpenResult({ KSecretsStore::StoreStatus::Good, 0 }));
+    return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::Good, 0));
 }
 
-KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept
+KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept { return d->dirCollections(); }
+
+KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections()
 {
-    // TODO
-    return DirCollectionsResult();
+    KSecretsStore::DirCollectionsResult res(KSecretsStore::StoreStatus::InvalidFile);
+    auto dir = secretsFile_.dirCollections();
+    if (dir.first) {
+    }
+    return res;
 }
 
 KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char*) noexcept
@@ -194,92 +189,110 @@ KSecretsStore::DeleteCollectionResult KSecretsStore::deleteCollection(const char
     return DeleteCollectionResult();
 }
 
-std::time_t KSecretsStore::Collection::createdTime() const {
+std::time_t KSecretsStore::Collection::createdTime() const
+{
     // TODO
     return std::time_t();
 }
 
-std::time_t KSecretsStore::Collection::modifiedTime() const {
-    //TODO
+std::time_t KSecretsStore::Collection::modifiedTime() const
+{
+    // TODO
     return std::time_t();
 }
 
-std::string KSecretsStore::Collection::label() const {
+std::string KSecretsStore::Collection::label() const
+{
     // TODO
     return "";
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::dirItems() const {
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::dirItems() const
+{
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const AttributesMap &) const {
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const AttributesMap&) const
+{
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*, const AttributesMap &) const {
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*, const AttributesMap&) const
+{
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*) const {
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*) const
+{
     // TODO
     return ItemList();
 }
 
-KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, AttributesMap, ItemValue) {
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, AttributesMap, ItemValue)
+{
     // TODO
     return ItemPtr();
 }
 
-bool KSecretsStore::Collection::deleteItem(ItemPtr) {
+bool KSecretsStore::Collection::deleteItem(ItemPtr)
+{
     // TODO
     return false;
 }
 
-KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, ItemValue) {
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, ItemValue)
+{
     // TODO
     return ItemPtr();
 }
 
-std::time_t KSecretsStore::Item::createdTime() const {
+std::time_t KSecretsStore::Item::createdTime() const
+{
     // TODO
     return std::time_t();
 }
 
-std::time_t KSecretsStore::Item::modifiedTime() const {
+std::time_t KSecretsStore::Item::modifiedTime() const
+{
     // TODO
     return std::time_t();
 }
 
-std::string KSecretsStore::Item::label() const {
+std::string KSecretsStore::Item::label() const
+{
     // TODO
     return "";
 }
 
-bool KSecretsStore::Item::setLabel(const char*) {
+bool KSecretsStore::Item::setLabel(const char*)
+{
     // TODO
     return false;
 }
 
-KSecretsStore::ItemValue KSecretsStore::Item::value() const {
+KSecretsStore::ItemValue KSecretsStore::Item::value() const
+{
     // TODO
     return ItemValue();
 }
 
-bool KSecretsStore::Item::setValue(ItemValue) {
+bool KSecretsStore::Item::setValue(ItemValue)
+{
     // TODO
     return false;
 }
 
-KSecretsStore::AttributesMap KSecretsStore::Item::attributes() const {
+KSecretsStore::AttributesMap KSecretsStore::Item::attributes() const
+{
     // TODO
     return AttributesMap();
 }
 
-bool KSecretsStore::Item::setAttributes(AttributesMap) {
+bool KSecretsStore::Item::setAttributes(AttributesMap)
+{
     // TODO
     return false;
 }
