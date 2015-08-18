@@ -22,11 +22,11 @@
 #include "ksecrets_file.h"
 
 #include <unistd.h>
+#include <algorithm>
+#include <cassert>
 
-long kss_encrypt_buffer(unsigned char* out, size_t lout, const void* iv,
-    size_t liv, const unsigned char* in, size_t lin);
-long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv,
-    size_t liv, const unsigned char* in, size_t lin);
+long kss_encrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t liv, const unsigned char* in, size_t lin);
+long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t liv, const unsigned char* in, size_t lin);
 char* kss_alloc_crypt_buffer(size_t rlen);
 
 SecretsEntity::SecretsEntity()
@@ -42,24 +42,6 @@ SecretsEntity::~SecretsEntity() {}
 const char* iv = nullptr;
 size_t liv = KSecretsFile::IV_SIZE;
 
-bool SecretsEntity::read(KSecretsFile& file)
-{
-    if (iv == nullptr) {
-        iv = file.iv();
-    }
-
-    size_t s;
-    if (!file.read(s)) {
-        return false;
-    }
-    if (!encrypted_.allocate(s)) {
-        return false;
-    }
-
-    return file.read(encrypted_.data_,
-        encrypted_.len_); // beware not to specify encrypted.size_ here
-}
-
 bool SecretsEntity::decrypt()
 {
     if (isEmpty())
@@ -69,8 +51,7 @@ bool SecretsEntity::decrypt()
     if (encrypted_.len_ == 0)
         return false; // what to decrypt?
     unencrypted_.allocate(encrypted_.len_);
-    auto dres = kss_decrypt_buffer(unencrypted_.data_, unencrypted_.len_, iv,
-        liv, encrypted_.data_, encrypted_.len_);
+    auto dres = kss_decrypt_buffer(unencrypted_.data_, unencrypted_.len_, iv, liv, encrypted_.data_, encrypted_.len_);
     return dres == 0;
 }
 
@@ -80,9 +61,113 @@ bool SecretsEntity::encrypt()
     return false;
 }
 
-bool SecretsEntity::write(KSecretsFile &) const
+bool SecretsEntity::write(KSecretsFile& file)
+{
+    bool res = false;
+    if (doBeforeWrite()) {
+        if (encrypt()) {
+            assert(state_ == State::Encrypted);
+            if (file.write(encrypted_.len_)) {
+                if (encrypted_.len_ > 0) {
+                    assert(encrypted_.data_ != nullptr);
+                    if (file.write(encrypted_.data_, encrypted_.len_)) {
+                        res = true;
+                    }
+                }
+                else {
+                    res = true;
+                }
+            }
+        }
+    }
+    if (res)
+        return doAfterWrite();
+    else
+        return res;
+}
+
+bool SecretsEntity::read(KSecretsFile& file)
+{
+    if (iv == nullptr) {
+        iv = file.iv();
+    }
+    if (!doBeforeRead())
+        return false;
+
+    encrypted_.empty();
+    size_t len;
+    if (!file.read(len))
+        return false;
+
+    if (!encrypted_.allocate(len))
+        return false;
+
+    if (len > 0) {
+        if (!file.read(encrypted_.data_, encrypted_.len_))
+            return false;
+    }
+
+    return doAfterRead();
+}
+
+CollectionDirectory::CollectionDirectory()
+{
+}
+
+bool CollectionDirectory::hasEntry(const std::string& collName) const
+{
+    auto pos = std::find(entries_.begin(), entries_.end(), collName);
+    return pos != entries_.end();
+}
+
+bool CollectionDirectory::doBeforeWrite()
 {
     // TODO
     return false;
 }
+
+bool CollectionDirectory::doAfterRead()
+{
+    // TODO
+    return false;
+}
+
+void SecretsCollection::setName(const std::string& name) { name_ = name; }
+
+bool SecretsCollection::doBeforeWrite()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsCollection::doAfterRead()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsItem::doBeforeWrite()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsItem::doAfterRead()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsEOF::doBeforeWrite()
+{
+    // TODO
+    return false;
+}
+
+bool SecretsEOF::doAfterRead()
+{
+    // TODO
+    return false;
+}
+
 // vim: tw=220:ts=4

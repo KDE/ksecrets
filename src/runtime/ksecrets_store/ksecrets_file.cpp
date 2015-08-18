@@ -141,6 +141,23 @@ int KSecretsFile::checkMAC() const
     return -1;
 }
 
+bool KSecretsFile::write(size_t s) { return write(&s, sizeof(size_t)); }
+
+bool KSecretsFile::write(const void* buf, size_t len)
+{
+    auto wres = ::write(file_, buf, len);
+    if (wres <0) {
+        return setFailState(errno);
+    }
+    if (static_cast<size_t>(wres) < len) {
+        // no more space left on the file system
+        // FIXME we should prevent such an event by keeping versions of the secrets file
+        // TODO manage secrets file versions to prevent this kind of problem
+        return setFailState(ENOSPC);
+    }
+    return true;
+}
+
 bool KSecretsFile::read(size_t& s) { return read(&s, sizeof(s)); }
 
 bool KSecretsFile::read(void* buf, size_t len)
@@ -183,5 +200,13 @@ bool KSecretsFile::readDirectory()
 }
 
 bool KSecretsFile::decryptEntity(SecretsEntity& entity) { return entity.decrypt(); }
+
+SecretsCollectionPtr KSecretsFile::createCollection(const std::string &collName) noexcept
+{
+    auto newColl = std::make_shared<SecretsCollection>();
+    newColl->setName(collName);
+    entities_.emplace_front(newColl);
+    return std::dynamic_pointer_cast<SecretsCollection>(entities_.front());
+}
 
 // vim: tw=220:ts=4

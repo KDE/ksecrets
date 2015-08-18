@@ -29,7 +29,8 @@ struct CryptBuffer {
         , data_(nullptr)
     {
     }
-    ~CryptBuffer() { delete[] data_; }
+    CryptBuffer(CryptBuffer&&) = default;
+    ~CryptBuffer();
 
     /**
      * @brief Allocate memory in multiples of cipher block len

@@ -170,12 +170,50 @@ KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char
     return d->createCollection(collName);
 }
 
+template <class R>
+R mapSecretsFileFailure(KSecretsFile &file, R &&r)
+{
+    if (file.errnumber()) {
+        r.errno_ = file.errnumber();
+        r.status_ = KSecretsStore::StoreStatus::SystemError;
+    } else {
+        if (file.eof()) {
+            r.status_ = KSecretsStore::StoreStatus::PrematureEndOfFileEncountered;
+        } else {
+            r.status_ = KSecretsStore::StoreStatus::UnknownError; // really, we should get here very seldom
+        }
+    }
+
+    return r;
+}
+
 KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(const std::string &collName) noexcept
 {
     KSecretsStore::CreateCollectionResult res;
-
+    auto cptr = std::make_shared<KSecretsCollectionPrivate>();
+    if (!cptr->createCollection(secretsFile_, collName)) {
+        return mapSecretsFileFailure(secretsFile_, res);
+    }
+    res.result_ = std::make_shared<KSecretsStore::Collection>(cptr);
     return res;
 }
+
+bool KSecretsCollectionPrivate::createCollection(KSecretsFile &file, const std::string &collName)
+{
+    bool res = false;
+    auto dir =  file.dirCollections();
+    if (dir.first) {
+        if (!dir.second->hasEntry(collName)) {
+            collection_data_ = file.createCollection(collName);
+            if (collection_data_ != nullptr) {
+                res = true;
+            }
+        }
+    }
+    return res;
+}
+
+KSecretsStore::Collection::Collection(KSecretsCollectionPrivatePtr dptr) : d(dptr) {}
 
 KSecretsStore::ReadCollectionResult KSecretsStore::readCollection(const char*) const noexcept
 {

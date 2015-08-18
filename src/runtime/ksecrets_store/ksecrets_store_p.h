@@ -52,6 +52,10 @@ class KSecretsItemPrivate : public TimeStamped {
 };
 
 class KSecretsCollectionPrivate : public TimeStamped {
+public:
+    bool createCollection(KSecretsFile &secretsFile, const std::string &collName);
+private:
+    SecretsCollectionPtr collection_data_;
 };
 
 class KSecretsStorePrivate {

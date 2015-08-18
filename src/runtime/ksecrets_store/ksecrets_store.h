@@ -31,6 +31,12 @@
 #include <future>
 
 class KSecretsStorePrivate;
+class KSecretsItemPrivate;
+class KSecretsCollectionPrivate;
+
+using KSecretsItemPrivatePtr = std::shared_ptr<KSecretsItemPrivate>;
+using KSecretsCollectionPrivatePtr = std::shared_ptr<KSecretsCollectionPrivate>;
+
 
 /**
  * Secrets storage for KSecrets Service.
@@ -72,9 +78,6 @@ class KSecretsStorePrivate;
  *       would be destroyed, releasing the file, upon block exit.
  */
 class KSECRETS_STORE_EXPORT KSecretsStore {
-    class ItemPrivate;
-    class CollectionPrivate;
-
 public:
     using AttributesMap = std::map<std::string, std::string>;
 
@@ -122,7 +125,7 @@ public:
         friend class KSecretsStore;
 
     private:
-        std::shared_ptr<ItemPrivate> d;
+        KSecretsItemPrivatePtr d;
     };
     using ItemPtr = std::shared_ptr<Item>;
 
@@ -181,14 +184,16 @@ public:
 
         bool deleteItem(ItemPtr) noexcept;
 
+        Collection(KSecretsCollectionPrivatePtr dptr);
     protected:
         Collection();
         Collection(const Collection&) = default;
         Collection& operator=(const Collection&) = default;
         friend class KSecretsStore;
+        friend class KSecretsStorePrivate;
 
     private:
-        std::shared_ptr<CollectionPrivate> d;
+        KSecretsCollectionPrivatePtr d;
     };
     using CollectionPtr = std::shared_ptr<Collection>;
 
@@ -221,6 +226,8 @@ public:
         CannotOpenFile,
         CannotLockFile,
         CannotReadFile,
+        PrematureEndOfFileEncountered,
+        UnknownError,
         SystemError
     };
 

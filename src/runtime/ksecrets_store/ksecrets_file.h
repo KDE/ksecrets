@@ -24,7 +24,7 @@
 #include "ksecrets_data.h"
 
 #include <memory>
-#include <list>
+#include <forward_list>
 
 /**
  * @brief This is the secrets file format handling class
@@ -53,9 +53,14 @@ public:
     int checkMAC() const noexcept;
     bool read(void* buf, size_t count);
     bool read(size_t&);
+    int errnumber() const noexcept { return errno_; }
+    bool eof() const noexcept { return eof_; }
+    bool write(const void *buf, size_t count);
+    bool write(size_t len);
 
     using DirCollectionResult = std::pair<bool, const CollectionDirectory*>;
     DirCollectionResult dirCollections() noexcept;
+    SecretsCollectionPtr createCollection(const std::string &collName) noexcept;
 
 private:
     bool setFailState(int err, bool retval = false) noexcept
@@ -70,7 +75,7 @@ private:
     bool readDirectory() noexcept;
     bool decryptEntity(SecretsEntity&) noexcept;
 
-    using Entities = std::list<SecretsEntity*>;
+    using Entities = std::forward_list<SecretsEntityPtr>;
 
     std::string filePath_;
     int file_;

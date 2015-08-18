@@ -25,6 +25,8 @@
 
 #include <cstdint>
 #include <sys/types.h>
+#include <memory>
+#include <list>
 
 class KSecretsFile;
 
@@ -34,11 +36,17 @@ class KSecretsFile;
  * TODO this class uses routines from ksecrets_crypt.cpp file to handle
  * encrypting and decrypting of the files. It would be better to define some
  * plugin architecture, allowing users specify different encryption methods.
+ *
+ * TODO in the future, if the need arises to add another file format, this
+ *code
+ * could be easily refactored to use the "visitor" pattern and convert the
+ * read and write methods to use a generic type which would then be
+ * implemented by the KSecretsFile. For now, no need of such generalization,
+ * as I cannot foresee the introduction of another file format (why should I?)
  */
-struct SecretsEntity {
+class SecretsEntity {
+public:
     SecretsEntity();
-    SecretsEntity(const SecretsEntity&) = delete;
-    SecretsEntity(SecretsEntity&&) = delete;
     virtual ~SecretsEntity();
 
     enum class State : std::uint8_t {
@@ -48,6 +56,7 @@ struct SecretsEntity {
     };
 
     bool isEmpty() const noexcept { return state_ == State::Empty; }
+    virtual bool hasNext() const noexcept { return true; }
     bool isDecrypted() const noexcept
     {
         return (static_cast<std::uint8_t>(state_)
@@ -57,18 +66,65 @@ struct SecretsEntity {
     virtual bool decrypt() noexcept;
     virtual bool encrypt() noexcept;
 
-    virtual bool read(KSecretsFile&) noexcept;
-    virtual bool write(KSecretsFile&) const noexcept;
+    bool read(KSecretsFile&) noexcept;
+    virtual bool doBeforeRead() noexcept { return true; }
+    virtual bool doAfterRead() noexcept = 0;
+
+    bool write(KSecretsFile&) noexcept;
+    virtual bool doBeforeWrite() noexcept = 0;
+    virtual bool doAfterWrite() noexcept { return true; }
 
     State state_;
     CryptBuffer encrypted_;
     CryptBuffer unencrypted_;
 };
 
-struct SecretsCollection : public SecretsEntity {
+using SecretsEntityPtr = std::shared_ptr<SecretsEntity>;
+
+class SecretsCollection : public SecretsEntity {
+public:
+    void setName(const std::string&) noexcept;
+
+private:
+    virtual bool doBeforeWrite() noexcept override;
+    virtual bool doAfterRead() noexcept override;
+
+    std::string name_;
 };
 
-struct CollectionDirectory : public SecretsEntity {
+using SecretsCollectionPtr = std::shared_ptr<SecretsCollection>;
+
+class CollectionDirectory : public SecretsEntity {
+public:
+    CollectionDirectory();
+    bool hasEntry(const std::string&) const noexcept;
+
+private:
+    virtual bool doBeforeWrite() noexcept override;
+    virtual bool doAfterRead() noexcept override;
+
+    std::list<std::string> entries_;
 };
+
+using CollectionDirectoryPtr = std::shared_ptr<CollectionDirectory>;
+
+class SecretsItem : public SecretsEntity {
+public:
+private:
+    virtual bool doBeforeWrite() noexcept override;
+    virtual bool doAfterRead() noexcept override;
+};
+
+using SecretsItemPtr = std::shared_ptr<SecretsItem>;
+
+class SecretsEOF : public SecretsEntity {
+private:
+    bool hasNext() const noexcept override { return false; }
+    virtual bool doBeforeWrite() noexcept override;
+    virtual bool doAfterRead() noexcept override;
+};
+
+using SecretsEOFPtr = std::shared_ptr<SecretsEOF>;
 
 #endif
+// vim: tw=220:ts=4
