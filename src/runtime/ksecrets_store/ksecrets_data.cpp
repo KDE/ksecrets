@@ -25,20 +25,17 @@
 #include <algorithm>
 #include <cassert>
 
-long kss_encrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t liv, const unsigned char* in, size_t lin);
-long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t liv, const unsigned char* in, size_t lin);
-char* kss_alloc_crypt_buffer(size_t rlen);
-
 SecretsEntity::SecretsEntity() {}
 
 SecretsEntity::~SecretsEntity() {}
 
 bool SecretsEntity::write(KSecretsFile& file)
 {
-    if (!doBeforeWrite())
+    std::ostream os(&buffer_);
+    if (!doBeforeWrite(os))
         return false;
 
-    if (!encrypted_.write(file))
+    if (!buffer_.write(file))
         return false;
 
     return doAfterWrite();
@@ -49,8 +46,10 @@ bool SecretsEntity::read(KSecretsFile& file)
     if (!doBeforeRead())
         return false;
 
-    if (encrypted_.read(file))
-        return doAfterRead();
+    if (buffer_.read(file)) {
+        std::istream is(&buffer_);
+        return doAfterRead(is);
+    }
     else
         return false;
 }
@@ -63,13 +62,13 @@ bool CollectionDirectory::hasEntry(const std::string& collName) const
     return pos != entries_.end();
 }
 
-bool CollectionDirectory::doBeforeWrite()
+bool CollectionDirectory::doBeforeWrite(std::ostream&)
 {
     // TODO
     return false;
 }
 
-bool CollectionDirectory::doAfterRead()
+bool CollectionDirectory::doAfterRead(std::istream&)
 {
     // TODO
     return false;
@@ -77,37 +76,37 @@ bool CollectionDirectory::doAfterRead()
 
 void SecretsCollection::setName(const std::string& name) { name_ = name; }
 
-bool SecretsCollection::doBeforeWrite()
+bool SecretsCollection::doBeforeWrite(std::ostream&)
 {
     // TODO
     return false;
 }
 
-bool SecretsCollection::doAfterRead()
+bool SecretsCollection::doAfterRead(std::istream&)
 {
     // TODO
     return false;
 }
 
-bool SecretsItem::doBeforeWrite()
+bool SecretsItem::doBeforeWrite(std::ostream&)
 {
     // TODO
     return false;
 }
 
-bool SecretsItem::doAfterRead()
+bool SecretsItem::doAfterRead(std::istream&)
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doBeforeWrite()
+bool SecretsEOF::doBeforeWrite(std::ostream&)
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doAfterRead()
+bool SecretsEOF::doAfterRead(std::istream&)
 {
     // TODO
     return false;

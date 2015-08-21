@@ -27,6 +27,8 @@
 #include <sys/types.h>
 #include <memory>
 #include <list>
+#include <ostream>
+#include <istream>
 
 class KSecretsFile;
 
@@ -49,23 +51,18 @@ public:
     SecretsEntity();
     virtual ~SecretsEntity();
 
-    // bool isEmpty() const noexcept { return state_ == State::Empty; }
     virtual bool hasNext() const noexcept { return true; }
-    // bool isDecrypted() const noexcept
-    // {
-    //     return (static_cast<std::uint8_t>(state_)
-    //                & static_cast<std::uint8_t>(State::Decrypted)) != 0;
-    // }
 
     bool read(KSecretsFile&) noexcept;
     virtual bool doBeforeRead() noexcept { return true; }
-    virtual bool doAfterRead() noexcept = 0;
+    virtual bool doAfterRead(std::istream&) noexcept = 0;
 
     bool write(KSecretsFile&) noexcept;
-    virtual bool doBeforeWrite() noexcept = 0;
+    virtual bool doBeforeWrite(std::ostream&) noexcept = 0;
     virtual bool doAfterWrite() noexcept { return true; }
 
-    CryptBuffer encrypted_;
+private:
+    CryptBuffer buffer_;
 };
 
 using SecretsEntityPtr = std::shared_ptr<SecretsEntity>;
@@ -75,8 +72,8 @@ public:
     void setName(const std::string&) noexcept;
 
 private:
-    virtual bool doBeforeWrite() noexcept override;
-    virtual bool doAfterRead() noexcept override;
+    virtual bool doBeforeWrite(std::ostream&) noexcept override;
+    virtual bool doAfterRead(std::istream&) noexcept override;
 
     std::string name_;
 };
@@ -89,8 +86,8 @@ public:
     bool hasEntry(const std::string&) const noexcept;
 
 private:
-    virtual bool doBeforeWrite() noexcept override;
-    virtual bool doAfterRead() noexcept override;
+    virtual bool doBeforeWrite(std::ostream&) noexcept override;
+    virtual bool doAfterRead(std::istream&) noexcept override;
 
     std::list<std::string> entries_;
 };
@@ -100,8 +97,8 @@ using CollectionDirectoryPtr = std::shared_ptr<CollectionDirectory>;
 class SecretsItem : public SecretsEntity {
 public:
 private:
-    virtual bool doBeforeWrite() noexcept override;
-    virtual bool doAfterRead() noexcept override;
+    virtual bool doBeforeWrite(std::ostream&) noexcept override;
+    virtual bool doAfterRead(std::istream&) noexcept override;
 };
 
 using SecretsItemPtr = std::shared_ptr<SecretsItem>;
@@ -109,8 +106,8 @@ using SecretsItemPtr = std::shared_ptr<SecretsItem>;
 class SecretsEOF : public SecretsEntity {
 private:
     bool hasNext() const noexcept override { return false; }
-    virtual bool doBeforeWrite() noexcept override;
-    virtual bool doAfterRead() noexcept override;
+    virtual bool doBeforeWrite(std::ostream&) noexcept override;
+    virtual bool doAfterRead(std::istream&) noexcept override;
 };
 
 using SecretsEOFPtr = std::shared_ptr<SecretsEOF>;
