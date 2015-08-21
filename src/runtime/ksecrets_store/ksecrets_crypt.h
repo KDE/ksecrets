@@ -22,42 +22,35 @@
 #define KSECRETS_CRYPT_H
 
 #include <sys/types.h>
+#include <streambuf>
 
-struct CryptBuffer {
-    CryptBuffer()
-        : len_(0)
-        , data_(nullptr)
-    {
-    }
+class KSecretsFile;
+
+class CryptBuffer : public std::streambuf {
+public:
+    CryptBuffer();
     CryptBuffer(CryptBuffer&&) = default;
     ~CryptBuffer();
 
-    /**
-     * @brief Allocate memory in multiples of cipher block len
-     *
-     * The reallocation operation is non-destructive, e.g. the data is copied
-     * from the old buffer into the new one.
-     *
-     * @param rlen is the lenght of the data that'll be handled in the buffer
-     *
-     * @return true if reallocation succeeded
-     */
-    bool resize(size_t rlen) noexcept;
 
     void empty() noexcept;
 
-    /**
-     * @brief Allocate an exact amount of memory
-     *
-     * @param rlen
-     *
-     * @return true if allocation succeeded
-     */
-    bool allocate(size_t rlen) noexcept;
+    bool read(KSecretsFile&);
+    bool write(KSecretsFile&);
 
-    static constexpr size_t cipherBlockLen_ = 8; // blowfish block len is 8
-    size_t len_;
-    unsigned char* data_;
+private:
+    int_type underflow() override;
+    int_type overflow(int_type) override;
+
+    bool decrypt() noexcept;
+    bool encrypt() noexcept;
+
+private:
+    static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
+    size_t len_; /// the length of both encrypted_ and decrypted_ buffers is the same
+    char* encrypted_;
+    char* decrypted_;
+    bool  dirty_;
 };
 
 #endif

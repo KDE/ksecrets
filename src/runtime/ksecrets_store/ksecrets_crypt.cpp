@@ -21,10 +21,12 @@
 
 #include "defines.h"
 #include "ksecrets_crypt.h"
+#include "ksecrets_file.h"
 
 #include <sys/types.h>
 #include <errno.h>
 #include <memory>
+#include <cassert>
 
 extern "C" {
 #include <keyutils.h>
@@ -219,37 +221,155 @@ long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t 
     return 0;
 }
 
-CryptBuffer::~CryptBuffer() { delete[] data_; }
+// TODO refactor this when encrypting plugins will be put in place
+// the KSecretsFile should place the IV in the plugin structure instead of
+// this class
+const char* iv = nullptr;
+size_t liv = KSecretsFile::IV_SIZE;
 
-bool CryptBuffer::resize(size_t rlen)
+CryptBuffer::CryptBuffer()
+    : len_(0)
+    , encrypted_(nullptr)
+    , decrypted_(nullptr)
+    , dirty_(false)
 {
-    if (rlen <= len_) {
-        return false; // if less bytes, we cannot copy; if same, why resize?
-    }
-    CryptBuffer oldBuffer(std::move(*this));
-    len_ = (rlen / cipherBlockLen_ + 1) * cipherBlockLen_;
-    data_ = new unsigned char[len_];
-    if (data_ && oldBuffer.len_) {
-        memmove(data_, oldBuffer.data_, oldBuffer.len_);
-        return true;
-    }
-    return false;
+    setg(nullptr, nullptr, nullptr);
+    setp(nullptr, nullptr);
+}
+
+CryptBuffer::~CryptBuffer()
+{
+    delete[] encrypted_, encrypted_ = nullptr;
+    delete[] decrypted_, decrypted_ = nullptr;
 }
 
 void CryptBuffer::empty()
 {
-    delete[] data_, data_ = nullptr;
+    delete[] encrypted_, encrypted_ = nullptr;
+    delete[] decrypted_, decrypted_ = nullptr;
     len_ = 0;
+    setg(nullptr, nullptr, nullptr);
+    setp(nullptr, nullptr);
+    dirty_ = false;
 }
 
-bool CryptBuffer::allocate(size_t rlen)
+bool CryptBuffer::read(KSecretsFile& file)
 {
+    if (iv == nullptr) {
+        iv = file.iv();
+    }
+
     empty();
-    data_ = new unsigned char[rlen];
-    if (data_ == nullptr) {
+
+    if (!file.read(len_))
+        return false;
+
+    encrypted_ = new char[len_];
+    if (encrypted_ == nullptr) {
+        len_ = 0;
         return false;
     }
-    len_ = rlen;
+
+    if (len_ > 0) {
+        if (!file.read(encrypted_, len_))
+            return false;
+    }
     return true;
+}
+
+bool CryptBuffer::write(KSecretsFile& file)
+{
+    encrypt();
+    return file.write(encrypted_, len_);
+}
+
+bool CryptBuffer::decrypt()
+{
+    if (len_ == 0)
+        return false;
+    decrypted_ = new char[len_];
+    auto dres = kss_decrypt_buffer((unsigned char*)decrypted_, len_, iv, liv, (const unsigned char*)encrypted_, len_);
+    if (dres == 0) {
+        setg(decrypted_, decrypted_, decrypted_ + len_);
+        setp(decrypted_, decrypted_ + len_);
+        return true;
+    }
+    else {
+        empty();
+        return false;
+    }
+}
+
+bool CryptBuffer::encrypt()
+{
+    if (len_ == 0)
+        return false;
+
+    if (!dirty_)
+        return true; // no need to re-encrypt
+
+    if (encrypted_ == nullptr) {
+        encrypted_ = new char[len_];
+        if (encrypted_ == nullptr) {
+            return false;
+        }
+        gcry_create_nonce(encrypted_, len_);
+    }
+
+    assert(decrypted_ != nullptr);
+    auto eres = kss_encrypt_buffer((unsigned char*)encrypted_, len_, iv, liv, (const unsigned char*)decrypted_, len_);
+    if (eres != 0)
+        return false;
+    delete[] decrypted_, decrypted_ = nullptr;
+    setp(nullptr, nullptr);
+    dirty_ = false;
+    return true;
+}
+
+CryptBuffer::int_type CryptBuffer::underflow()
+{
+    if (gptr() == nullptr) {
+        if (!decrypt())
+            return traits_type::eof();
+    }
+    if (gptr() < egptr()) {
+        return traits_type::to_int_type(*gptr());
+    }
+    else {
+        return traits_type::eof();
+    }
+}
+
+CryptBuffer::int_type CryptBuffer::overflow(int_type c)
+{
+    if (c == traits_type::eof())
+        return c;
+
+    if (pptr() == epptr()) {
+        char* oldBuffer = decrypted_;
+        size_t oldLen = len_;
+        size_t oldppos = egptr() - gptr();
+
+        len_ += cipherBlockLen_;
+        decrypted_ = new char[len_];
+        if (decrypted_ != nullptr) {
+            gcry_create_nonce((unsigned char*)decrypted_, len_);
+            if (oldBuffer != nullptr) {
+                memmove(decrypted_, oldBuffer, oldLen);
+            }
+        }
+        else {
+            return traits_type::eof();
+        }
+
+        setp(decrypted_, decrypted_ + oldLen);
+        setg(decrypted_, decrypted_ + oldppos, decrypted_ + len_);
+    }
+
+    *pptr() = c;
+    pbump(sizeof(c));
+    if (!dirty_)
+        dirty_ = true;
+    return c;
 }
 // vim: tw=220:ts=4

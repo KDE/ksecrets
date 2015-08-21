@@ -29,90 +29,33 @@ long kss_encrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t 
 long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t liv, const unsigned char* in, size_t lin);
 char* kss_alloc_crypt_buffer(size_t rlen);
 
-SecretsEntity::SecretsEntity()
-    : state_(State::Empty)
-{
-}
+SecretsEntity::SecretsEntity() {}
 
 SecretsEntity::~SecretsEntity() {}
 
-// TODO refactor this when encrypting plugins will be put in place
-// the KSecretsFile should place the IV in the plugin structure instead of
-// this class
-const char* iv = nullptr;
-size_t liv = KSecretsFile::IV_SIZE;
-
-bool SecretsEntity::decrypt()
-{
-    if (isEmpty())
-        return false;
-    if (unencrypted_.len_ > 0)
-        return true; // already decrpyted
-    if (encrypted_.len_ == 0)
-        return false; // what to decrypt?
-    unencrypted_.allocate(encrypted_.len_);
-    auto dres = kss_decrypt_buffer(unencrypted_.data_, unencrypted_.len_, iv, liv, encrypted_.data_, encrypted_.len_);
-    return dres == 0;
-}
-
-bool SecretsEntity::encrypt()
-{
-    // TODO
-    return false;
-}
-
 bool SecretsEntity::write(KSecretsFile& file)
 {
-    bool res = false;
-    if (doBeforeWrite()) {
-        if (encrypt()) {
-            assert(state_ == State::Encrypted);
-            if (file.write(encrypted_.len_)) {
-                if (encrypted_.len_ > 0) {
-                    assert(encrypted_.data_ != nullptr);
-                    if (file.write(encrypted_.data_, encrypted_.len_)) {
-                        res = true;
-                    }
-                }
-                else {
-                    res = true;
-                }
-            }
-        }
-    }
-    if (res)
-        return doAfterWrite();
-    else
-        return res;
+    if (!doBeforeWrite())
+        return false;
+
+    if (!encrypted_.write(file))
+        return false;
+
+    return doAfterWrite();
 }
 
 bool SecretsEntity::read(KSecretsFile& file)
 {
-    if (iv == nullptr) {
-        iv = file.iv();
-    }
     if (!doBeforeRead())
         return false;
 
-    encrypted_.empty();
-    size_t len;
-    if (!file.read(len))
+    if (encrypted_.read(file))
+        return doAfterRead();
+    else
         return false;
-
-    if (!encrypted_.allocate(len))
-        return false;
-
-    if (len > 0) {
-        if (!file.read(encrypted_.data_, encrypted_.len_))
-            return false;
-    }
-
-    return doAfterRead();
 }
 
-CollectionDirectory::CollectionDirectory()
-{
-}
+CollectionDirectory::CollectionDirectory() {}
 
 bool CollectionDirectory::hasEntry(const std::string& collName) const
 {

@@ -59,6 +59,8 @@ KSecretsFile::~KSecretsFile()
 
 int KSecretsFile::create(const std::string& path)
 {
+    // TODO modify this to use POSIX functions write and open instead of fwrite and fopen
+    // TODO add the SecretsEOF structure at the end of the empty file
     FILE* f = fopen(path.c_str(), "w");
     if (f == nullptr) {
         return errno;
@@ -146,7 +148,7 @@ bool KSecretsFile::write(size_t s) { return write(&s, sizeof(size_t)); }
 bool KSecretsFile::write(const void* buf, size_t len)
 {
     auto wres = ::write(file_, buf, len);
-    if (wres <0) {
+    if (wres < 0) {
         return setFailState(errno);
     }
     if (static_cast<size_t>(wres) < len) {
@@ -162,7 +164,8 @@ bool KSecretsFile::read(size_t& s) { return read(&s, sizeof(s)); }
 
 bool KSecretsFile::read(void* buf, size_t len)
 {
-    if (eof_) return false;
+    if (eof_)
+        return false;
     auto rres = ::read(file_, buf, len);
     if (rres < 0)
         return setFailState(errno);
@@ -181,10 +184,7 @@ KSecretsFile::DirCollectionResult KSecretsFile::dirCollections()
         return res;
     }
 
-    readDirectory();
-    decryptEntity(directory_);
-
-    if (directory_.isDecrypted()) {
+    if (readDirectory()) {
         res.first = true;
         res.second = &directory_;
     }
@@ -199,9 +199,7 @@ bool KSecretsFile::readDirectory()
     return directory_.read(*this);
 }
 
-bool KSecretsFile::decryptEntity(SecretsEntity& entity) { return entity.decrypt(); }
-
-SecretsCollectionPtr KSecretsFile::createCollection(const std::string &collName) noexcept
+SecretsCollectionPtr KSecretsFile::createCollection(const std::string& collName) noexcept
 {
     auto newColl = std::make_shared<SecretsCollection>();
     newColl->setName(collName);
