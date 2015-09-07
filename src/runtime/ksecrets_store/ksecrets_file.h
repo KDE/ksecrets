@@ -92,6 +92,7 @@ private:
         bool write(KSecretsFile&);
         bool check(KSecretsFile&);
 
+        bool valid_;
         gcry_mac_hd_t hd_;
     };
 

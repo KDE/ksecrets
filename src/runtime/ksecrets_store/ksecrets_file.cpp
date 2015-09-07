@@ -203,6 +203,11 @@ bool KSecretsFile::readAndCheck()
         }
     }
 
+    if (!mac_.check(*this)) {
+        syslog(KSS_LOG_ERR, "ksecrets: MAC check error, the file is corrupted or someone tampered with it");
+        return false;
+    }
+
     return true;
 }
 
@@ -286,7 +291,7 @@ bool KSecretsFile::write(const void* buf, size_t len)
         syslog(KSS_LOG_ERR, "ksecrets: cannot write all data to file. Disk full?");
         return setFailState(ENOSPC);
     }
-    return true;
+    return mac_.update(buf, len);
 }
 
 bool KSecretsFile::read(size_t& s) { return read(&s, sizeof(s)); }
@@ -300,7 +305,7 @@ bool KSecretsFile::read(void* buf, size_t len)
         return setFailState(errno);
     if (static_cast<size_t>(rres) < len)
         return setEOF(); // are we @ EOF?
-    return true;
+    return mac_.update(buf, len);
 }
 
 KSecretsFile::DirCollectionResult KSecretsFile::dirCollections()
@@ -339,32 +344,111 @@ SecretsCollectionPtr KSecretsFile::createCollection(const std::string& collName)
         return SecretsCollectionPtr();
 }
 
-KSecretsFile::MAC::MAC() {}
-KSecretsFile::MAC::~MAC() {}
+KSecretsFile::MAC::MAC()
+{
+    auto gcryerr = gcry_mac_open(&hd_, GCRY_MAC_HMAC_SHA512, 0, 0);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "opening MAC algo failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        valid_ = false;
+    }
+    else {
+        valid_ = true;
+    }
+}
+
+KSecretsFile::MAC::~MAC()
+{
+    if (valid_) {
+        gcry_mac_close(hd_);
+    }
+}
+
 bool KSecretsFile::MAC::init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept
 {
-    // TODO
-    return false;
+    if (!valid_) {
+        syslog(KSS_LOG_ERR, "ksecrets: MAC object is not valid");
+        return false;
+    }
+    auto gcryerr = gcry_mac_setiv(hd_, iv, ivlen);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "setting MAC IV failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+    gcryerr = gcry_mac_setkey(hd_, key, keyLen);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "setting MAC key failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+    return true;
 }
+
 bool KSecretsFile::MAC::reset() noexcept
 {
-    // TODO
-    return false;
-}
-bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
-{
-    // TODO
-    return false;
-}
-bool KSecretsFile::MAC::write(KSecretsFile&)
-{
-    // TODO
+    auto gcryerr = gcry_mac_reset(hd_);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "resetting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+
     return false;
 }
 
-bool KSecretsFile::MAC::check(KSecretsFile&)
+bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
 {
-    // TODO
+    auto gcryerr = gcry_mac_write(hd_, buffer, len);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "updating MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+
+    return false;
+}
+
+bool KSecretsFile::MAC::write(KSecretsFile& file)
+{
+    char buffer[512]; // on purpose allocate more
+    size_t len = sizeof(buffer) / sizeof(buffer[0]);
+    auto gcryerr = gcry_mac_read(hd_, (void*)buffer, &len);
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "obtaining resulting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+    // NOTE this will also update the MAC but we're no longer interested
+    if (!file.write(&len, sizeof(len))) {
+        syslog(KSS_LOG_ERR, "Cannot write calculated MAC length");
+        return false;
+    }
+    if (!file.write(buffer, len)) {
+        syslog(KSS_LOG_ERR, "Cannot write calculated MAC value");
+        return false;
+    }
+
+    return true;
+}
+
+bool KSecretsFile::MAC::check(KSecretsFile& file)
+{
+    size_t len = 0;
+    if (!file.read(&len, sizeof(len))) {
+        syslog(KSS_LOG_ERR, "Cannot read MAC len");
+        return false;
+    }
+    char *buffer = new char[len];
+    if (buffer == nullptr) {
+        syslog(KSS_LOG_ERR, "Cannot allocate MAC buffer");
+        return false;
+    }
+    if (!file.read(buffer, len)) {
+        syslog(KSS_LOG_ERR, "Cannot read MAC value");
+        return false;
+    }
+    auto gcryerr = gcry_mac_verify(hd_, buffer, len);
+    delete [] buffer;
+    if (gcryerr) {
+        syslog(KSS_LOG_ERR, "MAC check failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        return false;
+    }
+
     return false;
 }
 
