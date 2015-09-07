@@ -134,6 +134,10 @@ const char* KSecretsStorePrivate::salt() const { return secretsFile_.salt(); }
 
 KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
 {
+    // FIXME open sequence should be moved close to KSecretsFile @see KSecretsFile::backupAndReplaceWithWritten
+    // TODO this refactoring should be done by introducing an event mecanism with un observer interface
+    // interface defined in KSecretsFile and implemented by this store. So the KSecretsFile can change the status
+    // ot the store and get the same status in case of problems as if it were open from here
     using OpenResult = KSecretsStore::SetupResult;
     if (!secretsFile_.open()) {
         return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotOpenFile, errno));
@@ -149,8 +153,9 @@ KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
     if (!secretsFile_.checkMagic()) {
         return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile, -1));
     }
-    // TODO add here MAC integrity check
-    // decrypting will occur upon collection request
+    if (!secretsFile_.readAndCheck()) {
+        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile));
+    }
     return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::Good, 0));
 }
 

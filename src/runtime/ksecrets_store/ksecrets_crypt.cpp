@@ -332,7 +332,7 @@ CryptBuffer::int_type CryptBuffer::underflow()
         if (!decrypt())
             return traits_type::eof();
     }
-    if (gptr() < egptr()) {
+if (gptr() < egptr()) {
         return traits_type::to_int_type(*gptr());
     }
     else {

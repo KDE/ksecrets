@@ -25,6 +25,8 @@
 
 #include <memory>
 #include <forward_list>
+#define GCRPYT_NO_DEPRECATED
+#include <gcrypt.h>
 
 /**
  * @brief This is the secrets file format handling class
@@ -45,22 +47,25 @@ public:
     int create(const std::string& path);
     void setup(const std::string& path, bool readOnly) noexcept;
     bool open() noexcept;
+    bool readAndCheck() noexcept;
+    bool readNextEntity() noexcept;
+    bool save() noexcept;
+    bool saveEntity(SecretsEntityPtr);
     bool lock() noexcept;
     bool readHeader() noexcept;
     bool checkMagic() noexcept;
     const char* salt() const noexcept { return fileHead_.salt_; }
     const char* iv() const noexcept { return fileHead_.iv_; }
-    int checkMAC() const noexcept;
     bool read(void* buf, size_t count);
     bool read(size_t&);
     int errnumber() const noexcept { return errno_; }
     bool eof() const noexcept { return eof_; }
-    bool write(const void *buf, size_t count);
+    bool write(const void* buf, size_t count);
     bool write(size_t len);
 
     using DirCollectionResult = std::pair<bool, const CollectionDirectory*>;
     DirCollectionResult dirCollections() noexcept;
-    SecretsCollectionPtr createCollection(const std::string &collName) noexcept;
+    SecretsCollectionPtr createCollection(const std::string& collName) noexcept;
 
 private:
     bool setFailState(int err, bool retval = false) noexcept
@@ -68,26 +73,42 @@ private:
         errno_ = err;
         return retval; // wo do like this so this function could end other methods with an elegant return setFailState(errno);
     }
-    bool setEOF() noexcept {
+    bool setEOF() noexcept
+    {
         eof_ = true;
         return false; // this work the same as setFailState
     }
     bool readDirectory() noexcept;
     bool decryptEntity(SecretsEntity&) noexcept;
+    void closeFile(int) noexcept;
+    bool backupAndReplaceWithWritten(const char*) noexcept;
 
-    using Entities = std::forward_list<SecretsEntityPtr>;
+    struct MAC {
+        MAC();
+        ~MAC();
+        bool init(const char* key, size_t keyLen, const void *iv, size_t ivlen) noexcept;
+        bool reset() noexcept;
+        bool update(const void* buffer, size_t len) noexcept;
+        bool write(KSecretsFile&);
+        bool check(KSecretsFile&);
+
+        gcry_mac_hd_t hd_;
+    };
+
+    using Entities = std::list<SecretsEntityPtr>;
 
     std::string filePath_;
-    int file_;
+    int readFile_;
+    int writeFile_;
     bool locked_;
     bool readOnly_;
     FileHeadStruct fileHead_;
     bool empty_;
-    char fileMAC_[64];
     Entities entities_;
     CollectionDirectory directory_;
     int errno_;
     bool eof_;
+    MAC mac_;
 };
 
 #endif

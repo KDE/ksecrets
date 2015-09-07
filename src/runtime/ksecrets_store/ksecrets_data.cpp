@@ -20,10 +20,36 @@
 */
 #include "ksecrets_data.h"
 #include "ksecrets_file.h"
+#include "defines.h"
 
 #include <unistd.h>
 #include <algorithm>
 #include <cassert>
+
+SecretsEntityPtr SecretsEntityFactory::createInstance(SecretsEntity::EntityType et)
+{
+    SecretsEntityPtr res;
+    switch (et) {
+    case SecretsEntity::EntityType::SecretsEntityType:
+        assert(0);
+        break;
+    case SecretsEntity::EntityType::CollectionDirectoryType:
+        res = std::make_shared<CollectionDirectory>();
+        break;
+    case SecretsEntity::EntityType::SecretsItemType:
+        res = std::make_shared<SecretsItem>();
+        break;
+    case SecretsEntity::EntityType::SecretsEOFType:
+        res = std::make_shared<SecretsEOF>();
+        break;
+    case SecretsEntity::EntityType::SecretsCollectionType:
+        res = std::make_shared<SecretsCollection>();
+        break;
+    default:
+        syslog(KSS_LOG_ERR, "ksecrets: unkonw entity type creation requested %ld", (long)et);
+    }
+    return res;
+}
 
 SecretsEntity::SecretsEntity() {}
 
@@ -32,11 +58,13 @@ SecretsEntity::~SecretsEntity() {}
 bool SecretsEntity::write(KSecretsFile& file)
 {
     std::ostream os(&buffer_);
-    if (!doBeforeWrite(os))
+    if (!doBeforeWrite(os) || !os.good())
         return false;
 
-    if (!buffer_.write(file))
+    if (!buffer_.write(file)) {
+        doOnWriteError();
         return false;
+    }
 
     return doAfterWrite();
 }
@@ -46,13 +74,20 @@ bool SecretsEntity::read(KSecretsFile& file)
     if (!doBeforeRead())
         return false;
 
+    bool res = false;
     if (buffer_.read(file)) {
         std::istream is(&buffer_);
-        return doAfterRead(is);
+        res = doAfterRead(is) && is.good();
     }
-    else
-        return false;
+
+    if (!res) {
+        doOnReadError();
+    }
+    return res;
 }
+
+void SecretsEntity::doOnReadError() { /* nothing to do here */}
+void SecretsEntity::doOnWriteError() { /* nothing to do here */}
 
 CollectionDirectory::CollectionDirectory() {}
 
@@ -62,29 +97,39 @@ bool CollectionDirectory::hasEntry(const std::string& collName) const
     return pos != entries_.end();
 }
 
-bool CollectionDirectory::doBeforeWrite(std::ostream&)
+bool CollectionDirectory::doBeforeWrite(std::ostream& os)
 {
-    // TODO
-    return false;
+    os << entries_.size();
+    for (const std::string& entry : entries_) {
+        os << entry;
+    }
+    return true;
 }
 
-bool CollectionDirectory::doAfterRead(std::istream&)
+bool CollectionDirectory::doAfterRead(std::istream& is)
 {
-    // TODO
-    return false;
+    Entries::size_type n;
+    is >> n;
+    for (Entries::size_type i = 0; i < n; i++) {
+        std::string entry;
+        is >> entry;
+        entries_.emplace_back(entry);
+    }
+    return true;
 }
 
 void SecretsCollection::setName(const std::string& name) { name_ = name; }
 
-bool SecretsCollection::doBeforeWrite(std::ostream&)
+bool SecretsCollection::doBeforeWrite(std::ostream& os)
 {
-    // TODO
-    return false;
+    os << name_;
+    os << items_.size();
+    return true;
 }
 
-bool SecretsCollection::doAfterRead(std::istream&)
+bool SecretsCollection::doAfterRead(std::istream& is)
 {
-    // TODO
+    is >> name_;
     return false;
 }
 
