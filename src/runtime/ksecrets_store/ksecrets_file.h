@@ -48,6 +48,7 @@ public:
     enum class OpenStatus {
         Ok,
         CannotOpenFile,
+        CannotLockFile,
         CannotReadHeader,
         UnknownHeader,
         IntegrityCheckFailed
@@ -121,7 +122,6 @@ private:
     bool locked_;
     bool readOnly_;
     FileHeadStruct fileHead_;
-    bool empty_;
     Entities entities_;
     int errno_;
     bool eof_;

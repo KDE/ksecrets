@@ -39,7 +39,6 @@ KSecretsFile::KSecretsFile()
     : readFile_(-1)
     , writeFile_(-1)
     , locked_(false)
-    , empty_(true)
     , eof_(false)
 {
     memset(&fileHead_, 0, sizeof(fileHead_));
@@ -71,10 +70,8 @@ void KSecretsFile::closeFile(int f) noexcept
 
 int KSecretsFile::create(const std::string& path) noexcept
 {
-    // TODO modify this to use POSIX functions write and open instead of fwrite and fopen
-    // TODO add the SecretsEOF structure at the end of the empty file
-    FILE* f = fopen(path.c_str(), "w");
-    if (f == nullptr) {
+    int fd = ::creat(path.c_str(), S_IRUSR | S_IWUSR);
+    if (fd == -1) {
         return errno;
     }
 
@@ -86,10 +83,14 @@ int KSecretsFile::create(const std::string& path) noexcept
     gcry_randomize(emptyFileData.iv_, IV_SIZE, GCRY_STRONG_RANDOM);
 
     int res = 0;
-    if (fwrite(&emptyFileData, 1, sizeof(emptyFileData), f) != sizeof(emptyFileData)) {
-        res = ferror(f);
+    if (::write(fd, &emptyFileData, sizeof(emptyFileData)) != sizeof(emptyFileData)) {
+        res = errno;
     }
-    fclose(f);
+    long count = 0; // this file has 0 items in it
+    if (::write(fd, &count, sizeof(count)) != sizeof(count)) {
+        res = errno;
+    }
+    ::close(fd);
     return res;
 }
 
@@ -199,8 +200,6 @@ bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcep
 bool KSecretsFile::readAndCheck() noexcept
 {
     assert(readFile_ != -1);
-    if (empty_)
-        return true; // MAC of empty files is always OK
     if (!entities_.empty()) {
         entities_.clear();
     }
@@ -218,7 +217,7 @@ bool KSecretsFile::readAndCheck() noexcept
         }
     }
 
-    if (!mac_.check(*this)) {
+    if (entities_.size() && !mac_.check(*this)) {
         syslog(KSS_LOG_ERR, "ksecrets: MAC check error, the file is corrupted or someone tampered with it");
         return false;
     }
@@ -254,6 +253,10 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: failed to open file %s", filePath_.c_str());
         return OpenStatus::CannotOpenFile;
     }
+    if (locked_ && !lock()) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot lock file %s", filePath_.c_str());
+        return OpenStatus::CannotLockFile;
+    }
     if (!readHeader()) {
         syslog(KSS_LOG_ERR, "ksecrets: failed to read header from file %s", filePath_.c_str());
         return OpenStatus::CannotReadHeader;
@@ -277,28 +280,14 @@ bool KSecretsFile::open() noexcept
 
 bool KSecretsFile::lock() noexcept
 {
-    return flock(readFile_, LOCK_EX) != -1;
+    bool res = flock(readFile_, LOCK_EX) != -1;
     locked_ = true;
+    return res;
 }
 
 bool KSecretsFile::readHeader() noexcept
 {
     auto rres = ::read(readFile_, &fileHead_, sizeof(fileHead_));
-    char dummyBuffer[4];
-    auto bytes = sizeof(dummyBuffer) / sizeof(dummyBuffer[0]);
-    auto eoftest = ::read(readFile_, dummyBuffer, bytes);
-    if (eoftest == 0) {
-        // we are at EOF already, so file is empty
-        empty_ = true;
-        eof_ = true;
-    }
-    else {
-        if (-1 == lseek(readFile_, -bytes, SEEK_CUR)) {
-            setFailState(errno);
-            return false;
-        }
-        empty_ = false;
-    }
     return rres == sizeof(fileHead_);
 }
 
