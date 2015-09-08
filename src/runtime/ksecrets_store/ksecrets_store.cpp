@@ -23,6 +23,7 @@
 #include "ksecrets_store_p.h"
 #include "ksecrets_file.h"
 #include "ksecrets_data.h"
+#include "defines.h"
 
 #include <future>
 #include <thread>
@@ -33,6 +34,7 @@
 #include <syslog.h>
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
+#include <cassert>
 
 #define KSS_LOG_ERR (LOG_AUTH | LOG_ERR)
 
@@ -164,27 +166,29 @@ KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexce
 KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections()
 {
     KSecretsStore::DirCollectionsResult res(KSecretsStore::StoreStatus::InvalidFile);
-    auto dir = secretsFile_.dirCollections();
-    if (dir.first) {
+    SecretsEntityPtr entity = secretsFile_.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
+
+    if (entity) {
+        CollectionDirectoryPtr dir = std::dynamic_pointer_cast<CollectionDirectory>(entity);
+        // note the result_ is now empty si basically would avoid invoking a copy constructor
+        res.result_.insert(res.result_.end(), dir->entries().cbegin(), dir->entries().cend());
     }
     return res;
 }
 
-KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char* collName) noexcept
-{
-    return d->createCollection(collName);
-}
+KSecretsStore::CreateCollectionResult KSecretsStore::createCollection(const char* collName) noexcept { return d->createCollection(collName); }
 
-template <class R>
-R mapSecretsFileFailure(KSecretsFile &file, R &&r)
+template <class R> R mapSecretsFileFailure(KSecretsFile& file, R&& r)
 {
     if (file.errnumber()) {
         r.errno_ = file.errnumber();
         r.status_ = KSecretsStore::StoreStatus::SystemError;
-    } else {
+    }
+    else {
         if (file.eof()) {
             r.status_ = KSecretsStore::StoreStatus::PrematureEndOfFileEncountered;
-        } else {
+        }
+        else {
             r.status_ = KSecretsStore::StoreStatus::UnknownError; // really, we should get here very seldom
         }
     }
@@ -192,7 +196,7 @@ R mapSecretsFileFailure(KSecretsFile &file, R &&r)
     return r;
 }
 
-KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(const std::string &collName) noexcept
+KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(const std::string& collName) noexcept
 {
     KSecretsStore::CreateCollectionResult res;
     auto cptr = std::make_shared<KSecretsCollectionPrivate>();
@@ -203,22 +207,42 @@ KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(con
     return res;
 }
 
-bool KSecretsCollectionPrivate::createCollection(KSecretsFile &file, const std::string &collName)
+bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::string& collName)
 {
-    bool res = false;
-    auto dir =  file.dirCollections();
-    if (dir.first) {
-        if (!dir.second->hasEntry(collName)) {
-            collection_data_ = file.createCollection(collName);
-            if (collection_data_ != nullptr) {
-                res = true;
-            }
-        }
+    bool res = false; // an existing collection with same name already exists or some other sync error
+    auto dir = collectionsDir(file);
+    assert(dir);
+    if (!dir->hasEntry(collName)) {
+        collection_data_ = std::make_shared<SecretsCollection>();
+        collection_data_->setName(collName);
+        dir->addCollection(collName);
+        return file.emplace_entity(collection_data_);
+    }
+    else {
+        syslog(KSS_LOG_INFO, "ksecrets: a collection named '%s' already exists", collName.c_str());
     }
     return res;
 }
 
-KSecretsStore::Collection::Collection(KSecretsCollectionPrivatePtr dptr) : d(dptr) {}
+CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& file)
+{
+    if (!collections_dir_) {
+        SecretsEntityPtr entity = file.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
+        if (entity) {
+            collections_dir_ = std::dynamic_pointer_cast<CollectionDirectory>(entity);
+        }
+        else {
+            collections_dir_ = std::make_shared<CollectionDirectory>();
+            file.emplace_entity(collections_dir_);
+        }
+    }
+    return collections_dir_;
+}
+
+KSecretsStore::Collection::Collection(KSecretsCollectionPrivatePtr dptr)
+    : d(dptr)
+{
+}
 
 KSecretsStore::ReadCollectionResult KSecretsStore::readCollection(const char*) const noexcept
 {

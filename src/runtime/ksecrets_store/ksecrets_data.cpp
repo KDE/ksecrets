@@ -91,8 +91,16 @@ void SecretsEntity::doOnWriteError() { /* nothing to do here */}
 
 CollectionDirectory::CollectionDirectory() {}
 
+void CollectionDirectory::addCollection(const std::string & collName)
+{
+    assert(!hasEntry(collName));
+    entries_.emplace_back(collName);
+    // FIXME should we sort this list?
+}
+
 bool CollectionDirectory::hasEntry(const std::string& collName) const
 {
+    // FIXME should we use some binary search algo here?
     auto pos = std::find(entries_.begin(), entries_.end(), collName);
     return pos != entries_.end();
 }

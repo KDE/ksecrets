@@ -308,41 +308,14 @@ bool KSecretsFile::read(void* buf, size_t len)
     return mac_.update(buf, len);
 }
 
-KSecretsFile::DirCollectionResult KSecretsFile::dirCollections()
-{
-    DirCollectionResult res;
-    res.first = false;
-    res.second = nullptr;
-
-    if (empty_) {
-        return res;
-    }
-
-    if (readDirectory()) {
-        res.first = true;
-        res.second = &directory_;
-    }
-
-    return res;
+bool KSecretsFile::remove_entity(SecretsEntityPtr entity) {
+    Entities::iterator pos = std::find(entities_.begin(), entities_.end(), entity);
+    if (pos != entities_.end()) {
+        entities_.erase(pos);
+        return true;
+    } else return false;
 }
 
-bool KSecretsFile::readDirectory()
-{
-    if (empty_)
-        return false; // file is empty, don't even attempt read
-    return directory_.read(*this);
-}
-
-SecretsCollectionPtr KSecretsFile::createCollection(const std::string& collName) noexcept
-{
-    auto newColl = std::make_shared<SecretsCollection>();
-    newColl->setName(collName);
-    entities_.emplace_front(newColl);
-    if (save())
-        return std::dynamic_pointer_cast<SecretsCollection>(entities_.front());
-    else
-        return SecretsCollectionPtr();
-}
 
 KSecretsFile::MAC::MAC()
 {

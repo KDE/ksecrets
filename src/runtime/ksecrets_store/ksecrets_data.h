@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <sys/types.h>
 #include <memory>
-#include <list>
+#include <deque>
 #include <ostream>
 #include <istream>
 
@@ -86,15 +86,18 @@ public:
 
 class CollectionDirectory : public SecretsEntity {
 public:
+    using Entries = std::deque<std::string>;
+
     CollectionDirectory();
+    void addCollection(const std::string&) noexcept;
     bool hasEntry(const std::string&) const noexcept;
     virtual EntityType getType() const noexcept { return EntityType::CollectionDirectoryType; }
+    const Entries& entries() const noexcept { return entries_; }
 
 private:
     virtual bool doBeforeWrite(std::ostream&) noexcept override;
     virtual bool doAfterRead(std::istream&) noexcept override;
 
-    using Entries = std::list<std::string>;
     Entries entries_;
 };
 
@@ -119,7 +122,7 @@ private:
     virtual bool doAfterRead(std::istream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsCollectionType; }
 
-    using Items = std::list<SecretsItemPtr>;
+    using Items = std::deque<SecretsItemPtr>;
 
     std::string name_;
     Items items_;

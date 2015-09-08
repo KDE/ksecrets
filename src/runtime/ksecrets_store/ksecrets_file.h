@@ -24,7 +24,8 @@
 #include "ksecrets_data.h"
 
 #include <memory>
-#include <forward_list>
+#include <deque>
+#include <algorithm>
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
 
@@ -63,9 +64,17 @@ public:
     bool write(const void* buf, size_t count);
     bool write(size_t len);
 
-    using DirCollectionResult = std::pair<bool, const CollectionDirectory*>;
-    DirCollectionResult dirCollections() noexcept;
-    SecretsCollectionPtr createCollection(const std::string& collName) noexcept;
+    template <class E> bool emplace_entity(E&& e) noexcept {
+        entities_.emplace_back(e);
+        return save();
+    }
+    bool remove_entity(SecretsEntityPtr);
+    template <class P> SecretsEntityPtr find_entity(P pred) {
+        Entities::iterator pos = std::find_if(entities_.begin(), entities_.end(), pred);
+        if (pos != entities_.end()) {
+            return *pos;
+        } else return SecretsEntityPtr();
+    }
 
 private:
     bool setFailState(int err, bool retval = false) noexcept
@@ -78,7 +87,6 @@ private:
         eof_ = true;
         return false; // this work the same as setFailState
     }
-    bool readDirectory() noexcept;
     bool decryptEntity(SecretsEntity&) noexcept;
     void closeFile(int) noexcept;
     bool backupAndReplaceWithWritten(const char*) noexcept;
@@ -96,7 +104,7 @@ private:
         gcry_mac_hd_t hd_;
     };
 
-    using Entities = std::list<SecretsEntityPtr>;
+    using Entities = std::deque<SecretsEntityPtr>;
 
     std::string filePath_;
     int readFile_;
@@ -106,7 +114,6 @@ private:
     FileHeadStruct fileHead_;
     bool empty_;
     Entities entities_;
-    CollectionDirectory directory_;
     int errno_;
     bool eof_;
     MAC mac_;

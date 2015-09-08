@@ -299,6 +299,7 @@ public:
 
     bool isGood() const noexcept;
 
+    // TODO dir collections should return more information than simply the collection names
     using CollectionNames = std::vector<std::string>;
     using DirCollectionsResult = CallResultWithValue<StoreStatus::Good, CollectionNames>;
     DirCollectionsResult dirCollections() const noexcept;

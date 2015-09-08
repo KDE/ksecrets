@@ -27,7 +27,7 @@
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
 
-QTEST_GUILESS_MAIN(KSecretServiceStoreTest);
+QTEST_GUILESS_MAIN(KSecretServiceStoreTest)
 
 KSharedConfig::Ptr sharedConfig;
 QString secretsFilePath;

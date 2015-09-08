@@ -41,7 +41,7 @@ protected:
         // FIXME func may return some value so modify this to take that into account
         func();
         modifiedTime_ = std::time(nullptr);
-    };
+    }
 
 private:
     std::time_t createdTime_;
@@ -54,8 +54,10 @@ class KSecretsItemPrivate : public TimeStamped {
 class KSecretsCollectionPrivate : public TimeStamped {
 public:
     bool createCollection(KSecretsFile &secretsFile, const std::string &collName);
+    CollectionDirectoryPtr collectionsDir(KSecretsFile &secretsFile) noexcept;
 private:
     SecretsCollectionPtr collection_data_;
+    CollectionDirectoryPtr collections_dir_;
 };
 
 class KSecretsStorePrivate {
