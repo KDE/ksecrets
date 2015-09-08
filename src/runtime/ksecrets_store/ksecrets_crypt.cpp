@@ -142,6 +142,15 @@ int kss_keys_already_there()
     return TRUE;
 }
 
+/**
+ * @brief Reads a key from the kernel keyring
+ *
+ * @param keyName keyname from the keyring
+ * @param buffer buffer where to store the key payload
+ * @param bufferSize buffer size. If unsufficient, the return value would specify the needed length
+ *
+ * @return -1 on error, 0 on success, >0 needed buffer length in bytes, when bufferSize was not sufficient
+ */
 long kss_read_key(const char* keyName, char* buffer, size_t bufferSize)
 {
     key_serial_t key;
@@ -183,7 +192,8 @@ long kss_cipher_setup(gcry_cipher_hd_t* hd, const void* iv, size_t liv)
     }
     char encryptingKey[KSECRETS_KEYSIZE];
     auto keyres = kss_read_encrypting_key(encryptingKey, sizeof(encryptingKey) / sizeof(encryptingKey[0]));
-    if (!keyres) {
+    assert(keyres <= 0); // if positive result, then the handed buffer size is not sufficient
+    if (keyres <0) {
         syslog(KSS_LOG_ERR, "ksecrets: encrypting key not found in the keyring");
         return keyres;
     }
