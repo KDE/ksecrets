@@ -3,6 +3,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 find_package(LibGcrypt 1.6.0 REQUIRED)
 
 cmake_minimum_required(VERSION 3.2.2)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions" )
 
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS_BACKEND
                   VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ksecrets_store_version.h"

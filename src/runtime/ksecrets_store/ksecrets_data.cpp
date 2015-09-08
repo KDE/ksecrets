@@ -55,7 +55,7 @@ SecretsEntity::SecretsEntity() {}
 
 SecretsEntity::~SecretsEntity() {}
 
-bool SecretsEntity::write(KSecretsFile& file)
+bool SecretsEntity::write(KSecretsFile& file) noexcept
 {
     std::ostream os(&buffer_);
     if (!doBeforeWrite(os) || !os.good())
@@ -69,7 +69,7 @@ bool SecretsEntity::write(KSecretsFile& file)
     return doAfterWrite();
 }
 
-bool SecretsEntity::read(KSecretsFile& file)
+bool SecretsEntity::read(KSecretsFile& file) noexcept
 {
     if (!doBeforeRead())
         return false;
@@ -86,26 +86,26 @@ bool SecretsEntity::read(KSecretsFile& file)
     return res;
 }
 
-void SecretsEntity::doOnReadError() { /* nothing to do here */}
-void SecretsEntity::doOnWriteError() { /* nothing to do here */}
+void SecretsEntity::doOnReadError() noexcept { /* nothing to do here */}
+void SecretsEntity::doOnWriteError() noexcept { /* nothing to do here */}
 
 CollectionDirectory::CollectionDirectory() {}
 
-void CollectionDirectory::addCollection(const std::string & collName)
+void CollectionDirectory::addCollection(const std::string & collName) noexcept
 {
     assert(!hasEntry(collName));
     entries_.emplace_back(collName);
     // FIXME should we sort this list?
 }
 
-bool CollectionDirectory::hasEntry(const std::string& collName) const
+bool CollectionDirectory::hasEntry(const std::string& collName) const noexcept
 {
     // FIXME should we use some binary search algo here?
     auto pos = std::find(entries_.begin(), entries_.end(), collName);
     return pos != entries_.end();
 }
 
-bool CollectionDirectory::doBeforeWrite(std::ostream& os)
+bool CollectionDirectory::doBeforeWrite(std::ostream& os) noexcept
 {
     os << entries_.size();
     for (const std::string& entry : entries_) {
@@ -114,7 +114,7 @@ bool CollectionDirectory::doBeforeWrite(std::ostream& os)
     return true;
 }
 
-bool CollectionDirectory::doAfterRead(std::istream& is)
+bool CollectionDirectory::doAfterRead(std::istream& is) noexcept
 {
     Entries::size_type n;
     is >> n;
@@ -126,40 +126,40 @@ bool CollectionDirectory::doAfterRead(std::istream& is)
     return true;
 }
 
-void SecretsCollection::setName(const std::string& name) { name_ = name; }
+void SecretsCollection::setName(const std::string& name) noexcept { name_ = name; }
 
-bool SecretsCollection::doBeforeWrite(std::ostream& os)
+bool SecretsCollection::doBeforeWrite(std::ostream& os) noexcept
 {
     os << name_;
     os << items_.size();
     return true;
 }
 
-bool SecretsCollection::doAfterRead(std::istream& is)
+bool SecretsCollection::doAfterRead(std::istream& is) noexcept
 {
     is >> name_;
     return false;
 }
 
-bool SecretsItem::doBeforeWrite(std::ostream&)
+bool SecretsItem::doBeforeWrite(std::ostream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsItem::doAfterRead(std::istream&)
+bool SecretsItem::doAfterRead(std::istream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doBeforeWrite(std::ostream&)
+bool SecretsEOF::doBeforeWrite(std::ostream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doAfterRead(std::istream&)
+bool SecretsEOF::doAfterRead(std::istream&) noexcept
 {
     // TODO
     return false;

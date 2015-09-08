@@ -93,7 +93,7 @@ std::future<KSecretsStore::SetupResult> KSecretsStore::setup(const char* path, b
     return std::async(std::launch::async, [localThis, filePath, shouldCreateFile, readOnly]() { return localThis->d->setup(filePath, shouldCreateFile, readOnly); });
 }
 
-KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, bool shouldCreateFile, bool readOnly)
+KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, bool shouldCreateFile, bool readOnly) noexcept
 {
     if (shouldCreateFile) {
         auto createres = createFile(path);
@@ -115,7 +115,7 @@ std::future<KSecretsStore::CredentialsResult> KSecretsStore::setCredentials(cons
     return std::async(std::launch::async, [localThis, pwd]() { return localThis->d->setCredentials(pwd); });
 }
 
-KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std::string& password)
+KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std::string& password) noexcept
 {
     using Result = KSecretsStore::CredentialsResult;
     if (!kss_init_gcry()) {
@@ -128,13 +128,13 @@ KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std:
     return setStoreStatus(Result(KSecretsStore::StoreStatus::CredentialsSet, 0));
 }
 
-int KSecretsStorePrivate::createFile(const std::string& path) { return secretsFile_.create(path); }
+int KSecretsStorePrivate::createFile(const std::string& path) noexcept { return secretsFile_.create(path); }
 
 bool KSecretsStore::isGood() const noexcept { return d->status_ == StoreStatus::Good; }
 
-const char* KSecretsStorePrivate::salt() const { return secretsFile_.salt(); }
+const char* KSecretsStorePrivate::salt() const noexcept { return secretsFile_.salt(); }
 
-KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
+KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile) noexcept
 {
     // FIXME open sequence should be moved close to KSecretsFile @see KSecretsFile::backupAndReplaceWithWritten
     // TODO this refactoring should be done by introducing an event mecanism with un observer interface
@@ -163,7 +163,7 @@ KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile)
 
 KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept { return d->dirCollections(); }
 
-KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections()
+KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections() noexcept
 {
     KSecretsStore::DirCollectionsResult res(KSecretsStore::StoreStatus::InvalidFile);
     SecretsEntityPtr entity = secretsFile_.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
@@ -211,20 +211,23 @@ bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::
 {
     bool res = false; // an existing collection with same name already exists or some other sync error
     auto dir = collectionsDir(file);
-    assert(dir);
-    if (!dir->hasEntry(collName)) {
-        collection_data_ = std::make_shared<SecretsCollection>();
-        collection_data_->setName(collName);
-        dir->addCollection(collName);
-        return file.emplace_entity(collection_data_);
-    }
-    else {
-        syslog(KSS_LOG_INFO, "ksecrets: a collection named '%s' already exists", collName.c_str());
+    if (dir){
+        if (!dir->hasEntry(collName)) {
+            collection_data_ = std::make_shared<SecretsCollection>();
+            collection_data_->setName(collName);
+            dir->addCollection(collName);
+            return file.emplace_entity(collection_data_);
+        }
+        else {
+            syslog(KSS_LOG_INFO, "ksecrets: a collection named '%s' already exists", collName.c_str());
+        }
+    } else {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot create collection directory");
     }
     return res;
 }
 
-CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& file)
+CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& file) noexcept
 {
     if (!collections_dir_) {
         SecretsEntityPtr entity = file.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
@@ -233,7 +236,9 @@ CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& f
         }
         else {
             collections_dir_ = std::make_shared<CollectionDirectory>();
-            file.emplace_entity(collections_dir_);
+            if (!file.emplace_entity(collections_dir_)) {
+                collections_dir_.reset();
+            }
         }
     }
     return collections_dir_;
@@ -262,97 +267,97 @@ KSecretsStore::DeleteCollectionResult KSecretsStore::deleteCollection(const char
     return DeleteCollectionResult();
 }
 
-std::time_t KSecretsStore::Collection::createdTime() const
+std::time_t KSecretsStore::Collection::createdTime() const noexcept
 {
     // TODO
     return std::time_t();
 }
 
-std::time_t KSecretsStore::Collection::modifiedTime() const
+std::time_t KSecretsStore::Collection::modifiedTime() const noexcept
 {
     // TODO
     return std::time_t();
 }
 
-std::string KSecretsStore::Collection::label() const
+std::string KSecretsStore::Collection::label() const noexcept
 {
     // TODO
     return "";
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::dirItems() const
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::dirItems() const noexcept
 {
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const AttributesMap&) const
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const AttributesMap&) const noexcept
 {
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*, const AttributesMap&) const
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*, const AttributesMap&) const noexcept
 {
     // TODO
     return ItemList();
 }
 
-KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*) const
+KSecretsStore::Collection::ItemList KSecretsStore::Collection::searchItems(const char*) const noexcept
 {
     // TODO
     return ItemList();
 }
 
-KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, AttributesMap, ItemValue)
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, AttributesMap, ItemValue) noexcept
 {
     // TODO
     return ItemPtr();
 }
 
-bool KSecretsStore::Collection::deleteItem(ItemPtr)
+bool KSecretsStore::Collection::deleteItem(ItemPtr) noexcept
 {
     // TODO
     return false;
 }
 
-KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, ItemValue)
+KSecretsStore::ItemPtr KSecretsStore::Collection::createItem(const char*, ItemValue) noexcept
 {
     // TODO
     return ItemPtr();
 }
 
-std::time_t KSecretsStore::Item::createdTime() const
+std::time_t KSecretsStore::Item::createdTime() const noexcept
 {
     // TODO
     return std::time_t();
 }
 
-std::time_t KSecretsStore::Item::modifiedTime() const
+std::time_t KSecretsStore::Item::modifiedTime() const noexcept
 {
     // TODO
     return std::time_t();
 }
 
-std::string KSecretsStore::Item::label() const
+std::string KSecretsStore::Item::label() const noexcept
 {
     // TODO
     return "";
 }
 
-bool KSecretsStore::Item::setLabel(const char*)
+bool KSecretsStore::Item::setLabel(const char*) noexcept
 {
     // TODO
     return false;
 }
 
-KSecretsStore::ItemValue KSecretsStore::Item::value() const
+KSecretsStore::ItemValue KSecretsStore::Item::value() const noexcept
 {
     // TODO
     return ItemValue();
 }
 
-bool KSecretsStore::Item::setValue(ItemValue)
+bool KSecretsStore::Item::setValue(ItemValue) noexcept
 {
     // TODO
     return false;
@@ -364,7 +369,7 @@ KSecretsStore::AttributesMap KSecretsStore::Item::attributes() const
     return AttributesMap();
 }
 
-bool KSecretsStore::Item::setAttributes(AttributesMap)
+bool KSecretsStore::Item::setAttributes(AttributesMap) noexcept
 {
     // TODO
     return false;

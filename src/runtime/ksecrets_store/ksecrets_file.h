@@ -45,8 +45,17 @@ public:
         char iv_[IV_SIZE];
     };
 
-    int create(const std::string& path);
+    enum class OpenStatus {
+        Ok,
+        CannotOpenFile,
+        CannotReadHeader,
+        UnknownHeader,
+        IntegrityCheckFailed
+    };
+
+    int create(const std::string& path) noexcept;
     void setup(const std::string& path, bool readOnly) noexcept;
+    OpenStatus openAndCheck() noexcept;
     bool open() noexcept;
     bool readAndCheck() noexcept;
     bool readNextEntity() noexcept;

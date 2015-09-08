@@ -74,15 +74,21 @@ int kss_derive_keys(const char* salt, const char* password, char* encryption_key
     }
 
     /* generate both encryption and MAC key in one go */
-    char keys[2 * keySize];
+    char* keys = new char[2 * keySize];
+    if (keys == nullptr) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot allocate memory for key buffer");
+        return false;
+    }
     gcryerr = gcry_kdf_derive(password, strlen(password), GCRY_KDF_ITERSALTED_S2K, GCRY_MD_SHA512, salt, 8, KSECRETS_ITERATIONS, 2 * keySize, keys);
     if (gcryerr) {
-        syslog(KSS_LOG_ERR, "key derivation failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        delete [] keys;
+        syslog(KSS_LOG_ERR, "ksecrets: key derivation failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
         return FALSE;
     }
 
     memcpy(encryption_key, keys, keySize);
     memcpy(mac_key, keys + keySize, keySize);
+    delete [] keys;
     syslog(KSS_LOG_INFO, "successuflly generated ksecrets keys from user password.");
 
     return TRUE;
@@ -95,7 +101,7 @@ int kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySi
     ks = add_key("user", key_name, encryption_key, keySize, KEY_SPEC_SESSION_KEYRING);
     if (-1 == ks) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot store encryption key in kernel "
-                            "keyring: errno=%d (%m)",
+                            "keyring: errno=%d",
             errno);
         return FALSE;
     }
@@ -106,7 +112,7 @@ int kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySi
     key_name = get_keyname_mac();
     ks = add_key("user", key_name, mac_key, keySize, KEY_SPEC_SESSION_KEYRING);
     if (-1 == ks) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot store mac key in kernel keyring: errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot store mac key in kernel keyring: errno=%d", errno);
         return FALSE;
     }
     syslog(KSS_LOG_DEBUG, "ksecrets: mac key now in kernel keyring with id %d and desc %s", ks, key_name);
@@ -131,7 +137,7 @@ int kss_keys_already_there()
     key_serial_t key;
     key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), so "
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, so "
                               "assuming ksecrets not yet loaded",
             errno);
         return FALSE;
@@ -145,7 +151,7 @@ long kss_read_key(const char* keyName, char* buffer, size_t bufferSize)
     key_serial_t key;
     key = request_key("user", keyName, 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m) when reading MAC key %s", errno, keyName);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d when reading MAC key %s", errno, keyName);
         return -1;
     }
     auto bytes = keyctl_read(key, buffer, bufferSize);
@@ -243,7 +249,7 @@ CryptBuffer::~CryptBuffer()
     delete[] decrypted_, decrypted_ = nullptr;
 }
 
-void CryptBuffer::empty()
+void CryptBuffer::empty() noexcept
 {
     delete[] encrypted_, encrypted_ = nullptr;
     delete[] decrypted_, decrypted_ = nullptr;
@@ -264,7 +270,12 @@ bool CryptBuffer::read(KSecretsFile& file)
     if (!file.read(len_))
         return false;
 
-    encrypted_ = new char[len_];
+    try {
+        encrypted_ = new char[len_];
+    } catch (std::bad_alloc) {
+        syslog(KSS_LOG_ERR, "ksecrets: got a std::bad_alloc and that means the file is corrupt");
+        return false;
+    }
     if (encrypted_ == nullptr) {
         len_ = 0;
         return false;
@@ -283,7 +294,7 @@ bool CryptBuffer::write(KSecretsFile& file)
     return file.write(encrypted_, len_);
 }
 
-bool CryptBuffer::decrypt()
+bool CryptBuffer::decrypt() noexcept
 {
     if (len_ == 0)
         return false;
@@ -300,7 +311,7 @@ bool CryptBuffer::decrypt()
     }
 }
 
-bool CryptBuffer::encrypt()
+bool CryptBuffer::encrypt() noexcept
 {
     if (len_ == 0)
         return false;

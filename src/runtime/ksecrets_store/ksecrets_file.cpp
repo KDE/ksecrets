@@ -57,19 +57,19 @@ KSecretsFile::~KSecretsFile()
     }
 }
 
-void KSecretsFile::closeFile(int f)
+void KSecretsFile::closeFile(int f) noexcept
 {
     auto r = close(f);
     if (r == -1) {
         syslog(KSS_LOG_ERR, "ksecrets: system return erro upon secrets "
-                            "file close: %d (%m)",
+                            "file close: %d",
             errno);
         syslog(KSS_LOG_ERR, "ksecrets: the secrets file might now be "
                             "corrup because of the previous error");
     }
 }
 
-int KSecretsFile::create(const std::string& path)
+int KSecretsFile::create(const std::string& path) noexcept
 {
     // TODO modify this to use POSIX functions write and open instead of fwrite and fopen
     // TODO add the SecretsEOF structure at the end of the empty file
@@ -93,16 +93,22 @@ int KSecretsFile::create(const std::string& path)
     return res;
 }
 
-bool KSecretsFile::save()
+bool KSecretsFile::save() noexcept
 {
     assert(writeFile_ == -1);
     assert(readFile_ != -1);
 
     const char* pattern = "ksecrets-XXXXXX";
-    writeFile_ = mkostemp((char*)pattern, O_SYNC);
+    char* tmpfilename = new char[strlen(pattern) + 1];
+    strcpy(tmpfilename, pattern);
+    writeFile_ = mkostemp(tmpfilename, O_SYNC);
     if (writeFile_ == -1) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot create temp file for save errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot create temp file for save errno=%d", errno);
         return false;
+    }
+    else {
+        syslog(KSS_LOG_INFO, "ksecrets: saving to temporary file %s", tmpfilename);
+        delete[] tmpfilename;
     }
 
     if (!mac_.reset()) {
@@ -110,15 +116,15 @@ bool KSecretsFile::save()
         return false;
     }
 
-    if (write(&fileHead_, sizeof(fileHead_))) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write file header errno=%d (%m)", errno);
+    if (!write(&fileHead_, sizeof(fileHead_))) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write file header errno=%d", errno);
         return false;
     }
 
     bool res = true;
     long count = std::count_if(entities_.cbegin(), entities_.cend(), [](SecretsEntityPtr) { return true; });
     if (!write(&count, sizeof(count))) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write entity count errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write entity count errno=%d", errno);
         return false;
     }
 
@@ -129,7 +135,7 @@ bool KSecretsFile::save()
     }
 
     if (!mac_.write(*this)) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write file MAC errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write file MAC errno=%d", errno);
         return false;
     }
 
@@ -138,7 +144,7 @@ bool KSecretsFile::save()
     char tempWrittenFile[PATH_MAX];
     auto rlink = readlink(lnpath, tempWrittenFile, PATH_MAX - 1);
     if (rlink == -1) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d", errno);
         return false;
     }
 
@@ -159,29 +165,38 @@ bool KSecretsFile::saveEntity(SecretsEntityPtr entity)
         return false;
     }
     if (!entity->write(*this)) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot save entity to file errnor=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot save entity to file errnor=%d", errno);
         return false;
     }
     else
         return true;
 }
 
-bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath)
+bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcept
 {
     closeFile(readFile_);
     char backupPath[PATH_MAX];
     snprintf(backupPath, PATH_MAX, "%s.bkp", filePath_.c_str());
     auto rres = rename(filePath_.c_str(), backupPath);
     if (rres == -1) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot backup the secrets file errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot backup the secrets file errno=%d", errno);
         return false;
     }
-    // FIXME this code is the same sequence as in KSecretsStorePrivate when opening so factor it somehow
 
+    rres = rename(tempFilePath, filePath_.c_str());
+    if (rres == -1) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot move temp file to current secrets file errno=%d", errno);
+        return false;
+    }
+
+    if (openAndCheck() != OpenStatus::Ok) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot reopen file");
+        return false;
+    }
     return true;
 }
 
-bool KSecretsFile::readAndCheck()
+bool KSecretsFile::readAndCheck() noexcept
 {
     assert(readFile_ != -1);
     if (empty_)
@@ -193,7 +208,7 @@ bool KSecretsFile::readAndCheck()
 
     long entityCount = 0;
     if (::read(readFile_, &entityCount, sizeof(entityCount)) < (ssize_t)sizeof(entityCount)) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot read the secrets file errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot read the secrets file errno=%d", errno);
         return false;
     }
 
@@ -211,7 +226,7 @@ bool KSecretsFile::readAndCheck()
     return true;
 }
 
-bool KSecretsFile::readNextEntity()
+bool KSecretsFile::readNextEntity() noexcept
 {
     SecretsEntity::EntityType et;
     if (!read(&et, sizeof(et))) {
@@ -227,25 +242,46 @@ bool KSecretsFile::readNextEntity()
     return true;
 }
 
-void KSecretsFile::setup(const std::string& path, bool readOnly)
+void KSecretsFile::setup(const std::string& path, bool readOnly) noexcept
 {
     filePath_ = path;
     readOnly_ = readOnly;
 }
 
-bool KSecretsFile::open()
+KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
+{
+    if (!open()) {
+        syslog(KSS_LOG_ERR, "ksecrets: failed to open file %s", filePath_.c_str());
+        return OpenStatus::CannotOpenFile;
+    }
+    if (!readHeader()) {
+        syslog(KSS_LOG_ERR, "ksecrets: failed to read header from file %s", filePath_.c_str());
+        return OpenStatus::CannotReadHeader;
+    }
+    if (!checkMagic()) {
+        syslog(KSS_LOG_ERR, "ksecrets: magic check failed for file %s", filePath_.c_str());
+        return OpenStatus::UnknownHeader;
+    }
+    if (!readAndCheck()) {
+        syslog(KSS_LOG_ERR, "ksecrets: integrity check failed for file %s", filePath_.c_str());
+        return OpenStatus::IntegrityCheckFailed;
+    }
+    return OpenStatus::Ok;
+}
+
+bool KSecretsFile::open() noexcept
 {
     readFile_ = ::open(filePath_.c_str(), O_DSYNC | O_NOATIME | O_NOFOLLOW);
     return readFile_ != -1;
 }
 
-bool KSecretsFile::lock()
+bool KSecretsFile::lock() noexcept
 {
     return flock(readFile_, LOCK_EX) != -1;
     locked_ = true;
 }
 
-bool KSecretsFile::readHeader()
+bool KSecretsFile::readHeader() noexcept
 {
     auto rres = ::read(readFile_, &fileHead_, sizeof(fileHead_));
     char dummyBuffer[4];
@@ -266,7 +302,7 @@ bool KSecretsFile::readHeader()
     return rres == sizeof(fileHead_);
 }
 
-bool KSecretsFile::checkMagic()
+bool KSecretsFile::checkMagic() noexcept
 {
     if (memcmp(fileHead_.magic_, fileMagic, fileMagicLen) != 0) {
         return false;
@@ -281,7 +317,7 @@ bool KSecretsFile::write(const void* buf, size_t len)
     assert(writeFile_ != -1);
     auto wres = ::write(writeFile_, buf, len);
     if (wres < 0) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write to file errno=%d (%m)", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write to file errno=%d", errno);
         return setFailState(errno);
     }
     if (static_cast<size_t>(wres) < len) {
@@ -308,14 +344,16 @@ bool KSecretsFile::read(void* buf, size_t len)
     return mac_.update(buf, len);
 }
 
-bool KSecretsFile::remove_entity(SecretsEntityPtr entity) {
+bool KSecretsFile::remove_entity(SecretsEntityPtr entity)
+{
     Entities::iterator pos = std::find(entities_.begin(), entities_.end(), entity);
     if (pos != entities_.end()) {
         entities_.erase(pos);
         return true;
-    } else return false;
+    }
+    else
+        return false;
 }
-
 
 KSecretsFile::MAC::MAC()
 {
@@ -363,7 +401,7 @@ bool KSecretsFile::MAC::reset() noexcept
         return false;
     }
 
-    return false;
+    return true;
 }
 
 bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
@@ -374,7 +412,7 @@ bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
         return false;
     }
 
-    return false;
+    return true;
 }
 
 bool KSecretsFile::MAC::write(KSecretsFile& file)
@@ -406,7 +444,7 @@ bool KSecretsFile::MAC::check(KSecretsFile& file)
         syslog(KSS_LOG_ERR, "Cannot read MAC len");
         return false;
     }
-    char *buffer = new char[len];
+    char* buffer = new char[len];
     if (buffer == nullptr) {
         syslog(KSS_LOG_ERR, "Cannot allocate MAC buffer");
         return false;
@@ -416,13 +454,13 @@ bool KSecretsFile::MAC::check(KSecretsFile& file)
         return false;
     }
     auto gcryerr = gcry_mac_verify(hd_, buffer, len);
-    delete [] buffer;
+    delete[] buffer;
     if (gcryerr) {
         syslog(KSS_LOG_ERR, "MAC check failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
         return false;
     }
 
-    return false;
+    return true;
 }
 
 // vim: tw=220:ts=4
