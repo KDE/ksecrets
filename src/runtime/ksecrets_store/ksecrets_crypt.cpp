@@ -81,14 +81,14 @@ int kss_derive_keys(const char* salt, const char* password, char* encryption_key
     }
     gcryerr = gcry_kdf_derive(password, strlen(password), GCRY_KDF_ITERSALTED_S2K, GCRY_MD_SHA512, salt, 8, KSECRETS_ITERATIONS, 2 * keySize, keys);
     if (gcryerr) {
-        delete [] keys;
+        delete[] keys;
         syslog(KSS_LOG_ERR, "ksecrets: key derivation failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
         return FALSE;
     }
 
     memcpy(encryption_key, keys, keySize);
     memcpy(mac_key, keys + keySize, keySize);
-    delete [] keys;
+    delete[] keys;
     syslog(KSS_LOG_INFO, "successuflly generated ksecrets keys from user password.");
 
     return TRUE;
@@ -98,19 +98,17 @@ int kss_store_keys(const char* encryption_key, const char* mac_key, size_t keySi
 {
     key_serial_t ks;
     const char* key_name = get_keyname_encrypting();
-    ks = add_key("user", key_name, encryption_key, keySize, KEY_SPEC_SESSION_KEYRING);
+    ks = add_key("user", key_name, encryption_key, keySize, KEY_SPEC_USER_SESSION_KEYRING);
     if (-1 == ks) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot store encryption key in kernel "
                             "keyring: errno=%d",
             errno);
         return FALSE;
     }
-    syslog(KSS_LOG_DEBUG, "ksecrets: encrpyting key now in kernel keyring "
-                          "with id %d and desc %s",
-        ks, key_name);
+    syslog(KSS_LOG_DEBUG, "ksecrets: encrypting key now in kernel keyring with id %d and desc %s", ks, key_name);
 
     key_name = get_keyname_mac();
-    ks = add_key("user", key_name, mac_key, keySize, KEY_SPEC_SESSION_KEYRING);
+    ks = add_key("user", key_name, mac_key, keySize, KEY_SPEC_USER_SESSION_KEYRING);
     if (-1 == ks) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot store mac key in kernel keyring: errno=%d", errno);
         return FALSE;
@@ -135,11 +133,9 @@ int kss_set_credentials(const std::string& password, const char* salt)
 int kss_keys_already_there()
 {
     key_serial_t key;
-    key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_SESSION_KEYRING);
+    key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_USER_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, so "
-                              "assuming ksecrets not yet loaded",
-            errno);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, so assuming ksecrets not yet loaded", errno);
         return FALSE;
     }
     syslog(KSS_LOG_DEBUG, "ksecrets: keys already in keyring");
@@ -149,9 +145,9 @@ int kss_keys_already_there()
 long kss_read_key(const char* keyName, char* buffer, size_t bufferSize)
 {
     key_serial_t key;
-    key = request_key("user", keyName, 0, KEY_SPEC_SESSION_KEYRING);
+    key = request_key("user", keyName, 0, KEY_SPEC_USER_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d when reading MAC key %s", errno, keyName);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d when reading key %s", errno, keyName);
         return -1;
     }
     auto bytes = keyctl_read(key, buffer, bufferSize);
@@ -272,7 +268,8 @@ bool CryptBuffer::read(KSecretsFile& file)
 
     try {
         encrypted_ = new char[len_];
-    } catch (std::bad_alloc) {
+    }
+    catch (std::bad_alloc) {
         syslog(KSS_LOG_ERR, "ksecrets: got a std::bad_alloc and that means the file is corrupt");
         return false;
     }
@@ -343,7 +340,7 @@ CryptBuffer::int_type CryptBuffer::underflow()
         if (!decrypt())
             return traits_type::eof();
     }
-if (gptr() < egptr()) {
+    if (gptr() < egptr()) {
         return traits_type::to_int_type(*gptr());
     }
     else {
