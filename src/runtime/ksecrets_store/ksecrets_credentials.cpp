@@ -44,8 +44,9 @@ extern "C"
 int KSECRETS_STORE_EXPORT kss_set_credentials(const char* user_name, const char* password, const char* path)
 {
     UNUSED(user_name);
-    if (kss_keys_already_there())
+/*    if (kss_keys_already_there())
         return TRUE;
+*/
 
     KSecretsStore secretsStore;
     auto setupres = secretsStore.setup(path);
@@ -64,23 +65,23 @@ int KSECRETS_STORE_EXPORT kss_delete_credentials()
     key_serial_t key;
     key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), cannot purge encrypting key", errno);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, cannot purge encrypting key", errno);
         return FALSE;
     }
     long res = keyctl(KEYCTL_REVOKE, key);
     if (-1 == res) {
-        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d (%m), cannot purge encrypting key", errno);
+        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d, cannot purge encrypting key", errno);
         return FALSE;
     }
 
     key = request_key("user", get_keyname_mac(), 0, KEY_SPEC_SESSION_KEYRING);
     if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d (%m), cannot purge mac key", errno);
+        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, cannot purge mac key", errno);
         return FALSE;
     }
     res = keyctl(KEYCTL_REVOKE, key);
     if (-1 == res) {
-        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d (%m), cannot purge mac key", errno);
+        syslog(KSS_LOG_DEBUG, "removing key failed with errno %d, cannot purge mac key", errno);
         return FALSE;
     }
     return TRUE;
