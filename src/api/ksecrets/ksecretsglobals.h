@@ -38,7 +38,7 @@ namespace KSecrets {
 } // namespace
 
 #ifndef STRINGSTRINGMAP_METATYPE_DEFINED
-Q_DECLARE_METATYPE( KSecrets::StringStringMap );
+Q_DECLARE_METATYPE( KSecrets::StringStringMap )
 #define STRINGSTRINGMAP_METATYPE_DEFINED
 #endif // STRINGSTRINGMAP_METATYPE_DEFINED
 

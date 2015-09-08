@@ -122,7 +122,7 @@ KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std:
         return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotInitGcrypt, -1));
     }
     auto res = kss_set_credentials(password, salt());
-    if (-1 == res) {
+    if (0 == res) {
         return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotDeriveKeys, res));
     }
     return setStoreStatus(Result(KSecretsStore::StoreStatus::CredentialsSet, 0));

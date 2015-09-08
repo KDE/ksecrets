@@ -100,7 +100,7 @@ PAM_EXTERN int pam_sm_setcred(
         }
         pam_syslog(pamh, LOG_INFO, "ksecrets: setting secrets path to %s", secrets_path);
 
-        if (!kss_set_credentials(user_name, password, secrets_path)) {
+        if (kss_set_credentials(user_name, password, secrets_path) == 0) {
             pam_syslog(
                 pamh, LOG_ERR, "ksecrets credentials could not be set.");
             return PAM_CRED_ERR;

@@ -253,6 +253,6 @@ private:
     QSharedPointer<CollectionPrivate> d;
 };
 
-}; // namespace
+} // namespace
 
 #endif // KSECRETSCOLLECTION_H

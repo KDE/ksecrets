@@ -67,7 +67,7 @@ int kss_derive_keys(const char* salt, const char* password, char* encryption_key
 {
     gpg_error_t gcryerr;
 
-    syslog(KSS_LOG_INFO, "kss_set_credentials: attempting keys generation");
+    syslog(KSS_LOG_INFO, "ksecrets: attempting keys generation");
     if (0 == password) {
         syslog(KSS_LOG_INFO, "NULL password given. ksecrets will not be available.");
         return FALSE;
@@ -77,7 +77,7 @@ int kss_derive_keys(const char* salt, const char* password, char* encryption_key
     char* keys = new char[2 * keySize];
     if (keys == nullptr) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot allocate memory for key buffer");
-        return false;
+        return FALSE;
     }
     gcryerr = gcry_kdf_derive(password, strlen(password), GCRY_KDF_ITERSALTED_S2K, GCRY_MD_SHA512, salt, 8, KSECRETS_ITERATIONS, 2 * keySize, keys);
     if (gcryerr) {
@@ -126,7 +126,7 @@ int kss_set_credentials(const std::string& password, const char* salt)
     char encryption_key[KSECRETS_KEYSIZE];
     char mac_key[KSECRETS_KEYSIZE];
     auto res = kss_derive_keys(salt, password.c_str(), encryption_key, mac_key, KSECRETS_KEYSIZE);
-    if (res)
+    if (res == FALSE)
         return res;
 
     return kss_store_keys(encryption_key, mac_key, KSECRETS_KEYSIZE);

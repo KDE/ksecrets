@@ -87,6 +87,6 @@ private:
     QSharedDataPointer< SecretPrivate > d;
 };
 
-};
+}
 
 #endif // KSECRETSVALUE_H

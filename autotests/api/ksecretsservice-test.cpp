@@ -176,7 +176,7 @@ void KSecretServiceTest::setupKeyring()
     QVERIFY(-1 == key);
 
     /* now go setup user's keyring */
-    QVERIFY(kss_set_credentials(testUser.constData(), testPass.constData(), secretsFilePath.toLocal8Bit().constData()));
+    QVERIFY(1 == kss_set_credentials(testUser.constData(), testPass.constData(), secretsFilePath.toLocal8Bit().constData()));
 
     // the right keys should be present into the kernel keyring
     key = request_key("user", KEYNAME_ENCRYPTING, 0, KEY_SPEC_SESSION_KEYRING);
