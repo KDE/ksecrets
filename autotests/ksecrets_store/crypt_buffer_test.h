@@ -18,38 +18,22 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_CRYPT_H
-#define KSECRETS_CRYPT_H
+#ifndef CRYPT_BUFFER_TEST_H
+#define CRYPT_BUFFER_TEST_H
 
-#include <sys/types.h>
-#include <streambuf>
-
-class KSecretsFile;
-
-class CryptBuffer : public std::streambuf {
+#include <QtCore/QObject>
+class CryptBufferTest : public QObject {
+    Q_OBJECT
 public:
-    CryptBuffer();
-    CryptBuffer(CryptBuffer&&) = default;
-    ~CryptBuffer();
+    CryptBufferTest();
+    virtual ~CryptBufferTest();
 
-
-    void empty() noexcept;
-
-    bool read(KSecretsFile&);
-    bool write(KSecretsFile&);
+private Q_SLOTS:
+    void initTestCase();
+    void testEncryptDecryptStream();
+    void cleanupTestCase();
 
 private:
-    int_type underflow() override;
-    int_type overflow(int_type) override;
-
-    bool decrypt() noexcept;
-    bool encrypt() noexcept;
-
-private:
-    static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
-    size_t len_; /// the length of both encrypted_ and decrypted_ buffers is the same
-    char* encrypted_;
-    char* decrypted_;
 };
 
 #endif

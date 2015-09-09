@@ -309,7 +309,7 @@ bool KSecretsFile::write(const void* buf, size_t len)
         syslog(KSS_LOG_ERR, "ksecrets: cannot write all data to file. Disk full?");
         return setFailState(ENOSPC);
     }
-    syslog(KSS_LOG_INFO, "ksecrets: write offset is now %ld", lseek(writeFile_, 0, SEEK_CUR));
+    syslog(KSS_LOG_INFO, "ksecrets: W offset %ld", lseek(writeFile_, 0, SEEK_CUR));
     return mac_.update(buf, len);
 }
 
@@ -324,7 +324,7 @@ bool KSecretsFile::read(void* buf, size_t len)
         return setFailState(errno);
     if (static_cast<size_t>(rres) < len)
         return setEOF(); // are we @ EOF?
-    syslog(KSS_LOG_INFO, "ksecrets: read offset is now %ld", lseek(readFile_, 0, SEEK_CUR));
+    syslog(KSS_LOG_INFO, "ksecrets: R offset %ld", lseek(readFile_, 0, SEEK_CUR));
     return mac_.update(buf, len);
 }
 

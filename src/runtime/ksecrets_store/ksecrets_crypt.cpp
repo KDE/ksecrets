@@ -243,7 +243,6 @@ CryptBuffer::CryptBuffer()
     : len_(0)
     , encrypted_(nullptr)
     , decrypted_(nullptr)
-    , dirty_(false)
 {
     setg(nullptr, nullptr, nullptr);
     setp(nullptr, nullptr);
@@ -262,7 +261,6 @@ void CryptBuffer::empty() noexcept
     len_ = 0;
     setg(nullptr, nullptr, nullptr);
     setp(nullptr, nullptr);
-    dirty_ = false;
 }
 
 bool CryptBuffer::read(KSecretsFile& file)
@@ -297,17 +295,24 @@ bool CryptBuffer::read(KSecretsFile& file)
 
 bool CryptBuffer::write(KSecretsFile& file)
 {
-    encrypt();
-    return file.write(encrypted_, len_);
+    if (file.write(len_)) {
+        syslog(KSS_LOG_DEBUG, "ksecrets: write: |%s|", decrypted_);
+        encrypt();
+        return file.write(encrypted_, len_);
+    }
+    else
+        return false;
 }
 
 bool CryptBuffer::decrypt() noexcept
 {
     if (len_ == 0)
         return false;
+    assert(encrypted_ != nullptr);
     decrypted_ = new char[len_];
     auto dres = kss_decrypt_buffer((unsigned char*)decrypted_, len_, iv, liv, (const unsigned char*)encrypted_, len_);
     if (dres == 0) {
+        syslog(KSS_LOG_DEBUG, "ksecrets: read decrypted: |%s|", decrypted_);
         setg(decrypted_, decrypted_, decrypted_ + len_);
         setp(decrypted_, decrypted_ + len_);
         return true;
@@ -322,25 +327,20 @@ bool CryptBuffer::encrypt() noexcept
 {
     if (len_ == 0)
         return false;
-
-    if (!dirty_)
-        return true; // no need to re-encrypt
-
-    if (encrypted_ == nullptr) {
-        encrypted_ = new char[len_];
-        if (encrypted_ == nullptr) {
-            return false;
-        }
-        gcry_create_nonce(encrypted_, len_);
-    }
-
     assert(decrypted_ != nullptr);
+
+    delete[] encrypted_;
+    encrypted_ = new char[len_];
+    if (encrypted_ == nullptr) {
+        return false;
+    }
+    gcry_create_nonce(encrypted_, len_);
+
     auto eres = kss_encrypt_buffer((unsigned char*)encrypted_, len_, iv, liv, (const unsigned char*)decrypted_, len_);
     if (eres != 0)
         return false;
     delete[] decrypted_, decrypted_ = nullptr;
     setp(nullptr, nullptr);
-    dirty_ = false;
     return true;
 }
 
@@ -387,8 +387,6 @@ CryptBuffer::int_type CryptBuffer::overflow(int_type c)
 
         *pptr() = c;
         pbump(sizeof(char_type));
-        if (!dirty_)
-            dirty_ = true;
     }
 
     return traits_type::to_int_type(c);

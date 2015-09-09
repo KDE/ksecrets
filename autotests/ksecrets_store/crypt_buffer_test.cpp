@@ -18,39 +18,32 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_CRYPT_H
-#define KSECRETS_CRYPT_H
 
-#include <sys/types.h>
-#include <streambuf>
+#include "crypt_buffer_test.h"
 
-class KSecretsFile;
+#include <ksecrets_store.h>
+#include <QtTest/QtTest>
 
-class CryptBuffer : public std::streambuf {
-public:
-    CryptBuffer();
-    CryptBuffer(CryptBuffer&&) = default;
-    ~CryptBuffer();
+QTEST_GUILESS_MAIN(CryptBufferTest)
 
+CryptBufferTest::CryptBufferTest() {}
+CryptBufferTest::~CryptBufferTest() {}
 
-    void empty() noexcept;
+void CryptBufferTest::initTestCase()
+{
+    KSecretsStore backend;
+    // auto setupfut =
+    // backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
+    // QVERIFY(setupfut.get());
+    auto credfut = backend.setCredentials(
+        "test", "ksecrets-test:crypt", "ksecrets-test:mac");
+    QVERIFY(credfut.get());
+}
 
-    bool read(KSecretsFile&);
-    bool write(KSecretsFile&);
+void CryptBufferTest::cleanupTestCase()
+{
+    // Nothing to do here for the moment
+}
 
-private:
-    int_type underflow() override;
-    int_type overflow(int_type) override;
-
-    bool decrypt() noexcept;
-    bool encrypt() noexcept;
-
-private:
-    static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
-    size_t len_; /// the length of both encrypted_ and decrypted_ buffers is the same
-    char* encrypted_;
-    char* decrypted_;
-};
-
-#endif
+void CryptBufferTest::testEncryptDecryptStream() {}
 // vim: tw=220:ts=4
