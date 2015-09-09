@@ -109,7 +109,7 @@ void CryptBufferTest::testEncryptDecryptStream()
     {
         CryptBuffer theBuffer;
         std::ostream os(&theBuffer);
-        os << testString.length() << ':' << testString;
+        os << testString;
         theBuffer.write(theDevice);
     }
 
@@ -125,10 +125,9 @@ void CryptBufferTest::testEncryptDecryptStream()
         is >> c;
         QVERIFY(c == ':');
 
-        char *readStringBytes = (char*)std::malloc(len +1);
-        memset(readStringBytes, 0, len +1);
-        is.getline(readStringBytes, len +1);
-        std::string readString(readStringBytes);
+        std::string readString;
+        is >> readString;
+
         QVERIFY(readString.compare(readString) == 0);
     }
 }

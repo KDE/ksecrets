@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <streambuf>
+#include <iostream>
 
 class KSecretsFile;
 
@@ -54,6 +55,10 @@ private:
     char* decrypted_;
     const char* iv_;
 };
+
+// operators for text-mode serialization
+std::ostream& operator << (std::ostream& os, const std::string& str);
+std::istream& operator >> (std::istream& is, std::string& str);
 
 #endif
 // vim: tw=220:ts=4

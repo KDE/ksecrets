@@ -383,4 +383,25 @@ CryptBuffer::int_type CryptBuffer::overflow(int_type c)
 
     return traits_type::to_int_type(c);
 }
+
+std::ostream& operator << (std::ostream& os, const std::string& str) {
+    os << ' ' << str.length() << ":";
+    os.write(str.c_str(), str.length());
+    return os;
+}
+
+std::istream& operator >> (std::istream& is, std::string& str) {
+    std::string::size_type len;
+    is >> len;
+    char c;
+    is >> c;
+    if (c != ':') {
+        is.fail();
+        return is;
+    }
+    str.resize(len, ' ');
+    char *bytes = &*str.begin();
+    is.read(bytes, len);
+    return is;
+}
 // vim: tw=220:ts=4
