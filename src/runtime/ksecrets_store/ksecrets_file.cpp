@@ -48,24 +48,20 @@ KSecretsFile::~KSecretsFile()
 {
     if (readFile_ != -1) {
         closeFile(readFile_);
-        readFile_ = -1;
     }
     if (writeFile_ != -1) {
         closeFile(writeFile_);
-        writeFile_ = -1;
     }
 }
 
-void KSecretsFile::closeFile(int f) noexcept
+void KSecretsFile::closeFile(int& f) noexcept
 {
     auto r = close(f);
     if (r == -1) {
-        syslog(KSS_LOG_ERR, "ksecrets: system return erro upon secrets "
-                            "file close: %d",
-            errno);
-        syslog(KSS_LOG_ERR, "ksecrets: the secrets file might now be "
-                            "corrup because of the previous error");
+        syslog(KSS_LOG_ERR, "ksecrets: system return erro upon secrets file close: %d", errno);
+        syslog(KSS_LOG_ERR, "ksecrets: the secrets file might now be corrupt because of the previous error");
     }
+    f = -1;
 }
 
 int KSecretsFile::create(const std::string& path) noexcept
@@ -97,7 +93,6 @@ int KSecretsFile::create(const std::string& path) noexcept
 bool KSecretsFile::save() noexcept
 {
     assert(writeFile_ == -1);
-    assert(readFile_ != -1);
 
     const char* pattern = "ksecrets-XXXXXX";
     char* tmpfilename = new char[strlen(pattern) + 1];
@@ -117,26 +112,29 @@ bool KSecretsFile::save() noexcept
         return false;
     }
 
-    if (!write(&fileHead_, sizeof(fileHead_))) {
+    if (!writeHeader()) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot write file header errno=%d", errno);
+        closeFile(writeFile_);
         return false;
     }
 
-    bool res = true;
     long count = std::count_if(entities_.cbegin(), entities_.cend(), [](SecretsEntityPtr) { return true; });
     if (!write(&count, sizeof(count))) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot write entity count errno=%d", errno);
+        closeFile(writeFile_);
         return false;
     }
 
     for (SecretsEntityPtr entity : entities_) {
         if (!saveEntity(entity)) {
+            closeFile(writeFile_);
             return false;
         }
     }
 
     if (!mac_.write(*this)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot write file MAC errno=%d", errno);
+        closeFile(writeFile_);
         return false;
     }
 
@@ -149,11 +147,7 @@ bool KSecretsFile::save() noexcept
         return false;
     }
 
-    if (!res) {
-        closeFile(writeFile_);
-        writeFile_ = -1;
-        return false;
-    }
+    closeFile(writeFile_);
 
     // OK that worked, now replace the current file with the temp file
     return backupAndReplaceWithWritten(tempWrittenFile);
@@ -176,6 +170,7 @@ bool KSecretsFile::saveEntity(SecretsEntityPtr entity)
 bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcept
 {
     closeFile(readFile_);
+
     char backupPath[PATH_MAX];
     snprintf(backupPath, PATH_MAX, "%s.bkp", filePath_.c_str());
     auto rres = rename(filePath_.c_str(), backupPath);
@@ -206,7 +201,7 @@ bool KSecretsFile::readAndCheck() noexcept
     mac_.reset();
 
     long entityCount = 0;
-    if (::read(readFile_, &entityCount, sizeof(entityCount)) < (ssize_t)sizeof(entityCount)) {
+    if (!read(&entityCount, sizeof(entityCount))) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read the secrets file errno=%d", errno);
         return false;
     }
@@ -285,11 +280,9 @@ bool KSecretsFile::lock() noexcept
     return res;
 }
 
-bool KSecretsFile::readHeader() noexcept
-{
-    auto rres = ::read(readFile_, &fileHead_, sizeof(fileHead_));
-    return rres == sizeof(fileHead_);
-}
+bool KSecretsFile::readHeader() noexcept { return read(&fileHead_, sizeof(fileHead_)); }
+
+bool KSecretsFile::writeHeader() noexcept { return write(&fileHead_, sizeof(fileHead_)); }
 
 bool KSecretsFile::checkMagic() noexcept
 {
@@ -316,6 +309,7 @@ bool KSecretsFile::write(const void* buf, size_t len)
         syslog(KSS_LOG_ERR, "ksecrets: cannot write all data to file. Disk full?");
         return setFailState(ENOSPC);
     }
+    syslog(KSS_LOG_INFO, "ksecrets: write offset is now %ld", lseek(writeFile_, 0, SEEK_CUR));
     return mac_.update(buf, len);
 }
 
@@ -330,6 +324,7 @@ bool KSecretsFile::read(void* buf, size_t len)
         return setFailState(errno);
     if (static_cast<size_t>(rres) < len)
         return setEOF(); // are we @ EOF?
+    syslog(KSS_LOG_INFO, "ksecrets: read offset is now %ld", lseek(readFile_, 0, SEEK_CUR));
     return mac_.update(buf, len);
 }
 

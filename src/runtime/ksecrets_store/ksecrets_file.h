@@ -64,6 +64,7 @@ public:
     bool saveEntity(SecretsEntityPtr);
     bool lock() noexcept;
     bool readHeader() noexcept;
+    bool writeHeader() noexcept;
     bool checkMagic() noexcept;
     const char* salt() const noexcept { return fileHead_.salt_; }
     const char* iv() const noexcept { return fileHead_.iv_; }
@@ -98,7 +99,7 @@ private:
         return false; // this work the same as setFailState
     }
     bool decryptEntity(SecretsEntity&) noexcept;
-    void closeFile(int) noexcept;
+    void closeFile(int&) noexcept;
     bool backupAndReplaceWithWritten(const char*) noexcept;
 
     struct MAC {

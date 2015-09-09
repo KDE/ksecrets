@@ -193,7 +193,7 @@ long kss_cipher_setup(gcry_cipher_hd_t* hd, const void* iv, size_t liv)
     char encryptingKey[KSECRETS_KEYSIZE];
     auto keyres = kss_read_encrypting_key(encryptingKey, sizeof(encryptingKey) / sizeof(encryptingKey[0]));
     assert(keyres <= 0); // if positive result, then the handed buffer size is not sufficient
-    if (keyres <0) {
+    if (keyres < 0) {
         syslog(KSS_LOG_ERR, "ksecrets: encrypting key not found in the keyring");
         return keyres;
     }
@@ -364,30 +364,33 @@ CryptBuffer::int_type CryptBuffer::overflow(int_type c)
         return c;
 
     if (pptr() == epptr()) {
-        char* oldBuffer = decrypted_;
         size_t oldLen = len_;
-        size_t oldppos = egptr() - gptr();
+        size_t oldgpos = gptr() - eback();
 
         len_ += cipherBlockLen_;
-        decrypted_ = new char[len_];
-        if (decrypted_ != nullptr) {
-            gcry_create_nonce((unsigned char*)decrypted_, len_);
-            if (oldBuffer != nullptr) {
-                memmove(decrypted_, oldBuffer, oldLen);
-            }
+        if (decrypted_ == nullptr) {
+            decrypted_ = (char*)std::malloc(len_);
         }
         else {
-            return traits_type::eof();
+            decrypted_ = (char*)std::realloc(decrypted_, len_);
+            if (decrypted_ == nullptr) {
+                syslog(KSS_LOG_ERR, "ksecrets: cannot extend crypt buffer");
+                setp(nullptr, nullptr);
+                return traits_type::eof();
+            }
         }
+        // fill the not yet used area with random data
+        gcry_create_nonce((unsigned char*)decrypted_ + oldLen, cipherBlockLen_);
 
-        setp(decrypted_, decrypted_ + oldLen);
-        setg(decrypted_, decrypted_ + oldppos, decrypted_ + len_);
+        setp(decrypted_ + oldLen, decrypted_ + len_);
+        setg(decrypted_, decrypted_ + oldgpos, decrypted_ + len_);
+
+        *pptr() = c;
+        pbump(sizeof(char_type));
+        if (!dirty_)
+            dirty_ = true;
     }
 
-    *pptr() = c;
-    pbump(sizeof(c));
-    if (!dirty_)
-        dirty_ = true;
-    return c;
+    return traits_type::to_int_type(c);
 }
 // vim: tw=220:ts=4
