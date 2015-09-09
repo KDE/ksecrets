@@ -22,6 +22,7 @@
 #define KSECRETS_FILE_H
 
 #include "ksecrets_data.h"
+#include "ksecrets_device.h"
 
 #include <memory>
 #include <deque>
@@ -32,13 +33,11 @@
 /**
  * @brief This is the secrets file format handling class
  */
-class KSecretsFile {
+class KSecretsFile : public KSecretsDevice {
 public:
     KSecretsFile();
     ~KSecretsFile();
 
-    constexpr static auto IV_SIZE = 32;
-    constexpr static auto SALT_SIZE = 56;
     struct FileHeadStruct {
         char magic_[9];
         char salt_[SALT_SIZE];
@@ -67,13 +66,13 @@ public:
     bool writeHeader() noexcept;
     bool checkMagic() noexcept;
     const char* salt() const noexcept { return fileHead_.salt_; }
-    const char* iv() const noexcept { return fileHead_.iv_; }
-    bool read(void* buf, size_t count);
-    bool read(size_t&);
+    virtual const char* iv() const noexcept override { return fileHead_.iv_; }
+    virtual bool read(void* buf, size_t count) noexcept override;
+    virtual bool read(size_t&) noexcept override;
     int errnumber() const noexcept { return errno_; }
     bool eof() const noexcept { return eof_; }
-    bool write(const void* buf, size_t count);
-    bool write(size_t len);
+    virtual bool write(const void* buf, size_t count) noexcept override;
+    virtual bool write(size_t len) noexcept override;
 
     template <class E> bool emplace_entity(E&& e) noexcept {
         entities_.emplace_back(e);

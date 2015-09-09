@@ -292,9 +292,9 @@ bool KSecretsFile::checkMagic() noexcept
     return true;
 }
 
-bool KSecretsFile::write(size_t s) { return write(&s, sizeof(size_t)); }
+bool KSecretsFile::write(size_t s) noexcept { return write(&s, sizeof(size_t)); }
 
-bool KSecretsFile::write(const void* buf, size_t len)
+bool KSecretsFile::write(const void* buf, size_t len) noexcept
 {
     assert(writeFile_ != -1);
     auto wres = ::write(writeFile_, buf, len);
@@ -313,9 +313,9 @@ bool KSecretsFile::write(const void* buf, size_t len)
     return mac_.update(buf, len);
 }
 
-bool KSecretsFile::read(size_t& s) { return read(&s, sizeof(s)); }
+bool KSecretsFile::read(size_t& s) noexcept { return read(&s, sizeof(s)); }
 
-bool KSecretsFile::read(void* buf, size_t len)
+bool KSecretsFile::read(void* buf, size_t len) noexcept
 {
     if (eof_)
         return false;

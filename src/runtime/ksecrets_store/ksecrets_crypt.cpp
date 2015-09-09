@@ -233,12 +233,6 @@ long kss_decrypt_buffer(unsigned char* out, size_t lout, const void* iv, size_t 
     return 0;
 }
 
-// TODO refactor this when encrypting plugins will be put in place
-// the KSecretsFile should place the IV in the plugin structure instead of
-// this class
-const char* iv = nullptr;
-size_t liv = KSecretsFile::IV_SIZE;
-
 CryptBuffer::CryptBuffer()
     : len_(0)
     , encrypted_(nullptr)
@@ -263,13 +257,10 @@ void CryptBuffer::empty() noexcept
     setp(nullptr, nullptr);
 }
 
-bool CryptBuffer::read(KSecretsFile& file)
+bool CryptBuffer::read(KSecretsDevice& file)
 {
-    if (iv == nullptr) {
-        iv = file.iv();
-    }
-
     empty();
+    iv_ = file.iv();
 
     if (!file.read(len_))
         return false;
@@ -293,10 +284,11 @@ bool CryptBuffer::read(KSecretsFile& file)
     return true;
 }
 
-bool CryptBuffer::write(KSecretsFile& file)
+bool CryptBuffer::write(KSecretsDevice& file)
 {
     if (file.write(len_)) {
         syslog(KSS_LOG_DEBUG, "ksecrets: write: |%s|", decrypted_);
+        iv_ = file.iv();
         encrypt();
         return file.write(encrypted_, len_);
     }
@@ -310,7 +302,7 @@ bool CryptBuffer::decrypt() noexcept
         return false;
     assert(encrypted_ != nullptr);
     decrypted_ = new char[len_];
-    auto dres = kss_decrypt_buffer((unsigned char*)decrypted_, len_, iv, liv, (const unsigned char*)encrypted_, len_);
+    auto dres = kss_decrypt_buffer((unsigned char*)decrypted_, len_, iv_, KSecretsFile::IV_SIZE, (const unsigned char*)encrypted_, len_);
     if (dres == 0) {
         syslog(KSS_LOG_DEBUG, "ksecrets: read decrypted: |%s|", decrypted_);
         setg(decrypted_, decrypted_, decrypted_ + len_);
@@ -336,7 +328,7 @@ bool CryptBuffer::encrypt() noexcept
     }
     gcry_create_nonce(encrypted_, len_);
 
-    auto eres = kss_encrypt_buffer((unsigned char*)encrypted_, len_, iv, liv, (const unsigned char*)decrypted_, len_);
+    auto eres = kss_encrypt_buffer((unsigned char*)encrypted_, len_, iv_, KSecretsFile::IV_SIZE, (const unsigned char*)decrypted_, len_);
     if (eres != 0)
         return false;
     delete[] decrypted_, decrypted_ = nullptr;

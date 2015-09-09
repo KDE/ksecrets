@@ -3,8 +3,10 @@ include(ECMMarkAsTest)
 include(ECMAddTests)
 
 find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Test)
+find_package(LibGcrypt 1.6.0 REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions" )
 
 if(NOT Qt5Test_FOUND)
     message(STATUS "Qt5Test not found, autotests will not be built.")
@@ -21,5 +23,10 @@ ecm_add_test(
 
 ecm_add_test(
     crypt_buffer_test.cpp
-    LINK_LIBRARIES Qt5::Test KF5::CoreAddons KF5::ConfigCore ksecrets_store
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_crypt.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_store.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_file.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_data.cpp
+    LINK_LIBRARIES Qt5::Test KF5::CoreAddons KF5::ConfigCore ksecrets_store ${LIBGCRYPT_LIBRARIES}
+    TEST_NAME crypt_buffer_test
 )

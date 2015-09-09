@@ -18,42 +18,24 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_CRYPT_H
-#define KSECRETS_CRYPT_H
+#ifndef KSECRETS_DEVICE_H
+#define KSECRETS_DEVICE_H
 
-#include "ksecrets_device.h"
-
-#include <sys/types.h>
-#include <streambuf>
-
-class KSecretsFile;
-
-class CryptBuffer : public std::streambuf {
+#include <memory>
+/**
+ * @brief This class acts as an interface to allow testing the CryptBuffer
+ */
+class KSecretsDevice {
 public:
-    CryptBuffer();
-    CryptBuffer(CryptBuffer&&) = default;
-    ~CryptBuffer();
+    constexpr static auto IV_SIZE = 8;
+    constexpr static auto SALT_SIZE = 56;
 
-
-    void empty() noexcept;
-
-    bool read(KSecretsDevice&);
-    bool write(KSecretsDevice&);
-
-private:
-    int_type underflow() override;
-    int_type overflow(int_type) override;
-
-    bool decrypt() noexcept;
-    bool encrypt() noexcept;
-
-private:
-    static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
-    size_t len_; /// the length of both encrypted_ and decrypted_ buffers is the same
-    char* encrypted_;
-    char* decrypted_;
-    const char* iv_;
+    virtual ~KSecretsDevice() = default;
+    virtual const char* iv() const noexcept =0;
+    virtual bool read(void* buf, size_t count) noexcept = 0;
+    virtual bool read(size_t&) noexcept =0;
+    virtual bool write(const void* buf, size_t count) noexcept = 0;
+    virtual bool write(size_t len) noexcept =0;
 };
 
 #endif
-// vim: tw=220:ts=4
