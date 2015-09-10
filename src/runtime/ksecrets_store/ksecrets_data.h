@@ -21,7 +21,7 @@
 #ifndef KSECRETS_DATA_H
 #define KSECRETS_DATA_H
 
-#include "ksecrets_crypt.h"
+#include "crypt_buffer.h"
 
 #include <cstdint>
 #include <sys/types.h>

@@ -18,8 +18,8 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_CRYPT_H
-#define KSECRETS_CRYPT_H
+#ifndef CRYPT_BUFFER_H
+#define CRYPT_BUFFER_H
 
 #include "ksecrets_device.h"
 

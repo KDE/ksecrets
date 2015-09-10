@@ -20,7 +20,7 @@
 */
 
 #include "defines.h"
-#include "ksecrets_crypt.h"
+#include "crypt_buffer.h"
 #include "ksecrets_file.h"
 #include "crypting_engine.h"
 

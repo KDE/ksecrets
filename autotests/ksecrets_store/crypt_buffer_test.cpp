@@ -21,7 +21,7 @@
 
 #include "crypt_buffer_test.h"
 
-#include <ksecrets_crypt.h>
+#include <crypt_buffer.h>
 #include <ksecrets_store.h>
 #include <ksecrets_file.h>
 #include <QtTest/QtTest>

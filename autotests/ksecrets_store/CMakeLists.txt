@@ -23,7 +23,7 @@ ecm_add_test(
 
 ecm_add_test(
     crypt_buffer_test.cpp
-    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_crypt.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/crypt_buffer.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_store.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_file.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_data.cpp
@@ -36,7 +36,7 @@ ecm_add_test(
     ksecrets_file_test.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_file.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_data.cpp
-    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_crypt.cpp
+    ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/crypt_buffer.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/ksecrets_store.cpp
     ${CMAKE_SOURCE_DIR}/src/runtime/ksecrets_store/crypting_engine.cpp
     LINK_LIBRARIES Qt5::Test KF5::CoreAddons KF5::ConfigCore ksecrets_store ${LIBGCRYPT_LIBRARIES}

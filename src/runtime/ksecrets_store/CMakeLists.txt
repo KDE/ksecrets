@@ -12,7 +12,7 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KSECRETS_BACKEND
 set(ksecrets_store_SRC
     ksecrets_data.cpp
     ksecrets_file.cpp
-    ksecrets_crypt.cpp
+    crypt_buffer.cpp
     pam_credentials.cpp
     ksecrets_store.cpp
     crypting_engine.cpp)
