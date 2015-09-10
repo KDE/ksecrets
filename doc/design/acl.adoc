@@ -1,0 +1,8 @@
+= Managing ACL
+
+
+Before reading or otherwise manipulate secrets, an application should first open a session (login) with the KSecret Service.
+
+
+Application1 =(cookie)=> KSS =(cookie)=> Application1/GetSecretKey
+
