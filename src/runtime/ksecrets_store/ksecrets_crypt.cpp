@@ -257,7 +257,7 @@ void CryptBuffer::empty() noexcept
     setp(nullptr, nullptr);
 }
 
-bool CryptBuffer::read(KSecretsDevice& file)
+bool CryptBuffer::read(KSecretsDevice& file) noexcept
 {
     empty();
     iv_ = file.iv();
@@ -284,7 +284,7 @@ bool CryptBuffer::read(KSecretsDevice& file)
     return true;
 }
 
-bool CryptBuffer::write(KSecretsDevice& file)
+bool CryptBuffer::write(KSecretsDevice& file) noexcept
 {
     if (file.write(len_)) {
         syslog(KSS_LOG_DEBUG, "ksecrets: write: |%s|", decrypted_);
