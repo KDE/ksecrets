@@ -14,7 +14,8 @@ set(ksecrets_store_SRC
     ksecrets_file.cpp
     ksecrets_crypt.cpp
     pam_credentials.cpp
-    ksecrets_store.cpp)
+    ksecrets_store.cpp
+    crypting_engine.cpp)
 
 add_library(ksecrets_store SHARED ${ksecrets_store_SRC})
 generate_export_header(ksecrets_store BASE_NAME ksecrets_store)

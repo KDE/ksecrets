@@ -23,6 +23,7 @@
 #include "ksecrets_store_p.h"
 #include "ksecrets_file.h"
 #include "ksecrets_data.h"
+#include "crypting_engine.h"
 #include "defines.h"
 
 #include <future>
@@ -118,11 +119,12 @@ std::future<KSecretsStore::CredentialsResult> KSecretsStore::setCredentials(cons
 KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std::string& password) noexcept
 {
     using Result = KSecretsStore::CredentialsResult;
-    if (!kss_init_gcry()) {
+    CryptingEngine &cryengine = CryptingEngine::instance();
+    if (!cryengine.isValid()) {
         return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotInitGcrypt, -1));
     }
-    auto res = kss_set_credentials(password, salt());
-    if (0 == res) {
+    auto res = cryengine.setCredentials(password, salt());
+    if (!res) {
         return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotDeriveKeys, res));
     }
     return setStoreStatus(Result(KSecretsStore::StoreStatus::CredentialsSet, 0));
