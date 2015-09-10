@@ -18,32 +18,33 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_DEVICE_H
-#define KSECRETS_DEVICE_H
 
-#include <memory>
-/**
- * @brief This class acts as an interface to allow testing the CryptBuffer
- */
-class KSecretsDevice {
-public:
-    constexpr static auto IV_SIZE = 8;
-    constexpr static auto SALT_SIZE = 56;
+#include "ksecrets_file_test.h"
 
-    virtual ~KSecretsDevice() = default;
-    virtual const char* iv() const noexcept = 0;
+#include <ksecrets_file.h>
+#include <ksecrets_store.h>
+#include <QtTest/QtTest>
+#include <stdlib.h>
 
-    virtual bool read(void* buf, size_t count) noexcept = 0;
-    template <typename T> bool read(T& s) noexcept
-    {
-        return read(&s, sizeof(s));
-    }
+QTEST_GUILESS_MAIN(KSecretsFileTest)
 
-    virtual bool write(const void* buf, size_t count) noexcept = 0;
-    template <typename T> bool write(T t) noexcept
-    {
-        return write(&t, sizeof(t));
-    }
-};
+KSecretsFileTest::KSecretsFileTest() {}
+KSecretsFileTest::~KSecretsFileTest() {}
 
-#endif
+void KSecretsFileTest::initTestCase()
+{
+    KSecretsStore backend;
+    auto credfut = backend.setCredentials("test", "ksecrets-test:crypt", "ksecrets-test:mac");
+    QVERIFY(credfut.get());
+}
+
+void KSecretsFileTest::testIntegrityCheck()
+{
+    const char* TEST_FILE_NAME = "ksecrets_file_test_tmp.data";
+
+    KSecretsFile theFile;
+    theFile.create(TEST_FILE_NAME);
+    theFile.setup(TEST_FILE_NAME, false);
+    QVERIFY(theFile.openAndCheck() == KSecretsFile::OpenStatus::Ok);
+}
+// vim: tw=220:ts=4

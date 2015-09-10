@@ -71,6 +71,7 @@ int KSecretsFile::create(const std::string& path) noexcept
         return errno;
     }
 
+    MAC mac;
     FileHeadStruct emptyFileData;
     memcpy(emptyFileData.magic_, fileMagic, fileMagicLen);
 
@@ -94,6 +95,48 @@ bool KSecretsFile::save() noexcept
 {
     assert(writeFile_ == -1);
 
+    if (!openSaveTempFile()) {
+        return false;
+    }
+
+    if (!writeHeader()) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write file header errno=%d", errno);
+        closeFile(writeFile_);
+        return false;
+    }
+
+    size_t count = std::count_if(entities_.cbegin(), entities_.cend(), [](SecretsEntityPtr) { return true; });
+    if (!base_class::template write(count)) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write entity count errno=%d", errno);
+        closeFile(writeFile_);
+        return false;
+    }
+
+    for (SecretsEntityPtr entity : entities_) {
+        if (!saveEntity(entity)) {
+            closeFile(writeFile_);
+            return false;
+        }
+    }
+
+    if (!saveMac()) return false;
+
+    char lnpath[PATH_MAX];
+    snprintf(lnpath, PATH_MAX, "/proc/self/fd/%d", writeFile_);
+    char tempWrittenFile[PATH_MAX];
+    auto rlink = readlink(lnpath, tempWrittenFile, PATH_MAX - 1);
+    if (rlink == -1) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d", errno);
+        return false;
+    }
+
+    closeFile(writeFile_);
+
+    // OK that worked, now replace the current file with the temp file
+    return backupAndReplaceWithWritten(tempWrittenFile);
+}
+
+bool KSecretsFile::openSaveTempFile() noexcept {
     const char* pattern = "ksecrets-XXXXXX";
     char* tmpfilename = new char[strlen(pattern) + 1];
     strcpy(tmpfilename, pattern);
@@ -112,51 +155,22 @@ bool KSecretsFile::save() noexcept
         return false;
     }
 
-    if (!writeHeader()) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write file header errno=%d", errno);
-        closeFile(writeFile_);
-        return false;
-    }
+    return true;
+}
 
-    long count = std::count_if(entities_.cbegin(), entities_.cend(), [](SecretsEntityPtr) { return true; });
-    if (!write(&count, sizeof(count))) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write entity count errno=%d", errno);
-        closeFile(writeFile_);
-        return false;
-    }
-
-    for (SecretsEntityPtr entity : entities_) {
-        if (!saveEntity(entity)) {
-            closeFile(writeFile_);
-            return false;
-        }
-    }
-
+bool KSecretsFile::saveMac() noexcept {
     if (!mac_.write(*this)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot write file MAC errno=%d", errno);
         closeFile(writeFile_);
         return false;
     }
-
-    char lnpath[PATH_MAX];
-    snprintf(lnpath, PATH_MAX, "/proc/self/fd/%d", writeFile_);
-    char tempWrittenFile[PATH_MAX];
-    auto rlink = readlink(lnpath, tempWrittenFile, PATH_MAX - 1);
-    if (rlink == -1) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d", errno);
-        return false;
-    }
-
-    closeFile(writeFile_);
-
-    // OK that worked, now replace the current file with the temp file
-    return backupAndReplaceWithWritten(tempWrittenFile);
+    return true;
 }
 
 bool KSecretsFile::saveEntity(SecretsEntityPtr entity)
 {
-    SecretsEntity::EntityType et = entity->getType();
-    if (!write(&et, sizeof(et))) {
+    auto et = (std::uint8_t)entity->getType();
+    if (!base_class::template write(et)) {
         return false;
     }
     if (!entity->write(*this)) {
@@ -192,16 +206,15 @@ bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcep
     return true;
 }
 
-bool KSecretsFile::readAndCheck() noexcept
+bool KSecretsFile::readEntities() noexcept
 {
     assert(readFile_ != -1);
     if (!entities_.empty()) {
         entities_.clear();
     }
-    mac_.reset();
 
-    long entityCount = 0;
-    if (!read(&entityCount, sizeof(entityCount))) {
+    size_t entityCount = 0;
+    if (!base_class::template read(entityCount)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read the secrets file errno=%d", errno);
         return false;
     }
@@ -211,23 +224,25 @@ bool KSecretsFile::readAndCheck() noexcept
             return false;
         }
     }
+    return true;
+}
 
-    if (entities_.size() && !mac_.check(*this)) {
+bool KSecretsFile::readCheckMac() noexcept {
+    if (!mac_.check(*this)) {
         syslog(KSS_LOG_ERR, "ksecrets: MAC check error, the file is corrupted or someone tampered with it");
         return false;
     }
-
     return true;
 }
 
 bool KSecretsFile::readNextEntity() noexcept
 {
-    SecretsEntity::EntityType et;
-    if (!read(&et, sizeof(et))) {
+    std::uint8_t et;
+    if (!base_class::template read(et)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read next entities type");
         return false;
     }
-    SecretsEntityPtr entity = SecretsEntityFactory::createInstance(et);
+    SecretsEntityPtr entity = SecretsEntityFactory::createInstance((SecretsEntity::EntityType)et);
     if (!entity->read(*this)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read next entity");
         return false;
@@ -252,6 +267,7 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: cannot lock file %s", filePath_.c_str());
         return OpenStatus::CannotLockFile;
     }
+    mac_.reset();
     if (!readHeader()) {
         syslog(KSS_LOG_ERR, "ksecrets: failed to read header from file %s", filePath_.c_str());
         return OpenStatus::CannotReadHeader;
@@ -260,7 +276,11 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: magic check failed for file %s", filePath_.c_str());
         return OpenStatus::UnknownHeader;
     }
-    if (!readAndCheck()) {
+    if (!readEntities()) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot read entities from file %s", filePath_.c_str());
+        return OpenStatus::EntitiesReadError;
+    }
+    if (!readCheckMac()) {
         syslog(KSS_LOG_ERR, "ksecrets: integrity check failed for file %s", filePath_.c_str());
         return OpenStatus::IntegrityCheckFailed;
     }
@@ -292,8 +312,6 @@ bool KSecretsFile::checkMagic() noexcept
     return true;
 }
 
-bool KSecretsFile::write(size_t s) noexcept { return write(&s, sizeof(size_t)); }
-
 bool KSecretsFile::write(const void* buf, size_t len) noexcept
 {
     assert(writeFile_ != -1);
@@ -312,8 +330,6 @@ bool KSecretsFile::write(const void* buf, size_t len) noexcept
     syslog(KSS_LOG_INFO, "ksecrets: W offset %ld", lseek(writeFile_, 0, SEEK_CUR));
     return mac_.update(buf, len);
 }
-
-bool KSecretsFile::read(size_t& s) noexcept { return read(&s, sizeof(s)); }
 
 bool KSecretsFile::read(void* buf, size_t len) noexcept
 {
@@ -340,6 +356,7 @@ bool KSecretsFile::remove_entity(SecretsEntityPtr entity)
 }
 
 KSecretsFile::MAC::MAC()
+    : ignore_updates_(false)
 {
     auto gcryerr = gcry_mac_open(&hd_, GCRY_MAC_HMAC_SHA512, 0, 0);
     if (gcryerr) {
@@ -390,6 +407,10 @@ bool KSecretsFile::MAC::reset() noexcept
 
 bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
 {
+    if (!valid_)
+        return false;
+    if (ignore_updates_)
+        return true;
     auto gcryerr = gcry_mac_write(hd_, buffer, len);
     if (gcryerr) {
         syslog(KSS_LOG_ERR, "updating MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
@@ -421,8 +442,20 @@ bool KSecretsFile::MAC::write(KSecretsFile& file)
     return true;
 }
 
+template <bool INIT>
+struct AutoBool {
+    explicit AutoBool(bool& b)
+        : b_(b)
+    {
+        b_ = INIT;
+    }
+    ~AutoBool() { b_ = !INIT; }
+    bool& b_;
+};
+
 bool KSecretsFile::MAC::check(KSecretsFile& file)
 {
+    AutoBool<true> ignoreUpdates(ignore_updates_); // prevent reading MAC from the file updating us, if not we'll be unable to check
     size_t len = 0;
     if (!file.read(&len, sizeof(len))) {
         syslog(KSS_LOG_ERR, "Cannot read MAC len");

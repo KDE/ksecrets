@@ -54,7 +54,6 @@ public:
     CryptBuffer(CryptBuffer&&) = default;
     ~CryptBuffer();
 
-
     void empty() noexcept;
 
     bool read(KSecretsDevice&) noexcept;
@@ -69,15 +68,15 @@ private:
 
 private:
     static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
-    size_t len_; /// the length of both encrypted_ and decrypted_ buffers is the same
+    size_t len_;                                 /// the length of both encrypted_ and decrypted_ buffers is the same
     char* encrypted_;
     char* decrypted_;
     const char* iv_;
 };
 
 // operators for text-mode serialization
-std::ostream& operator << (std::ostream& os, const std::string& str);
-std::istream& operator >> (std::istream& is, std::string& str);
+std::ostream& operator<<(std::ostream& os, const std::string& str);
+std::istream& operator>>(std::istream& is, std::string& str);
 
 #endif
 // vim: tw=220:ts=4

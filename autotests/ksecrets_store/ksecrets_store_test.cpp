@@ -47,6 +47,7 @@ void KSecretServiceStoreTest::initTestCase()
     secretsFilePath += QLatin1Literal("/ksecrets-test.data");
     qDebug() << "secrets store path: " << secretsFilePath;
     // create a test file here and performe the real open test below
+    QDir::home().remove(secretsFilePath); // remove the previous test on, if present
     KSecretsStore backend;
     auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
     QVERIFY(setupfut.get());
@@ -132,10 +133,10 @@ void KSecretServiceStoreTest::testReadCollection()
     QVERIFY(coll->label() == collName2);
 }
 
-const char *itemName1 = "item1";
-const char *itemName2 = "item2";
-const char *itemName3 = "item3";
-const char *itemNamesWildcard = "item*";
+const char* itemName1 = "item1";
+const char* itemName2 = "item2";
+const char* itemName3 = "item3";
+const char* itemNamesWildcard = "item*";
 KSecretsStore::ItemValue emptyValue;
 
 void KSecretServiceStoreTest::testCreateItem()
@@ -221,7 +222,8 @@ void KSecretServiceStoreTest::testSearchItem()
     QVERIFY(list1.front()->label() == itemName3);
 }
 
-void KSecretServiceStoreTest::testItem() {
+void KSecretServiceStoreTest::testItem()
+{
     KSecretsStore backend;
     auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
     // this test expends previous testCreateItem put in some items in collection named collName1
@@ -244,7 +246,7 @@ void KSecretServiceStoreTest::testItem() {
     QVERIFY(item->setLabel(newLabel1));
     QVERIFY(item->label() == newLabel1);
 
-    const char *newContentType = "changed-content-type";
+    const char* newContentType = "changed-content-type";
     std::string newContents = "some other contents";
     auto val = item->value();
     val.contentType = newContentType;
@@ -253,7 +255,6 @@ void KSecretServiceStoreTest::testItem() {
 
     auto val1 = item->value();
     QVERIFY(val1 == val);
-
 }
 
 void KSecretServiceStoreTest::testItemModifyFailOnReadonly()
@@ -284,7 +285,8 @@ void KSecretServiceStoreTest::testItemModifyFailOnReadonly()
     QVERIFY(!item->setAttributes(attrs));
 }
 
-void KSecretServiceStoreTest::testDeleteItem() {
+void KSecretServiceStoreTest::testDeleteItem()
+{
     KSecretsStore backend;
     auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
 
@@ -305,7 +307,8 @@ void KSecretServiceStoreTest::testDeleteItem() {
     QVERIFY(il1.size() == 0);
 }
 
-void KSecretServiceStoreTest::testDeleteItemFailOnReadonly() {
+void KSecretServiceStoreTest::testDeleteItemFailOnReadonly()
+{
     KSecretsStore backend;
     auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData());
 

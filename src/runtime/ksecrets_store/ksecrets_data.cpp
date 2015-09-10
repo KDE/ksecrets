@@ -62,7 +62,6 @@ bool SecretsEntity::write(KSecretsFile& file) noexcept
     if (!doBeforeWrite(os) || !os.good())
         return false;
 
-    os.put(0);
     if (!buffer_.write(file)) {
         doOnWriteError();
         return false;
@@ -111,7 +110,7 @@ bool CollectionDirectory::doBeforeWrite(std::ostream& os) noexcept
 {
     os << ' ' << entries_.size();
     for (const std::string& entry : entries_) {
-        os << entry.length() << " " << entry;
+        os << entry;
     }
     return true;
 }
@@ -121,10 +120,8 @@ bool CollectionDirectory::doAfterRead(std::istream& is) noexcept
     Entries::size_type n;
     is >> n;
     for (Entries::size_type i = 0; i < n; i++) {
-        size_t entryLen;
-        is >> entryLen;
         std::string entry;
-        is >> std::setw(entryLen) >> entry;
+        is >> entry;
         entries_.emplace_back(entry);
     }
     return true;
@@ -134,7 +131,7 @@ void SecretsCollection::setName(const std::string& name) noexcept { name_ = name
 
 bool SecretsCollection::doBeforeWrite(std::ostream& os) noexcept
 {
-    os << name_.length() << ' ' << name_;
+    os << name_;
     os << ' ' << items_.size();
     for (SecretsItemPtr item : items_) {
     }
@@ -143,9 +140,7 @@ bool SecretsCollection::doBeforeWrite(std::ostream& os) noexcept
 
 bool SecretsCollection::doAfterRead(std::istream& is) noexcept
 {
-    size_t strLen;
-    is >> strLen;
-    is >> std::setw(strLen) >> name_;
+    is >> name_;
     Items::size_type nItems;
     is >> nItems;
     return false;

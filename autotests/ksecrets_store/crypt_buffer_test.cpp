@@ -74,7 +74,6 @@ public:
         gptr_ += count;
         return true;
     }
-    virtual bool read(size_t& s) noexcept { return read(&s, sizeof(s)); }
     virtual bool write(const void* buf, size_t count) noexcept
     {
         auto oldppos = pptr_ - buffer_;
@@ -90,7 +89,6 @@ public:
         pptr_ += count;
         return true;
     }
-    virtual bool write(size_t len) noexcept { return write(&len, sizeof(len)); }
 
 private:
     char* iv_;

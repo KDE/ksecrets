@@ -13,7 +13,7 @@ set(ksecrets_store_SRC
     ksecrets_data.cpp
     ksecrets_file.cpp
     ksecrets_crypt.cpp
-    ksecrets_credentials.cpp
+    pam_credentials.cpp
     ksecrets_store.cpp)
 
 add_library(ksecrets_store SHARED ${ksecrets_store_SRC})

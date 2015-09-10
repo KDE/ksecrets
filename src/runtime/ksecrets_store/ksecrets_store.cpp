@@ -155,7 +155,7 @@ KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile) noexcept
     if (!secretsFile_.checkMagic()) {
         return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile, -1));
     }
-    if (!secretsFile_.readAndCheck()) {
+    if (!secretsFile_.readEntities() || !secretsFile_.readCheckMac()) {
         return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile));
     }
     return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::Good, 0));
@@ -211,7 +211,7 @@ bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::
 {
     bool res = false; // an existing collection with same name already exists or some other sync error
     auto dir = collectionsDir(file);
-    if (dir){
+    if (dir) {
         if (!dir->hasEntry(collName)) {
             collection_data_ = std::make_shared<SecretsCollection>();
             collection_data_->setName(collName);
@@ -221,7 +221,8 @@ bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::
         else {
             syslog(KSS_LOG_INFO, "ksecrets: a collection named '%s' already exists", collName.c_str());
         }
-    } else {
+    }
+    else {
         syslog(KSS_LOG_ERR, "ksecrets: cannot create collection directory");
     }
     return res;

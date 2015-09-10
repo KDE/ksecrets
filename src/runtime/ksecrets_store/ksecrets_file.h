@@ -34,6 +34,8 @@
  * @brief This is the secrets file format handling class
  */
 class KSecretsFile : public KSecretsDevice {
+    using base_class = KSecretsDevice;
+
 public:
     KSecretsFile();
     ~KSecretsFile();
@@ -44,20 +46,16 @@ public:
         char iv_[IV_SIZE];
     };
 
-    enum class OpenStatus {
-        Ok,
-        CannotOpenFile,
-        CannotLockFile,
-        CannotReadHeader,
-        UnknownHeader,
-        IntegrityCheckFailed
-    };
+    enum class OpenStatus { Ok, CannotOpenFile, CannotLockFile, CannotReadHeader, UnknownHeader, EntitiesReadError, IntegrityCheckFailed };
 
     int create(const std::string& path) noexcept;
     void setup(const std::string& path, bool readOnly) noexcept;
     OpenStatus openAndCheck() noexcept;
     bool open() noexcept;
-    bool readAndCheck() noexcept;
+    bool openSaveTempFile() noexcept;
+    bool saveMac() noexcept;
+    bool readEntities() noexcept;
+    bool readCheckMac() noexcept;
     bool readNextEntity() noexcept;
     bool save() noexcept;
     bool saveEntity(SecretsEntityPtr);
@@ -68,22 +66,24 @@ public:
     const char* salt() const noexcept { return fileHead_.salt_; }
     virtual const char* iv() const noexcept override { return fileHead_.iv_; }
     virtual bool read(void* buf, size_t count) noexcept override;
-    virtual bool read(size_t&) noexcept override;
     int errnumber() const noexcept { return errno_; }
     bool eof() const noexcept { return eof_; }
     virtual bool write(const void* buf, size_t count) noexcept override;
-    virtual bool write(size_t len) noexcept override;
 
-    template <class E> bool emplace_entity(E&& e) noexcept {
+    template <class E> bool emplace_entity(E&& e) noexcept
+    {
         entities_.emplace_back(e);
         return save();
     }
     bool remove_entity(SecretsEntityPtr);
-    template <class P> SecretsEntityPtr find_entity(P pred) {
+    template <class P> SecretsEntityPtr find_entity(P pred)
+    {
         Entities::iterator pos = std::find_if(entities_.begin(), entities_.end(), pred);
         if (pos != entities_.end()) {
             return *pos;
-        } else return SecretsEntityPtr();
+        }
+        else
+            return SecretsEntityPtr();
     }
 
 private:
@@ -104,7 +104,7 @@ private:
     struct MAC {
         MAC();
         ~MAC();
-        bool init(const char* key, size_t keyLen, const void *iv, size_t ivlen) noexcept;
+        bool init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept;
         bool reset() noexcept;
         bool update(const void* buffer, size_t len) noexcept;
         bool write(KSecretsFile&);
@@ -112,6 +112,9 @@ private:
 
         bool valid_;
         gcry_mac_hd_t hd_;
+
+    private:
+        bool ignore_updates_;
     };
 
     using Entities = std::deque<SecretsEntityPtr>;

@@ -3,7 +3,7 @@
 #define PAM_SM_SESSION
 #define PAM_SM_PASSWORD
 
-#include <ksecrets_credentials.h>
+#include <pam_credentials.h>
 
 #include <syslog.h>
 #include <security/pam_ext.h>

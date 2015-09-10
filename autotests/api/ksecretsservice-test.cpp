@@ -24,7 +24,7 @@
 #include <ksecretscollection.h>
 #include <ksecretsvalue.h>
 #include <ksecretsitem.h>
-#include <ksecrets_credentials.h>
+#include <pam_credentials.h>
 
 #include <QtCore/QtGlobal>
 #include <QtTest/QTest>

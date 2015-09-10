@@ -17,7 +17,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#include "ksecrets_credentials.h"
+#include "pam_credentials.h"
 #include "ksecrets_store.h"
 #include "defines.h"
 
@@ -37,16 +37,12 @@ extern "C" {
 
 const char* get_keyname_encrypting();
 const char* get_keyname_mac();
-int kss_keys_already_there();
 
 
 extern "C"
 int KSECRETS_STORE_EXPORT kss_set_credentials(const char* user_name, const char* password, const char* path)
 {
     UNUSED(user_name);
-/*    if (kss_keys_already_there())
-        return TRUE;
-*/
 
     KSecretsStore secretsStore;
     auto setupres = secretsStore.setup(path);
@@ -92,6 +88,7 @@ int KSECRETS_STORE_EXPORT kss_can_change_password()
 {
     /* nothing to do for the moment */
     syslog(KSS_LOG_INFO, "kss_can_change_password");
+    // TODO
     return TRUE;
 }
 
@@ -100,6 +97,7 @@ int KSECRETS_STORE_EXPORT kss_change_password(const char* new_password)
 {
     UNUSED(new_password);
     syslog(LOG_INFO, "kss_change_password");
+    // TODO
     return TRUE;
 }
 /* vim: tw=220 ts=4

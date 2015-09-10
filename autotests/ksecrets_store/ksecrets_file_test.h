@@ -18,32 +18,19 @@
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
 */
-#ifndef KSECRETS_DEVICE_H
-#define KSECRETS_DEVICE_H
+#ifndef KSECRETS_FILE_TEST
+#define KSECRETS_FILE_TEST
 
-#include <memory>
-/**
- * @brief This class acts as an interface to allow testing the CryptBuffer
- */
-class KSecretsDevice {
+#include <QtCore/QObject>
+
+class KSecretsFileTest : public QObject {
+    Q_OBJECT
 public:
-    constexpr static auto IV_SIZE = 8;
-    constexpr static auto SALT_SIZE = 56;
+    KSecretsFileTest();
+    virtual ~KSecretsFileTest();
 
-    virtual ~KSecretsDevice() = default;
-    virtual const char* iv() const noexcept = 0;
-
-    virtual bool read(void* buf, size_t count) noexcept = 0;
-    template <typename T> bool read(T& s) noexcept
-    {
-        return read(&s, sizeof(s));
-    }
-
-    virtual bool write(const void* buf, size_t count) noexcept = 0;
-    template <typename T> bool write(T t) noexcept
-    {
-        return write(&t, sizeof(t));
-    }
+private Q_SLOTS:
+    void initTestCase();
+    void testIntegrityCheck();
 };
-
 #endif

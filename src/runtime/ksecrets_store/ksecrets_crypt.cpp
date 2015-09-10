@@ -130,18 +130,6 @@ int kss_set_credentials(const std::string& password, const char* salt)
     return kss_store_keys(encryption_key, mac_key, KSECRETS_KEYSIZE);
 }
 
-int kss_keys_already_there()
-{
-    key_serial_t key;
-    key = request_key("user", get_keyname_encrypting(), 0, KEY_SPEC_USER_SESSION_KEYRING);
-    if (-1 == key) {
-        syslog(KSS_LOG_DEBUG, "request_key failed with errno %d, so assuming ksecrets not yet loaded", errno);
-        return FALSE;
-    }
-    syslog(KSS_LOG_DEBUG, "ksecrets: keys already in keyring");
-    return TRUE;
-}
-
 /**
  * @brief Reads a key from the kernel keyring
  *

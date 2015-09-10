@@ -53,7 +53,7 @@ public:
 
     virtual bool hasNext() const noexcept { return true; }
 
-    enum class EntityType {
+    enum class EntityType : std::uint8_t {
         SecretsEntityType, /// this is never used and never should be encountered
         CollectionDirectoryType,
         SecretsItemType,
