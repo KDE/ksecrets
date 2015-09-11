@@ -71,13 +71,12 @@ int KSecretsFile::create(const std::string& path) noexcept
         return errno;
     }
 
-    MAC mac;
+    CryptingEngine::MAC mac;
     FileHeadStruct emptyFileData;
     memcpy(emptyFileData.magic_, fileMagic, fileMagicLen);
 
-    // FIXME should we put this kind of call in gcrypt-dedicated file?
-    gcry_randomize(emptyFileData.salt_, SALT_SIZE, GCRY_STRONG_RANDOM);
-    gcry_randomize(emptyFileData.iv_, IV_SIZE, GCRY_STRONG_RANDOM);
+    CryptingEngine::randomize(emptyFileData.salt_, CryptingEngine::SALT_SIZE);
+    CryptingEngine::randomize(emptyFileData.iv_, CryptingEngine::IV_SIZE);
 
     int res = 0;
     if (::write(fd, &emptyFileData, sizeof(emptyFileData)) != sizeof(emptyFileData)) {
@@ -159,9 +158,15 @@ bool KSecretsFile::openSaveTempFile() noexcept {
 }
 
 bool KSecretsFile::saveMac() noexcept {
-    if (!mac_.write(*this)) {
-        syslog(KSS_LOG_ERR, "ksecrets: cannot write file MAC errno=%d", errno);
-        closeFile(writeFile_);
+    mac_.stop();
+    auto buf = mac_.read();
+
+    if (!write(&buf->len_, sizeof(buf->len_))) {
+        syslog(KSS_LOG_ERR, "Cannot write calculated MAC length");
+        return false;
+    }
+    if (!write(buf->bytes_, buf->len_)) {
+        syslog(KSS_LOG_ERR, "Cannot write calculated MAC value");
         return false;
     }
     return true;
@@ -228,7 +233,22 @@ bool KSecretsFile::readEntities() noexcept
 }
 
 bool KSecretsFile::readCheckMac() noexcept {
-    if (!mac_.check(*this)) {
+    mac_.stop();
+    size_t len = 0;
+    if (!read(&len, sizeof(len))) {
+        syslog(KSS_LOG_ERR, "Cannot read MAC len");
+        return false;
+    }
+    auto buffer = new unsigned char[len];
+    if (buffer == nullptr) {
+        syslog(KSS_LOG_ERR, "Cannot allocate MAC buffer");
+        return false;
+    }
+    if (!read(buffer, len)) {
+        syslog(KSS_LOG_ERR, "Cannot read MAC value");
+        return false;
+    }
+    if (!mac_.verify(buffer, len)) {
         syslog(KSS_LOG_ERR, "ksecrets: MAC check error, the file is corrupted or someone tampered with it");
         return false;
     }
@@ -355,129 +375,5 @@ bool KSecretsFile::remove_entity(SecretsEntityPtr entity)
         return false;
 }
 
-KSecretsFile::MAC::MAC()
-    : ignore_updates_(false)
-{
-    auto gcryerr = gcry_mac_open(&hd_, GCRY_MAC_HMAC_SHA512, 0, 0);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "opening MAC algo failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        valid_ = false;
-    }
-    else {
-        valid_ = true;
-    }
-}
-
-KSecretsFile::MAC::~MAC()
-{
-    if (valid_) {
-        gcry_mac_close(hd_);
-    }
-}
-
-bool KSecretsFile::MAC::init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept
-{
-    if (!valid_) {
-        syslog(KSS_LOG_ERR, "ksecrets: MAC object is not valid");
-        return false;
-    }
-    auto gcryerr = gcry_mac_setiv(hd_, iv, ivlen);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "setting MAC IV failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-    gcryerr = gcry_mac_setkey(hd_, key, keyLen);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "setting MAC key failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-    return true;
-}
-
-bool KSecretsFile::MAC::reset() noexcept
-{
-    auto gcryerr = gcry_mac_reset(hd_);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "resetting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-
-    return true;
-}
-
-bool KSecretsFile::MAC::update(const void* buffer, size_t len) noexcept
-{
-    if (!valid_)
-        return false;
-    if (ignore_updates_)
-        return true;
-    auto gcryerr = gcry_mac_write(hd_, buffer, len);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "updating MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-
-    return true;
-}
-
-bool KSecretsFile::MAC::write(KSecretsFile& file)
-{
-    char buffer[512]; // on purpose allocate more
-    size_t len = sizeof(buffer) / sizeof(buffer[0]);
-    auto gcryerr = gcry_mac_read(hd_, (void*)buffer, &len);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "obtaining resulting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-    // NOTE this will also update the MAC but we're no longer interested
-    if (!file.write(&len, sizeof(len))) {
-        syslog(KSS_LOG_ERR, "Cannot write calculated MAC length");
-        return false;
-    }
-    if (!file.write(buffer, len)) {
-        syslog(KSS_LOG_ERR, "Cannot write calculated MAC value");
-        return false;
-    }
-
-    return true;
-}
-
-template <bool INIT>
-struct AutoBool {
-    explicit AutoBool(bool& b)
-        : b_(b)
-    {
-        b_ = INIT;
-    }
-    ~AutoBool() { b_ = !INIT; }
-    bool& b_;
-};
-
-bool KSecretsFile::MAC::check(KSecretsFile& file)
-{
-    AutoBool<true> ignoreUpdates(ignore_updates_); // prevent reading MAC from the file updating us, if not we'll be unable to check
-    size_t len = 0;
-    if (!file.read(&len, sizeof(len))) {
-        syslog(KSS_LOG_ERR, "Cannot read MAC len");
-        return false;
-    }
-    char* buffer = new char[len];
-    if (buffer == nullptr) {
-        syslog(KSS_LOG_ERR, "Cannot allocate MAC buffer");
-        return false;
-    }
-    if (!file.read(buffer, len)) {
-        syslog(KSS_LOG_ERR, "Cannot read MAC value");
-        return false;
-    }
-    auto gcryerr = gcry_mac_verify(hd_, buffer, len);
-    delete[] buffer;
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "MAC check failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-
-    return true;
-}
 
 // vim: tw=220:ts=4

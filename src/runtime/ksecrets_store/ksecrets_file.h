@@ -23,6 +23,7 @@
 
 #include "ksecrets_data.h"
 #include "ksecrets_device.h"
+#include "crypting_engine.h"
 
 #include <memory>
 #include <deque>
@@ -42,8 +43,8 @@ public:
 
     struct FileHeadStruct {
         char magic_[9];
-        char salt_[SALT_SIZE];
-        char iv_[IV_SIZE];
+        unsigned char salt_[CryptingEngine::SALT_SIZE];
+        unsigned char iv_[CryptingEngine::IV_SIZE];
     };
 
     enum class OpenStatus { Ok, CannotOpenFile, CannotLockFile, CannotReadHeader, UnknownHeader, EntitiesReadError, IntegrityCheckFailed };
@@ -63,8 +64,8 @@ public:
     bool readHeader() noexcept;
     bool writeHeader() noexcept;
     bool checkMagic() noexcept;
-    const char* salt() const noexcept { return fileHead_.salt_; }
-    virtual const char* iv() const noexcept override { return fileHead_.iv_; }
+    const unsigned char* salt() const noexcept { return fileHead_.salt_; }
+    virtual const unsigned char* iv() const noexcept override { return fileHead_.iv_; }
     virtual bool read(void* buf, size_t count) noexcept override;
     int errnumber() const noexcept { return errno_; }
     bool eof() const noexcept { return eof_; }
@@ -101,22 +102,6 @@ private:
     void closeFile(int&) noexcept;
     bool backupAndReplaceWithWritten(const char*) noexcept;
 
-    struct MAC {
-        MAC();
-        ~MAC();
-        bool init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept;
-        bool reset() noexcept;
-        bool update(const void* buffer, size_t len) noexcept;
-        bool write(KSecretsFile&);
-        bool check(KSecretsFile&);
-
-        bool valid_;
-        gcry_mac_hd_t hd_;
-
-    private:
-        bool ignore_updates_;
-    };
-
     using Entities = std::deque<SecretsEntityPtr>;
 
     std::string filePath_;
@@ -128,7 +113,7 @@ private:
     Entities entities_;
     int errno_;
     bool eof_;
-    MAC mac_;
+    CryptingEngine::MAC mac_;
 };
 
 #endif

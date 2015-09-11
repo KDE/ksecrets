@@ -57,13 +57,12 @@ void CryptBuffer::empty() noexcept
 bool CryptBuffer::read(KSecretsDevice& file) noexcept
 {
     empty();
-    iv_ = file.iv();
 
     if (!file.read(len_))
         return false;
 
     try {
-        encrypted_ = new char[len_];
+        encrypted_ = new unsigned char[len_];
     }
     catch (std::bad_alloc) {
         syslog(KSS_LOG_ERR, "ksecrets: got a std::bad_alloc and that means the file is corrupt");
@@ -85,7 +84,6 @@ bool CryptBuffer::write(KSecretsDevice& file) noexcept
 {
     if (file.write(len_)) {
         syslog(KSS_LOG_DEBUG, "ksecrets: write: |%s|", decrypted_);
-        iv_ = file.iv();
         encrypt();
         return file.write(encrypted_, len_);
     }
@@ -98,12 +96,12 @@ bool CryptBuffer::decrypt() noexcept
     if (len_ == 0)
         return false;
     assert(encrypted_ != nullptr);
-    decrypted_ = new char[len_];
+    decrypted_ = new unsigned char[len_];
     auto dres = CryptingEngine::instance().decrypt(decrypted_, len_, encrypted_, len_);
     if (dres) {
         syslog(KSS_LOG_DEBUG, "ksecrets: read decrypted: |%s|", decrypted_);
-        setg(decrypted_, decrypted_, decrypted_ + len_);
-        setp(decrypted_, decrypted_ + len_);
+        setg((char*)decrypted_, (char*)decrypted_, (char*)decrypted_ + len_);
+        setp((char*)decrypted_, (char*)decrypted_ + len_);
         return true;
     }
     else {
@@ -119,11 +117,11 @@ bool CryptBuffer::encrypt() noexcept
     assert(decrypted_ != nullptr);
 
     delete[] encrypted_;
-    encrypted_ = new char[len_];
+    encrypted_ = new unsigned char[len_];
     if (encrypted_ == nullptr) {
         return false;
     }
-    gcry_create_nonce(encrypted_, len_);
+    CryptingEngine::create_nonce(encrypted_, len_);
 
     auto eres = CryptingEngine::instance().encrypt(encrypted_, len_, decrypted_, len_);
     if (!eres)
@@ -158,10 +156,10 @@ CryptBuffer::int_type CryptBuffer::overflow(int_type c)
 
         len_ += cipherBlockLen_;
         if (decrypted_ == nullptr) {
-            decrypted_ = (char*)std::malloc(len_);
+            decrypted_ = (unsigned char*)std::malloc(len_);
         }
         else {
-            decrypted_ = (char*)std::realloc(decrypted_, len_);
+            decrypted_ = (unsigned char*)std::realloc(decrypted_, len_);
             if (decrypted_ == nullptr) {
                 syslog(KSS_LOG_ERR, "ksecrets: cannot extend crypt buffer");
                 setp(nullptr, nullptr);
@@ -171,8 +169,8 @@ CryptBuffer::int_type CryptBuffer::overflow(int_type c)
         // fill the not yet used area with random data
         gcry_create_nonce((unsigned char*)decrypted_ + oldLen, cipherBlockLen_);
 
-        setp(decrypted_ + oldLen, decrypted_ + len_);
-        setg(decrypted_, decrypted_ + oldgpos, decrypted_ + len_);
+        setp((char*)decrypted_ + oldLen, (char*)decrypted_ + len_);
+        setg((char*)decrypted_, (char*)decrypted_ + oldgpos, (char*)decrypted_ + len_);
 
         *pptr() = c;
         pbump(sizeof(char_type));

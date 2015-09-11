@@ -69,7 +69,7 @@ public:
     KSecretsStore::CredentialsResult setCredentials(const std::string&) noexcept;
     KSecretsStore::SetupResult open(bool) noexcept;
     int createFile(const std::string&) noexcept;
-    const char* salt() const noexcept;
+    const unsigned char* salt() const noexcept;
     KSecretsStore::CreateCollectionResult createCollection(const std::string&) noexcept;
     KSecretsStore::DirCollectionsResult dirCollections() noexcept;
 

@@ -39,14 +39,6 @@
 
 #define KSS_LOG_ERR (LOG_AUTH | LOG_ERR)
 
-const char* keyNameEncrypting = nullptr;
-const char* keyNameMac = nullptr;
-
-bool kss_init_gcry();
-int kss_set_credentials(const std::string& password, const char* salt);
-const char* get_keyname_encrypting() { return keyNameEncrypting; }
-const char* get_keyname_mac() { return keyNameMac; }
-
 KSecretsStorePrivate::KSecretsStorePrivate(KSecretsStore* b)
     : b_(b)
 {
@@ -108,8 +100,8 @@ KSecretsStore::SetupResult KSecretsStorePrivate::setup(const std::string& path, 
 
 std::future<KSecretsStore::CredentialsResult> KSecretsStore::setCredentials(const char* password, const char* keyNameEncrypting, const char* keyNameMac)
 {
-    ::keyNameEncrypting = keyNameEncrypting;
-    ::keyNameMac = keyNameMac;
+    CryptingEngine::instance().setKeyNameEncrypting(keyNameEncrypting);
+    CryptingEngine::instance().setKeyNameMac(keyNameMac);
 
     std::string pwd = password;
     auto localThis = this;
@@ -134,7 +126,7 @@ int KSecretsStorePrivate::createFile(const std::string& path) noexcept { return 
 
 bool KSecretsStore::isGood() const noexcept { return d->status_ == StoreStatus::Good; }
 
-const char* KSecretsStorePrivate::salt() const noexcept { return secretsFile_.salt(); }
+const unsigned char* KSecretsStorePrivate::salt() const noexcept { return secretsFile_.salt(); }
 
 KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile) noexcept
 {

@@ -29,13 +29,21 @@
 class CryptingEngine {
     CryptingEngine();
     void setup() noexcept;
-    bool isReady() const noexcept;
+    bool isReady() noexcept;
 
 public:
     static CryptingEngine& instance();
 
+    static void randomize(unsigned char* buffer, size_t length);
+    static void create_nonce(unsigned char* buffer, size_t length);
+    static void setKeyNameEncrypting(const char*) noexcept;
+    static void setKeyNameMac(const char*) noexcept;
+
+    constexpr static auto IV_SIZE = 8;
+    constexpr static auto SALT_SIZE = 56;
+
     bool isValid() noexcept;
-    bool setIV(const void* iv, size_t liv) noexcept;
+    bool setIV(const unsigned char* iv, size_t liv) noexcept;
     /**
      * @brief This allow to specify a password instead of letting this engine get it from the kernel keyring
      *
@@ -44,9 +52,34 @@ public:
      *
      * @return
      */
-    bool setCredentials(const std::string& password, const char* salt) noexcept;
+    bool setCredentials(const std::string& password, const unsigned char* salt) noexcept;
     bool encrypt(void* out, size_t lout, const void* in, size_t lin) noexcept;
     bool decrypt(void* out, size_t lout, const void* in, size_t lin) noexcept;
+
+    struct Buffer {
+        Buffer();
+        explicit Buffer(size_t len);
+        ~Buffer();
+        unsigned char* bytes_;
+        size_t len_;
+    };
+    using BufferPtr = std::shared_ptr<Buffer>;
+
+    struct MAC {
+        MAC();
+        ~MAC();
+        bool init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept;
+        bool reset() noexcept;
+        bool update(const void* buffer, size_t len) noexcept;
+        void stop() noexcept;
+        BufferPtr read() noexcept;
+        bool verify(unsigned char* buffer, size_t len) noexcept;
+
+    private:
+        gcry_mac_hd_t hd_;
+        bool valid_;
+        bool ignore_updates_;
+    };
 
 private:
     static CryptingEngine* instance_;
@@ -54,6 +87,8 @@ private:
     bool has_iv_;
     bool has_credentials_;
     gcry_cipher_hd_t hd_;
+    unsigned char iv_[IV_SIZE];
 };
 
 #endif
+// vim: tw=220:ts=4

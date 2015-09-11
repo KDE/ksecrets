@@ -27,11 +27,8 @@
  */
 class KSecretsDevice {
 public:
-    constexpr static auto IV_SIZE = 8;
-    constexpr static auto SALT_SIZE = 56;
-
     virtual ~KSecretsDevice() = default;
-    virtual const char* iv() const noexcept = 0;
+    virtual const unsigned char* iv() const noexcept = 0;
 
     virtual bool read(void* buf, size_t count) noexcept = 0;
     template <typename T> bool read(T& s) noexcept

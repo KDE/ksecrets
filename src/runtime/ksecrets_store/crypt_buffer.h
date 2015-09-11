@@ -69,9 +69,8 @@ private:
 private:
     static constexpr size_t cipherBlockLen_ = 8; /// blowfish block len is 8
     size_t len_;                                 /// the length of both encrypted_ and decrypted_ buffers is the same
-    char* encrypted_;
-    char* decrypted_;
-    const char* iv_;
+    unsigned char* encrypted_;
+    unsigned char* decrypted_;
 };
 
 // operators for text-mode serialization

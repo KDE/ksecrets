@@ -22,8 +22,7 @@
 #include "crypt_buffer_test.h"
 
 #include <crypt_buffer.h>
-#include <ksecrets_store.h>
-#include <ksecrets_file.h>
+#include <crypting_engine.h>
 #include <QtTest/QtTest>
 #define GCRPYT_NO_DEPRECATED
 #include <gcrypt.h>
@@ -37,12 +36,18 @@ CryptBufferTest::~CryptBufferTest() {}
 
 void CryptBufferTest::initTestCase()
 {
-    KSecretsStore backend;
-    // auto setupfut =
-    // backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
-    // QVERIFY(setupfut.get());
-    auto credfut = backend.setCredentials("test", "ksecrets-test:crypt", "ksecrets-test:mac");
-    QVERIFY(credfut.get());
+    unsigned char salt[CryptingEngine::SALT_SIZE];
+    CryptingEngine::create_nonce(salt, CryptingEngine::SALT_SIZE);
+
+    unsigned char iv[CryptingEngine::IV_SIZE];
+    CryptingEngine::create_nonce(iv, CryptingEngine::IV_SIZE);
+
+
+    CryptingEngine &crengine = CryptingEngine::instance();
+    crengine.setKeyNameEncrypting("ksecrets-test:encrypting");
+    crengine.setKeyNameMac("ksecrets-test:mac");
+    crengine.setIV(iv, CryptingEngine::IV_SIZE);
+    crengine.setCredentials("test", salt);
 }
 
 void CryptBufferTest::cleanupTestCase()
@@ -54,8 +59,8 @@ class TestDevice : public KSecretsDevice {
 public:
     TestDevice()
     {
-        iv_ = new char[KSecretsFile::IV_SIZE];
-        gcry_create_nonce(iv_, KSecretsFile::IV_SIZE);
+        iv_ = new unsigned char[CryptingEngine::IV_SIZE];
+        gcry_create_nonce(iv_, CryptingEngine::IV_SIZE);
         len_ = 1024;
         buffer_ = (char*)std::malloc(len_);
         gptr_ = buffer_;
@@ -66,7 +71,7 @@ public:
         if (buffer_)
             std::free(buffer_);
     }
-    virtual const char* iv() const noexcept { return iv_; }
+    virtual unsigned const char* iv() const noexcept { return iv_; }
     virtual bool read(void* buf, size_t count) noexcept
     {
         assert(count < (len_ - (gptr_ - buffer_)));
@@ -91,7 +96,7 @@ public:
     }
 
 private:
-    char* iv_;
+    unsigned char* iv_;
     size_t len_;
     char* buffer_;
     char* gptr_;
