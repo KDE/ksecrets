@@ -68,10 +68,24 @@ int KSecretsFile::create(const std::string& path) noexcept
 {
     int fd = ::creat(path.c_str(), S_IRUSR | S_IWUSR);
     if (fd == -1) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot create new secrets file");
         return errno;
     }
 
+    struct AutoClose {
+        AutoClose(int fd)
+            : fd_(fd)
+        {
+        }
+        ~AutoClose() { ::close(fd_); }
+        int fd_;
+    } autoClose(fd);
+
     CryptingEngine::MAC mac;
+    if (!mac.reset()) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot setup MAC calculation");
+        return -1;
+    }
     FileHeadStruct emptyFileData;
     memcpy(emptyFileData.magic_, fileMagic, fileMagicLen);
 
@@ -80,13 +94,31 @@ int KSecretsFile::create(const std::string& path) noexcept
 
     int res = 0;
     if (::write(fd, &emptyFileData, sizeof(emptyFileData)) != sizeof(emptyFileData)) {
-        res = errno;
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write data to newly create file");
+        return errno;
     }
-    long count = 0; // this file has 0 items in it
+    if (!mac.update(&emptyFileData, sizeof(emptyFileData))) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot update MAC");
+        return -1;
+    }
+    size_t count = 0; // this file has 0 items in it
     if (::write(fd, &count, sizeof(count)) != sizeof(count)) {
-        res = errno;
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write data to newly create file");
+        return errno;
     }
-    ::close(fd);
+    if (!mac.update(&count, sizeof(count))) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot update MAC");
+        return -1;
+    }
+    auto m = mac.read();
+    if (!::write(fd, &m->len_, sizeof(m->len_))) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write data to newly create file");
+        return -1;
+    }
+    if (!::write(fd, m->bytes_, m->len_)) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot write data to newly create file");
+        return -1;
+    }
     return res;
 }
 
@@ -118,7 +150,8 @@ bool KSecretsFile::save() noexcept
         }
     }
 
-    if (!saveMac()) return false;
+    if (!saveMac())
+        return false;
 
     char lnpath[PATH_MAX];
     snprintf(lnpath, PATH_MAX, "/proc/self/fd/%d", writeFile_);
@@ -135,7 +168,8 @@ bool KSecretsFile::save() noexcept
     return backupAndReplaceWithWritten(tempWrittenFile);
 }
 
-bool KSecretsFile::openSaveTempFile() noexcept {
+bool KSecretsFile::openSaveTempFile() noexcept
+{
     const char* pattern = "ksecrets-XXXXXX";
     char* tmpfilename = new char[strlen(pattern) + 1];
     strcpy(tmpfilename, pattern);
@@ -157,7 +191,8 @@ bool KSecretsFile::openSaveTempFile() noexcept {
     return true;
 }
 
-bool KSecretsFile::saveMac() noexcept {
+bool KSecretsFile::saveMac() noexcept
+{
     mac_.stop();
     auto buf = mac_.read();
 
@@ -232,7 +267,8 @@ bool KSecretsFile::readEntities() noexcept
     return true;
 }
 
-bool KSecretsFile::readCheckMac() noexcept {
+bool KSecretsFile::readCheckMac() noexcept
+{
     mac_.stop();
     size_t len = 0;
     if (!read(&len, sizeof(len))) {
@@ -374,6 +410,5 @@ bool KSecretsFile::remove_entity(SecretsEntityPtr entity)
     else
         return false;
 }
-
 
 // vim: tw=220:ts=4

@@ -43,7 +43,8 @@ public:
     constexpr static auto SALT_SIZE = 56;
 
     bool isValid() noexcept;
-    bool setIV(const unsigned char* iv, size_t liv) noexcept;
+    static bool setIV(const unsigned char* iv, size_t liv) noexcept;
+    static unsigned char* getIV() noexcept;
     /**
      * @brief This allow to specify a password instead of letting this engine get it from the kernel keyring
      *
@@ -68,7 +69,6 @@ public:
     struct MAC {
         MAC();
         ~MAC();
-        bool init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept;
         bool reset() noexcept;
         bool update(const void* buffer, size_t len) noexcept;
         void stop() noexcept;
@@ -78,16 +78,17 @@ public:
     private:
         gcry_mac_hd_t hd_;
         bool valid_;
+        bool need_init_;
         bool ignore_updates_;
     };
 
 private:
     static CryptingEngine* instance_;
+    static unsigned char iv_[IV_SIZE];
+    static bool has_iv_;
     bool valid_;
-    bool has_iv_;
     bool has_credentials_;
     gcry_cipher_hd_t hd_;
-    unsigned char iv_[IV_SIZE];
 };
 
 #endif

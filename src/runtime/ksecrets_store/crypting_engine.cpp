@@ -144,6 +144,9 @@ long kss_read_mac_key(char* buffer, size_t bufferSize) { return kss_read_key(get
 long kss_read_encrypting_key(char* buffer, size_t bufferSize) { return kss_read_key(get_keyname_encrypting(), buffer, bufferSize); }
 
 CryptingEngine* CryptingEngine::instance_ = nullptr;
+unsigned char CryptingEngine::iv_[IV_SIZE];
+bool CryptingEngine::has_iv_ = false;
+unsigned char* CryptingEngine::getIV() noexcept { return iv_; }
 
 CryptingEngine& CryptingEngine::instance()
 {
@@ -163,14 +166,13 @@ void CryptingEngine::setKeyNameMac(const char* name) noexcept { keyNameMac = nam
 
 CryptingEngine::CryptingEngine()
     : valid_(false)
-    , has_iv_(false)
     , has_credentials_(false)
 {
 }
 
 void CryptingEngine::setup() noexcept
 {
-    syslog(KSS_LOG_DEBUG, "ksecrets: setting-up grypt library");
+    syslog(KSS_LOG_DEBUG, "ksecrets: setting-up gcrypt library");
     if (!gcry_check_version(GCRYPT_REQUIRED_VERSION)) {
         syslog(KSS_LOG_ERR, "ksecrets_store: libcrypt version is too old");
         return;
@@ -293,7 +295,8 @@ bool CryptingEngine::decrypt(void* out, size_t lout, const void* in, size_t lin)
 }
 
 CryptingEngine::MAC::MAC()
-    : ignore_updates_(false)
+    : need_init_(true)
+    , ignore_updates_(false)
 {
     auto gcryerr = gcry_mac_open(&hd_, GCRY_MAC_HMAC_SHA512, 0, 0);
     if (gcryerr) {
@@ -312,31 +315,36 @@ CryptingEngine::MAC::~MAC()
     }
 }
 
-bool CryptingEngine::MAC::init(const char* key, size_t keyLen, const void* iv, size_t ivlen) noexcept
+bool CryptingEngine::MAC::reset() noexcept
 {
     if (!valid_) {
         syslog(KSS_LOG_ERR, "ksecrets: MAC object is not valid");
         return false;
     }
-    auto gcryerr = gcry_mac_setiv(hd_, iv, ivlen);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "setting MAC IV failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
+    if (need_init_) {
+        char macKey[KSECRETS_KEYSIZE];
+        if (kss_read_mac_key(macKey, KSECRETS_KEYSIZE) != 0) {
+            syslog(KSS_LOG_ERR, "ksecrets: cannot retrieve MAC key");
+            return false;
+        }
+        // auto gcryerr = gcry_mac_setiv(hd_, CryptingEngine::getIV(), CryptingEngine::IV_SIZE);
+        // if (gcryerr) {
+        //     syslog(KSS_LOG_ERR, "setting MAC IV failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        //     return false;
+        // }
+        auto gcryerr = gcry_mac_setkey(hd_, macKey, KSECRETS_KEYSIZE);
+        if (gcryerr) {
+            syslog(KSS_LOG_ERR, "setting MAC key failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+            return false;
+        }
+        need_init_ = false;
     }
-    gcryerr = gcry_mac_setkey(hd_, key, keyLen);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "setting MAC key failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
-    }
-    return true;
-}
-
-bool CryptingEngine::MAC::reset() noexcept
-{
-    auto gcryerr = gcry_mac_reset(hd_);
-    if (gcryerr) {
-        syslog(KSS_LOG_ERR, "resetting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
+    else {
+        auto gcryerr = gcry_mac_reset(hd_);
+        if (gcryerr) {
+            syslog(KSS_LOG_ERR, "resetting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+            return false;
+        }
     }
     ignore_updates_ = false;
 
@@ -351,9 +359,13 @@ bool CryptingEngine::MAC::update(const void* buffer, size_t len) noexcept
         return false;
     if (ignore_updates_)
         return true;
+    if (need_init_) {
+        syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset!");
+        return false;
+    }
     auto gcryerr = gcry_mac_write(hd_, buffer, len);
     if (gcryerr) {
-        syslog(KSS_LOG_ERR, "updating MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
+        syslog(KSS_LOG_ERR, "ksecrets: updating MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
         return false;
     }
 
@@ -362,22 +374,36 @@ bool CryptingEngine::MAC::update(const void* buffer, size_t len) noexcept
 
 CryptingEngine::BufferPtr CryptingEngine::MAC::read() noexcept
 {
+    if (need_init_) {
+        syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset!");
+        return false;
+    }
+    auto res = std::make_shared<CryptingEngine::Buffer>();
     char buffer[512]; // on purpose allocate more
     size_t len = sizeof(buffer) / sizeof(buffer[0]);
     auto gcryerr = gcry_mac_read(hd_, (void*)buffer, &len);
     if (gcryerr) {
         syslog(KSS_LOG_ERR, "obtaining resulting MAC failed: code 0x%0x: %s/%s", gcryerr, gcry_strsource(gcryerr), gcry_strerror(gcryerr));
-        return false;
+        return res;
     }
 
-    auto res = std::make_shared<CryptingEngine::Buffer>();
-    res->bytes_ = (unsigned char*)std::malloc(gcryerr);
-    res->len_ = gcryerr;
+    res->bytes_ = (unsigned char*)std::malloc(len);
+    if (res->bytes_ == nullptr) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot allocate MAC buffer");
+        return res;
+    } else {
+        memcpy(res->bytes_, buffer, len);
+    }
+    res->len_ = len;
     return res;
 }
 
 bool CryptingEngine::MAC::verify(unsigned char* buffer, size_t len) noexcept
 {
+    if (need_init_) {
+        syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset!");
+        return false;
+    }
     auto gcryerr = gcry_mac_verify(hd_, buffer, len);
     delete[] buffer;
     if (gcryerr) {

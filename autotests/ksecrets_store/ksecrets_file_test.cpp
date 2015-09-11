@@ -22,7 +22,7 @@
 #include "ksecrets_file_test.h"
 
 #include <ksecrets_file.h>
-#include <ksecrets_store.h>
+#include <crypting_engine.h>
 #include <QtTest/QtTest>
 #include <stdlib.h>
 
@@ -33,9 +33,17 @@ KSecretsFileTest::~KSecretsFileTest() {}
 
 void KSecretsFileTest::initTestCase()
 {
-    KSecretsStore backend;
-    auto credfut = backend.setCredentials("test", "ksecrets-test:crypt", "ksecrets-test:mac");
-    QVERIFY(credfut.get());
+    CryptingEngine &crengine = CryptingEngine::instance();
+    unsigned char salt[CryptingEngine::SALT_SIZE];
+    CryptingEngine::create_nonce(salt, CryptingEngine::SALT_SIZE);
+
+    unsigned char iv[CryptingEngine::IV_SIZE];
+    CryptingEngine::create_nonce(iv, CryptingEngine::IV_SIZE);
+
+    crengine.setKeyNameEncrypting("ksecrets-test:encrypting");
+    crengine.setKeyNameMac("ksecrets-test:mac");
+    crengine.setIV(iv, CryptingEngine::IV_SIZE);
+    crengine.setCredentials("test", salt);
 }
 
 void KSecretsFileTest::testIntegrityCheck()
