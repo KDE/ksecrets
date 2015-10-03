@@ -346,6 +346,7 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
 bool KSecretsFile::open() noexcept
 {
     readFile_ = ::open(filePath_.c_str(), O_DSYNC | O_NOATIME | O_NOFOLLOW);
+    mac_.reset();
     return readFile_ != -1;
 }
 

@@ -49,10 +49,10 @@ void KSecretServiceStoreTest::initTestCase()
     // create a test file here and performe the real open test below
     QDir::home().remove(secretsFilePath); // remove the previous test on, if present
     KSecretsStore backend;
-    auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
-    QVERIFY(setupfut.get());
     auto credfut = backend.setCredentials("test", "ksecrets-test:crypt", "ksecrets-test:mac");
     QVERIFY(credfut.get());
+    auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
+    QVERIFY(setupfut.get());
 }
 
 static const char* collName1 = "test collection1";

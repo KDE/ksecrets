@@ -55,7 +55,8 @@ KSecretsStore::~KSecretsStore() = default;
 std::future<KSecretsStore::SetupResult> KSecretsStore::setup(const char* path, bool readOnly /* = true */)
 {
     // sanity checks
-    if (d->status_ != StoreStatus::JustCreated) {
+    if (d->status_ != StoreStatus::CredentialsSet && d->status_ != StoreStatus::JustCreated) {
+        // setCredentials should be called first
         return std::async(std::launch::deferred, []() { return SetupResult{ StoreStatus::IncorrectState, -1 }; });
     }
     if (path == nullptr || strlen(path) == 0) {

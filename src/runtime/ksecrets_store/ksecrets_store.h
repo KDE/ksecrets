@@ -214,7 +214,6 @@ public:
     enum class StoreStatus {
         Good,
         JustCreated,
-        SetupShouldBeCalledFirst,
         CredentialsSet,
         IncorrectState,
         CannotInitGcrypt,
@@ -282,6 +281,8 @@ public:
      * unintended side effects. If the file don't exists, the SetupResult.statu_ is set
      * to StoreStatus::SystemError and errno should be 2
      *
+     * @note This function needs the user's password to succeed, so please ensure the pam module already prepared the key or, if not, manually call setCredentials
+     *
      * @return SetupResult whose operator bool could be used to check the error condition
      */
     std::future<SetupResult> setup(const char* path, bool readOnly = true);
@@ -294,6 +295,8 @@ public:
      * This method is typically called from the pam module but it can also be
      * called from another program after prompting user for the password, for example.
      * Client applications only need to call this once per user session.
+     *
+     * @note This method needs to be called before setup in case the password is not yet available in the kernel keyring
      */
     std::future<CredentialsResult> setCredentials(const char* password = nullptr, const char* keyNameEcrypting = "ksecrets:encrypting", const char* keyNameMac = "ksecrets:mac");
 

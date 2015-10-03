@@ -360,7 +360,7 @@ bool CryptingEngine::MAC::update(const void* buffer, size_t len) noexcept
     if (ignore_updates_)
         return true;
     if (need_init_) {
-        syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset!");
+        syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset on this MAC!");
         return false;
     }
     auto gcryerr = gcry_mac_write(hd_, buffer, len);
