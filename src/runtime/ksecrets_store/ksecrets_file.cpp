@@ -332,6 +332,10 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: magic check failed for file %s", filePath_.c_str());
         return OpenStatus::UnknownHeader;
     }
+    if (!CryptingEngine::setIV(fileHead_.iv_, sizeof(fileHead_.iv_)) ) {
+        syslog(KSS_LOG_ERR, "ksecrets: cannot set IV read from the secrets file");
+        return OpenStatus::CryptEngineError;
+    }
     if (!readEntities()) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read entities from file %s", filePath_.c_str());
         return OpenStatus::EntitiesReadError;

@@ -63,6 +63,7 @@ void KSecretServiceStoreTest::testCreateCollection()
 {
     KSecretsStore backend;
     auto setupfut = backend.setup(secretsFilePath.toLocal8Bit().constData(), false);
+    QVERIFY(setupfut.get());
 
     createTimeMark = std::time(nullptr);
     auto crval1 = backend.createCollection(collName1);

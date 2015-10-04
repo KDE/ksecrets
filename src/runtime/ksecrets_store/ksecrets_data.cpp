@@ -117,11 +117,17 @@ bool CollectionDirectory::doBeforeWrite(std::ostream& os) noexcept
 
 bool CollectionDirectory::doAfterRead(std::istream& is) noexcept
 {
+    if (!is.good())
+        return false;
     Entries::size_type n;
     is >> n;
+    if (!is.good())
+        return false;
     for (Entries::size_type i = 0; i < n; i++) {
         std::string entry;
         is >> entry;
+        if (!is.good())
+            return false;
         entries_.emplace_back(entry);
     }
     return true;

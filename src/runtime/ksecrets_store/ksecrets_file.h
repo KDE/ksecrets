@@ -47,7 +47,7 @@ public:
         unsigned char iv_[CryptingEngine::IV_SIZE];
     };
 
-    enum class OpenStatus { Ok, CannotOpenFile, CannotLockFile, CannotReadHeader, UnknownHeader, EntitiesReadError, IntegrityCheckFailed };
+    enum class OpenStatus { Ok, CannotOpenFile, CannotLockFile, CannotReadHeader, UnknownHeader, CryptEngineError, EntitiesReadError, IntegrityCheckFailed };
 
     int create(const std::string& path) noexcept;
     void setup(const std::string& path, bool readOnly) noexcept;
