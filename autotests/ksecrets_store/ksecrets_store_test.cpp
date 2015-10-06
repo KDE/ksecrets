@@ -106,7 +106,7 @@ void KSecretServiceStoreTest::testCreateCollectionFailOnReadonly()
 
     createTimeMark = std::time(nullptr);
     auto crval1 = backend.createCollection(collName1);
-    QVERIFY(!crval1);
+    QVERIFY(crval1.status_ == KSecretsStore::StoreStatus::CannotLockFile);
 }
 
 void KSecretServiceStoreTest::testDirCollections()
