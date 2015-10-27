@@ -33,6 +33,26 @@
 
 /**
  * @brief This is the secrets file format handling class
+ *
+ * The file format strives to be multiplatform compatible. The aim is to be able to just copy this file from one
+ * platform to another and just open it with the corresponding library or application.
+ *
+ * The file has three main sections:
+ *   FileHead
+ *   Encrypted items
+ *   Checksum
+ *
+ * The file header is described by the @ref FileHeadStruct. This structure contains the file format magic string
+ * followed by the salt and the initialization vector needed during libgcrypt setup.
+ *
+ * The actual data follows the file header and is encrypted with libgcrypt using a pair of keys derived by from user's
+ * password using libgcrypt. The encryption details are handled by the @ref CryptingEngine. The serialization of the
+ * items is taken care of by the @ref SecretsItem class and it's inheritors. The serialization is done in ASCII in
+ * order to avoid endian issues.
+ *
+ * The end of the file containa the checksum. That'a also handled by the @ref SecretsItem base class.
+ *
+ * @sa SecretsItem, CryptingEngine
  */
 class KSecretsFile : public KSecretsDevice {
     using base_class = KSecretsDevice;

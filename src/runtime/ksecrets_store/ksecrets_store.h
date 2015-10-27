@@ -250,6 +250,7 @@ public:
         StoreStatus status_;
         int errno_;
         operator bool() const { return status_ == G; }
+        void setGood() { status_ = G; errno_ = 0; }
     };
 
     template <typename T> struct AlwaysGoodPred {

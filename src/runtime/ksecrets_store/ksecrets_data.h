@@ -35,16 +35,18 @@ class KSecretsFile;
 /**
  * @brief Elementary secret element
  *
- * TODO this class uses routines from ksecrets_crypt.cpp file to handle
- * encrypting and decrypting of the files. It would be better to define some
- * plugin architecture, allowing users specify different encryption methods.
+ * This base class encapsulates the details of the data serialization into the @ref KSecretsFile. It uses
+ * ASCII serialization in order to avoid binary endian problems.
  *
- * TODO in the future, if the need arises to add another file format, this
- *code
+ * The actual serialization is taken care of by the inheritor classes. The protocol is enforced by this class
+ * being an abstract base class.
+ *
+ * @todo in the future, if the need arises to add another file format, this code
  * could be easily refactored to use the "visitor" pattern and convert the
  * read and write methods to use a generic type which would then be
  * implemented by the KSecretsFile. For now, no need of such generalization,
- * as I cannot foresee the introduction of another file format (why should I?)
+ * as I cannot foresee the introduction of another file format (why should I?)A
+ *
  */
 class SecretsEntity {
 public:
@@ -63,15 +65,19 @@ public:
 
     virtual EntityType getType() const = 0;
 
-    bool read(KSecretsFile&) noexcept;
-    virtual bool doBeforeRead() noexcept { return true; }
-    virtual bool doAfterRead(std::istream&) noexcept = 0;
-    virtual void doOnReadError() noexcept;
-
     bool write(KSecretsFile&) noexcept;
-    virtual bool doBeforeWrite(std::ostream&) noexcept = 0;
-    virtual bool doAfterWrite() noexcept { return true; }
-    virtual void doOnWriteError() noexcept;
+    bool read(KSecretsFile&) noexcept;
+
+    virtual bool serialize(std::ostream&) noexcept = 0;
+    virtual bool deserialize(std::istream&) noexcept = 0;
+
+private:
+    virtual bool deserializeChildren(std::istream&) noexcept;
+    virtual bool doBeforeRead() noexcept { return true; }
+    virtual void onReadError() noexcept;
+
+    virtual bool serializeChildren(std::ostream&) noexcept;
+    virtual void onWriteError() noexcept;
 
 private:
     CryptBuffer buffer_;
@@ -84,20 +90,39 @@ public:
     static SecretsEntityPtr createInstance(SecretsEntity::EntityType);
 };
 
+/**
+ * @brief Holds the list of the collections stored into the secrets file
+ *
+ * The secrets file contains mainly secret collections. Each of these collections
+ * has a name and some access rights. These informations are encrypted and one
+ * would need to decrypt them before use. This should also occur upon collection
+ * search. Decrypting all the collections in the file lowers the security. To avoid
+ * this unwanted systematic decryption, we introduced this separate structure containig
+ * the list of the known collections. The coherence of this directory is ensured
+ * by the logic in KSecretsStore
+ *
+ * @see SecretsCollection, KSecretsStore
+ */
 class CollectionDirectory : public SecretsEntity {
 public:
     using Entries = std::deque<std::string>;
 
     CollectionDirectory();
+
+    // avoid potential problems by disabling these copy operators
+    CollectionDirectory(const CollectionDirectory&) = delete;
+    CollectionDirectory(CollectionDirectory&&) = delete;
+    CollectionDirectory& operator = (const CollectionDirectory&) = delete;
+
     void addCollection(const std::string&) noexcept;
     bool hasEntry(const std::string&) const noexcept;
     virtual EntityType getType() const noexcept { return EntityType::CollectionDirectoryType; }
     const Entries& entries() const noexcept { return entries_; }
 
-private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 
+private:
     Entries entries_;
 };
 
@@ -105,9 +130,9 @@ using CollectionDirectoryPtr = std::shared_ptr<CollectionDirectory>;
 
 class SecretsItem : public SecretsEntity {
 public:
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsItemType; }
 };
 
@@ -117,24 +142,28 @@ class SecretsCollection : public SecretsEntity {
 public:
     void setName(const std::string&) noexcept;
 
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
+    virtual bool deserializeChildren(std::istream&) noexcept override;
+    virtual bool serializeChildren(std::ostream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsCollectionType; }
 
     using Items = std::deque<SecretsItemPtr>;
 
     std::string name_;
     Items items_;
+    size_t itemsCount_; // used during serialization
 };
 
 using SecretsCollectionPtr = std::shared_ptr<SecretsCollection>;
 
 class SecretsEOF : public SecretsEntity {
+    public:
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
     bool hasNext() const noexcept override { return false; }
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsEOFType; }
 };
 

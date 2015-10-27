@@ -57,7 +57,6 @@ public:
     CollectionDirectoryPtr collectionsDir(KSecretsFile &secretsFile) noexcept;
 private:
     SecretsCollectionPtr collection_data_;
-    CollectionDirectoryPtr collections_dir_;
 };
 
 class KSecretsStorePrivate {

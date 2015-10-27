@@ -112,7 +112,7 @@ std::future<KSecretsStore::CredentialsResult> KSecretsStore::setCredentials(cons
 KSecretsStore::CredentialsResult KSecretsStorePrivate::setCredentials(const std::string& password) noexcept
 {
     using Result = KSecretsStore::CredentialsResult;
-    CryptingEngine &cryengine = CryptingEngine::instance();
+    CryptingEngine& cryengine = CryptingEngine::instance();
     if (!cryengine.isValid()) {
         return setStoreStatus(Result(KSecretsStore::StoreStatus::CannotInitGcrypt, -1));
     }
@@ -165,7 +165,7 @@ KSecretsStore::DirCollectionsResult KSecretsStorePrivate::dirCollections() noexc
 
     if (entity) {
         CollectionDirectoryPtr dir = std::dynamic_pointer_cast<CollectionDirectory>(entity);
-        // note the result_ is now empty si basically would avoid invoking a copy constructor
+        // note the result_ is now empty so basically would avoid invoking a copy constructor
         res.result_.insert(res.result_.end(), dir->entries().cbegin(), dir->entries().cend());
     }
     return res;
@@ -199,6 +199,7 @@ KSecretsStore::CreateCollectionResult KSecretsStorePrivate::createCollection(con
         return mapSecretsFileFailure(secretsFile_, res);
     }
     res.result_ = std::make_shared<KSecretsStore::Collection>(cptr);
+    res.setGood();
     return res;
 }
 
@@ -225,19 +226,39 @@ bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::
 
 CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& file) noexcept
 {
-    if (!collections_dir_) {
-        SecretsEntityPtr entity = file.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
-        if (entity) {
-            collections_dir_ = std::dynamic_pointer_cast<CollectionDirectory>(entity);
+    static bool detectLoop = false;
+    // NOTE collection dir cannot be cached because the file is reloaded upon each operation invalidating the cached pointer
+    // on the other hand, in a typical file, the directory item is the first item so the search is quick
+    CollectionDirectoryPtr collections_dir;
+    SecretsEntityPtr entity = file.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
+    if (entity) {
+        collections_dir = std::dynamic_pointer_cast<CollectionDirectory>(entity);
+        detectLoop = false;
+    }
+    else {
+        if (detectLoop) {
+            // abnormal situation where a successful directory succeeded, file reloaded by the directory si still not there
+            syslog(KSS_LOG_ERR, "ksecrets: collectionsDir loop detected");
         }
         else {
-            collections_dir_ = std::make_shared<CollectionDirectory>();
-            if (!file.emplace_entity(collections_dir_)) {
-                collections_dir_.reset();
+            collections_dir = std::make_shared<CollectionDirectory>();
+            if (file.emplace_entity(collections_dir)) {
+                detectLoop = true;
+                // NOTE emplace_entity triggers file reloading so simply search again
+                return collectionsDir(file);
+            }
+            else {
+                collections_dir.reset();
+                // this is an abornmal situation
+                assert(0);
+                syslog(KSS_LOG_ERR, "ksecrets: abnormal situation encoutered upon getting collectionsDir");
+                // NOTE we cannot to exit(0) here because we're only a library
+                // TODO introduce a global validity flag on the library and put it in fault state
             }
         }
     }
-    return collections_dir_;
+
+    return collections_dir;
 }
 
 KSecretsStore::Collection::Collection(KSecretsCollectionPrivatePtr dptr)

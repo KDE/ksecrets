@@ -153,9 +153,12 @@ bool KSecretsFile::save() noexcept
     if (!saveMac())
         return false;
 
+    syslog(KSS_LOG_INFO, "ksecrets: reloading file");
     char lnpath[PATH_MAX];
+    memset(lnpath, 0, sizeof(lnpath)/sizeof(lnpath[0]));
     snprintf(lnpath, PATH_MAX, "/proc/self/fd/%d", writeFile_);
     char tempWrittenFile[PATH_MAX];
+    memset(tempWrittenFile, 0, sizeof(tempWrittenFile)/sizeof(tempWrittenFile[0]));
     auto rlink = readlink(lnpath, tempWrittenFile, PATH_MAX - 1);
     if (rlink == -1) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d", errno);
