@@ -35,16 +35,18 @@ class KSecretsFile;
 /**
  * @brief Elementary secret element
  *
- * TODO this class uses routines from ksecrets_crypt.cpp file to handle
- * encrypting and decrypting of the files. It would be better to define some
- * plugin architecture, allowing users specify different encryption methods.
+ * This base class encapsulates the details of the data serialization into the @ref KSecretsFile. It uses
+ * ASCII serialization in order to avoid binary endian problems.
  *
- * TODO in the future, if the need arises to add another file format, this
- *code
+ * The actual serialization is taken care of by the inheritor classes. The protocol is enforced by this class
+ * being an abstract base class.
+ *
+ * @todo in the future, if the need arises to add another file format, this code
  * could be easily refactored to use the "visitor" pattern and convert the
  * read and write methods to use a generic type which would then be
  * implemented by the KSecretsFile. For now, no need of such generalization,
- * as I cannot foresee the introduction of another file format (why should I?)
+ * as I cannot foresee the introduction of another file format (why should I?)A
+ *
  */
 class SecretsEntity {
 public:
@@ -63,15 +65,19 @@ public:
 
     virtual EntityType getType() const = 0;
 
-    bool read(KSecretsFile&) noexcept;
-    virtual bool doBeforeRead() noexcept { return true; }
-    virtual bool doAfterRead(std::istream&) noexcept = 0;
-    virtual void doOnReadError() noexcept;
-
     bool write(KSecretsFile&) noexcept;
-    virtual bool doBeforeWrite(std::ostream&) noexcept = 0;
-    virtual bool doAfterWrite() noexcept { return true; }
-    virtual void doOnWriteError() noexcept;
+    bool read(KSecretsFile&) noexcept;
+
+    virtual bool serialize(std::ostream&) noexcept = 0;
+    virtual bool deserialize(std::istream&) noexcept = 0;
+
+private:
+    virtual bool deserializeChildren(std::istream&) noexcept;
+    virtual bool doBeforeRead() noexcept { return true; }
+    virtual void onReadError() noexcept;
+
+    virtual bool serializeChildren(std::ostream&) noexcept;
+    virtual void onWriteError() noexcept;
 
 private:
     CryptBuffer buffer_;
@@ -94,10 +100,10 @@ public:
     virtual EntityType getType() const noexcept { return EntityType::CollectionDirectoryType; }
     const Entries& entries() const noexcept { return entries_; }
 
-private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 
+private:
     Entries entries_;
 };
 
@@ -105,9 +111,9 @@ using CollectionDirectoryPtr = std::shared_ptr<CollectionDirectory>;
 
 class SecretsItem : public SecretsEntity {
 public:
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsItemType; }
 };
 
@@ -117,24 +123,28 @@ class SecretsCollection : public SecretsEntity {
 public:
     void setName(const std::string&) noexcept;
 
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
+    virtual bool deserializeChildren(std::istream&) noexcept override;
+    virtual bool serializeChildren(std::ostream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsCollectionType; }
 
     using Items = std::deque<SecretsItemPtr>;
 
     std::string name_;
     Items items_;
+    size_t itemsCount_; // used during serialization
 };
 
 using SecretsCollectionPtr = std::shared_ptr<SecretsCollection>;
 
 class SecretsEOF : public SecretsEntity {
+    public:
+    virtual bool serialize(std::ostream&) noexcept override;
+    virtual bool deserialize(std::istream&) noexcept override;
 private:
     bool hasNext() const noexcept override { return false; }
-    virtual bool doBeforeWrite(std::ostream&) noexcept override;
-    virtual bool doAfterRead(std::istream&) noexcept override;
     virtual EntityType getType() const noexcept { return EntityType::SecretsEOFType; }
 };
 

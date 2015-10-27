@@ -59,15 +59,18 @@ SecretsEntity::~SecretsEntity() {}
 bool SecretsEntity::write(KSecretsFile& file) noexcept
 {
     std::ostream os(&buffer_);
-    if (!doBeforeWrite(os) || !os.good())
+    if (!serialize(os) || !os.good())
+        return false;
+
+    if (!serializeChildren(os) || !os.good())
         return false;
 
     if (!buffer_.write(file)) {
-        doOnWriteError();
+        onWriteError();
         return false;
     }
 
-    return doAfterWrite();
+    return true;
 }
 
 bool SecretsEntity::read(KSecretsFile& file) noexcept
@@ -78,17 +81,23 @@ bool SecretsEntity::read(KSecretsFile& file) noexcept
     bool res = false;
     if (buffer_.read(file)) {
         std::istream is(&buffer_);
-        res = doAfterRead(is) && is.good();
-    }
 
-    if (!res) {
-        doOnReadError();
+        if (!deserialize(is) || !is.good())
+            return false;
+
+        if (!deserializeChildren(is) && !is.good())
+            return false;
+    }
+    else {
+        onReadError();
     }
     return res;
 }
 
-void SecretsEntity::doOnReadError() noexcept { /* nothing to do here */}
-void SecretsEntity::doOnWriteError() noexcept { /* nothing to do here */}
+bool SecretsEntity::deserializeChildren(std::istream&) noexcept { return true; }
+bool SecretsEntity::serializeChildren(std::ostream&) noexcept { return true; }
+void SecretsEntity::onReadError() noexcept { /* nothing to do here */}
+void SecretsEntity::onWriteError() noexcept { /* nothing to do here */}
 
 CollectionDirectory::CollectionDirectory() {}
 
@@ -106,7 +115,7 @@ bool CollectionDirectory::hasEntry(const std::string& collName) const noexcept
     return pos != entries_.end();
 }
 
-bool CollectionDirectory::doBeforeWrite(std::ostream& os) noexcept
+bool CollectionDirectory::serialize(std::ostream& os) noexcept
 {
     os << ' ' << entries_.size();
     for (const std::string& entry : entries_) {
@@ -115,7 +124,7 @@ bool CollectionDirectory::doBeforeWrite(std::ostream& os) noexcept
     return true;
 }
 
-bool CollectionDirectory::doAfterRead(std::istream& is) noexcept
+bool CollectionDirectory::deserialize(std::istream& is) noexcept
 {
     if (!is.good())
         return false;
@@ -135,42 +144,51 @@ bool CollectionDirectory::doAfterRead(std::istream& is) noexcept
 
 void SecretsCollection::setName(const std::string& name) noexcept { name_ = name; }
 
-bool SecretsCollection::doBeforeWrite(std::ostream& os) noexcept
+bool SecretsCollection::serializeChildren(std::ostream& os) noexcept
+{
+    bool res = true;
+    for (SecretsItemPtr item : items_) {
+        if (item->serialize(os) || !os.good())
+            return false;
+    }
+    return res;
+}
+
+bool SecretsCollection::deserializeChildren(std::istream& is) noexcept
+{
+    bool res = true;
+
+    return res;
+}
+
+bool SecretsCollection::serialize(std::ostream& os) noexcept
 {
     os << name_;
     os << ' ' << items_.size();
-    for (SecretsItemPtr item : items_) {
-    }
     return true;
 }
 
-bool SecretsCollection::doAfterRead(std::istream& is) noexcept
-{
-    is >> name_;
-    Items::size_type nItems;
-    is >> nItems;
-    return false;
-}
+bool SecretsCollection::deserialize(std::istream& is) noexcept { return false; }
 
-bool SecretsItem::doBeforeWrite(std::ostream&) noexcept
+bool SecretsItem::serialize(std::ostream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsItem::doAfterRead(std::istream&) noexcept
+bool SecretsItem::deserialize(std::istream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doBeforeWrite(std::ostream&) noexcept
+bool SecretsEOF::serialize(std::ostream&) noexcept
 {
     // TODO
     return false;
 }
 
-bool SecretsEOF::doAfterRead(std::istream&) noexcept
+bool SecretsEOF::deserialize(std::istream&) noexcept
 {
     // TODO
     return false;
