@@ -82,11 +82,9 @@ bool SecretsEntity::read(KSecretsFile& file) noexcept
     if (buffer_.read(file)) {
         std::istream is(&buffer_);
 
-        // if (!deserialize(is) || !is.good())
         if (!deserialize(is))
             return false;
 
-        // if (!deserializeChildren(is) && !is.good())
         if (!deserializeChildren(is))
             return false;
 
