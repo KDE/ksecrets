@@ -153,12 +153,11 @@ bool KSecretsFile::save() noexcept
     if (!saveMac())
         return false;
 
-    syslog(KSS_LOG_INFO, "ksecrets: reloading file");
     char lnpath[PATH_MAX];
-    memset(lnpath, 0, sizeof(lnpath)/sizeof(lnpath[0]));
+    memset(lnpath, 0, sizeof(lnpath) / sizeof(lnpath[0]));
     snprintf(lnpath, PATH_MAX, "/proc/self/fd/%d", writeFile_);
     char tempWrittenFile[PATH_MAX];
-    memset(tempWrittenFile, 0, sizeof(tempWrittenFile)/sizeof(tempWrittenFile[0]));
+    memset(tempWrittenFile, 0, sizeof(tempWrittenFile) / sizeof(tempWrittenFile[0]));
     auto rlink = readlink(lnpath, tempWrittenFile, PATH_MAX - 1);
     if (rlink == -1) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot get written temp file path! errno=%d", errno);
@@ -166,6 +165,7 @@ bool KSecretsFile::save() noexcept
     }
 
     closeFile(writeFile_);
+    syslog(KSS_LOG_INFO, "ksecrets: temp file written: %s", tempWrittenFile);
 
     // OK that worked, now replace the current file with the temp file
     return backupAndReplaceWithWritten(tempWrittenFile);
@@ -235,6 +235,7 @@ bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcep
         syslog(KSS_LOG_ERR, "ksecrets: cannot backup the secrets file errno=%d", errno);
         return false;
     }
+    syslog(KSS_LOG_INFO, "ksecrets: backed-up to: %s", backupPath);
 
     rres = rename(tempFilePath, filePath_.c_str());
     if (rres == -1) {
@@ -242,18 +243,21 @@ bool KSecretsFile::backupAndReplaceWithWritten(const char* tempFilePath) noexcep
         return false;
     }
 
-    if (openAndCheck() != OpenStatus::Ok) {
+    if (openAndCheck(locked_, true) != OpenStatus::Ok) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot reopen file");
         return false;
     }
+    syslog(KSS_LOG_INFO, "ksecrets: successfully replaced the file");
     return true;
 }
 
-bool KSecretsFile::readEntities() noexcept
+bool KSecretsFile::readEntities(bool justCheck) noexcept
 {
     assert(readFile_ != -1);
-    if (!entities_.empty()) {
-        entities_.clear();
+    if (!justCheck) {
+        if (!entities_.empty()) {
+            entities_.clear();
+        }
     }
 
     size_t entityCount = 0;
@@ -263,7 +267,7 @@ bool KSecretsFile::readEntities() noexcept
     }
 
     while (entityCount--) {
-        if (!readNextEntity()) {
+        if (!readNextEntity(justCheck)) {
             return false;
         }
     }
@@ -294,7 +298,7 @@ bool KSecretsFile::readCheckMac() noexcept
     return true;
 }
 
-bool KSecretsFile::readNextEntity() noexcept
+bool KSecretsFile::readNextEntity(bool justCheck) noexcept
 {
     std::uint8_t et;
     if (!base_class::template read(et)) {
@@ -306,7 +310,9 @@ bool KSecretsFile::readNextEntity() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: cannot read next entity");
         return false;
     }
-    entities_.emplace_back(entity);
+    if (!justCheck) {
+        entities_.emplace_back(entity);
+    }
     return true;
 }
 
@@ -316,13 +322,13 @@ void KSecretsFile::setup(const std::string& path, bool readOnly) noexcept
     readOnly_ = readOnly;
 }
 
-KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
+KSecretsFile::OpenStatus KSecretsFile::openAndCheck(bool lockFile, bool justCheck) noexcept
 {
     if (!open()) {
         syslog(KSS_LOG_ERR, "ksecrets: failed to open file %s", filePath_.c_str());
         return OpenStatus::CannotOpenFile;
     }
-    if (locked_ && !lock()) {
+    if (lockFile && !lock()) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot lock file %s", filePath_.c_str());
         return OpenStatus::CannotLockFile;
     }
@@ -335,11 +341,11 @@ KSecretsFile::OpenStatus KSecretsFile::openAndCheck() noexcept
         syslog(KSS_LOG_ERR, "ksecrets: magic check failed for file %s", filePath_.c_str());
         return OpenStatus::UnknownHeader;
     }
-    if (!CryptingEngine::setIV(fileHead_.iv_, sizeof(fileHead_.iv_)) ) {
+    if (!CryptingEngine::setIV(fileHead_.iv_, sizeof(fileHead_.iv_))) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot set IV read from the secrets file");
         return OpenStatus::CryptEngineError;
     }
-    if (!readEntities()) {
+    if (!readEntities(justCheck)) {
         syslog(KSS_LOG_ERR, "ksecrets: cannot read entities from file %s", filePath_.c_str());
         return OpenStatus::EntitiesReadError;
     }

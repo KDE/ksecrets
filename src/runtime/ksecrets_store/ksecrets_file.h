@@ -71,13 +71,13 @@ public:
 
     int create(const std::string& path) noexcept;
     void setup(const std::string& path, bool readOnly) noexcept;
-    OpenStatus openAndCheck() noexcept;
+    OpenStatus openAndCheck(bool lock, bool justCheck =false) noexcept;
     bool open() noexcept;
     bool openSaveTempFile() noexcept;
     bool saveMac() noexcept;
-    bool readEntities() noexcept;
+    bool readEntities(bool justCheck) noexcept;
     bool readCheckMac() noexcept;
-    bool readNextEntity() noexcept;
+    bool readNextEntity(bool justCheck) noexcept;
     bool save() noexcept;
     bool saveEntity(SecretsEntityPtr);
     bool lock() noexcept;

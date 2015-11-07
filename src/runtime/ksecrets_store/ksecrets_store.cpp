@@ -136,24 +136,37 @@ KSecretsStore::SetupResult KSecretsStorePrivate::open(bool lockFile) noexcept
     // interface defined in KSecretsFile and implemented by this store. So the KSecretsFile can change the status
     // ot the store and get the same status in case of problems as if it were open from here
     using OpenResult = KSecretsStore::SetupResult;
-    if (!secretsFile_.open()) {
-        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotOpenFile, errno));
+    auto fileOpenResult = secretsFile_.openAndCheck(lockFile);
+    KSecretsStore::StoreStatus status = KSecretsStore::StoreStatus::Good;
+    switch (fileOpenResult) {
+    case KSecretsFile::OpenStatus::Ok:
+        status = KSecretsStore::StoreStatus::Good;
+        break;
+    case KSecretsFile::OpenStatus::CannotOpenFile:
+        status = KSecretsStore::StoreStatus::CannotOpenFile;
+        break;
+    case KSecretsFile::OpenStatus::CannotLockFile:
+        status = KSecretsStore::StoreStatus::CannotLockFile;
+        break;
+    case KSecretsFile::OpenStatus::CannotReadHeader:
+        status = KSecretsStore::StoreStatus::CannotReadFile;
+        break;
+    case KSecretsFile::OpenStatus::UnknownHeader:
+        status = KSecretsStore::StoreStatus::InvalidFile;
+        break;
+    case KSecretsFile::OpenStatus::CryptEngineError:
+        status = KSecretsStore::StoreStatus::InvalidFile;
+        break;
+    case KSecretsFile::OpenStatus::EntitiesReadError:
+        status = KSecretsStore::StoreStatus::InvalidFile;
+        break;
+    case KSecretsFile::OpenStatus::IntegrityCheckFailed:
+        status = KSecretsStore::StoreStatus::InvalidFile;
+        break;
+    default:
+        assert(0);
     }
-    if (lockFile) {
-        if (!secretsFile_.lock()) {
-            return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotLockFile, errno));
-        }
-    }
-    if (!secretsFile_.readHeader()) {
-        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::CannotReadFile, errno));
-    }
-    if (!secretsFile_.checkMagic()) {
-        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile, -1));
-    }
-    if (!secretsFile_.readEntities() || !secretsFile_.readCheckMac()) {
-        return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::InvalidFile));
-    }
-    return setStoreStatus(OpenResult(KSecretsStore::StoreStatus::Good, 0));
+    return setStoreStatus(OpenResult(status, errno));
 }
 
 KSecretsStore::DirCollectionsResult KSecretsStore::dirCollections() const noexcept { return d->dirCollections(); }
@@ -226,36 +239,23 @@ bool KSecretsCollectionPrivate::createCollection(KSecretsFile& file, const std::
 
 CollectionDirectoryPtr KSecretsCollectionPrivate::collectionsDir(KSecretsFile& file) noexcept
 {
-    static bool detectLoop = false;
     // NOTE collection dir cannot be cached because the file is reloaded upon each operation invalidating the cached pointer
     // on the other hand, in a typical file, the directory item is the first item so the search is quick
     CollectionDirectoryPtr collections_dir;
     SecretsEntityPtr entity = file.find_entity([](SecretsEntityPtr e) { return e->getType() == SecretsEntity::EntityType::CollectionDirectoryType; });
     if (entity) {
         collections_dir = std::dynamic_pointer_cast<CollectionDirectory>(entity);
-        detectLoop = false;
     }
     else {
-        if (detectLoop) {
-            // abnormal situation where a successful directory succeeded, file reloaded by the directory si still not there
-            syslog(KSS_LOG_ERR, "ksecrets: collectionsDir loop detected");
+        collections_dir = std::make_shared<CollectionDirectory>();
+        if (!file.emplace_entity(collections_dir)) {
+            assert(0);
+            syslog(KSS_LOG_ERR, "ksecrets: abnormal situation encoutered upon getting collectionsDir");
+            // NOTE we cannot to exit(0) here because we're only a library
+            // TODO introduce a global validity flag on the library and put it in fault state
+            collections_dir.reset();
         }
-        else {
-            collections_dir = std::make_shared<CollectionDirectory>();
-            if (file.emplace_entity(collections_dir)) {
-                detectLoop = true;
-                // NOTE emplace_entity triggers file reloading so simply search again
-                return collectionsDir(file);
-            }
-            else {
-                collections_dir.reset();
-                // this is an abornmal situation
-                assert(0);
-                syslog(KSS_LOG_ERR, "ksecrets: abnormal situation encoutered upon getting collectionsDir");
-                // NOTE we cannot to exit(0) here because we're only a library
-                // TODO introduce a global validity flag on the library and put it in fault state
-            }
-        }
+        return collections_dir;
     }
 
     return collections_dir;

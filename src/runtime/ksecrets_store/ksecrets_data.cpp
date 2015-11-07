@@ -121,7 +121,7 @@ bool CollectionDirectory::hasEntry(const std::string& collName) const noexcept
 
 bool CollectionDirectory::serialize(std::ostream& os) noexcept
 {
-    syslog(KSS_LOG_INFO, "ksecrets: CollectionDirectory serializing %d items", entries_.size());
+    syslog(KSS_LOG_INFO, "ksecrets: CollectionDirectory serializing %d items", (int)entries_.size());
     os << ' ' << entries_.size();
     for (const std::string& entry : entries_) {
         syslog(KSS_LOG_INFO, "   %s", entry.c_str());

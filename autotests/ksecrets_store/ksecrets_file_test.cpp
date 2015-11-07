@@ -53,6 +53,6 @@ void KSecretsFileTest::testIntegrityCheck()
     KSecretsFile theFile;
     theFile.create(TEST_FILE_NAME);
     theFile.setup(TEST_FILE_NAME, false);
-    QVERIFY(theFile.openAndCheck() == KSecretsFile::OpenStatus::Ok);
+    QVERIFY(theFile.openAndCheck(false) == KSecretsFile::OpenStatus::Ok);
 }
 // vim: tw=220:ts=4
