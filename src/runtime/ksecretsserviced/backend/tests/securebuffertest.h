@@ -39,7 +39,7 @@ class SecureBufferTest : public QObject
 public:
     SecureBufferTest();
 
-private slots:
+private Q_SLOTS:
     void getSetCheck();
     void readBlock();
     void readBlockPastEnd();
@@ -61,7 +61,7 @@ private slots:
     void readLineBoundaries();
     void writeAfterSecureArrayResize();
 
-protected slots:
+protected Q_SLOTS:
     void readyReadSlot();
     void bytesWrittenSlot(qint64 written);
 
