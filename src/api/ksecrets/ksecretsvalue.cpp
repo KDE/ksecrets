@@ -99,6 +99,3 @@ bool SecretPrivate::operator == ( const SecretPrivate &that )  const
     result &= value == that.value;
     return result;
 }
-
-
-#include "ksecretsvalue.moc"

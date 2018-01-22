@@ -246,5 +246,4 @@ QList<SecretItemPtr> CollectionPrivate::items() const
     return QList<SecretItemPtr>();
 }
 
-#include "ksecretscollection.moc"
 } // namespace

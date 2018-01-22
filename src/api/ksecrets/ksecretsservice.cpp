@@ -63,5 +63,4 @@ QFuture<QList<CollectionPtr> > Service::listCollections()
     return QtConcurrent::run(&ServicePrivate::listCollections);
 }
 
-#include "ksecretsservice.moc"
 } // namespace

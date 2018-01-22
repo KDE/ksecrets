@@ -189,5 +189,3 @@ void KSecretServiceTest::cleanupKeyring()
 {
     QVERIFY(kss_delete_credentials());
 }
-
-#include "ksecretsservice-test.moc"

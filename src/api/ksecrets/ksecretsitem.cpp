@@ -161,5 +161,3 @@ QDateTime SecretItemPrivate::modifiedTime() const
   // TODO
   return QDateTime();
 }
-
-#include "ksecretsitem.moc"
