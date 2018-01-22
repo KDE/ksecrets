@@ -376,7 +376,7 @@ CryptingEngine::BufferPtr CryptingEngine::MAC::read() noexcept
 {
     if (need_init_) {
         syslog(KSS_LOG_ERR, "ksecrets: you forgot to call reset!");
-        return false;
+        return {};
     }
     auto res = std::make_shared<CryptingEngine::Buffer>();
     char buffer[512]; // on purpose allocate more
